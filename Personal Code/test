@@ -1,1 +1,6 @@
+clear
+clc
 
+test_cell = {'Station','Pressure', ' Temperature', 'Cp', 'Gamma'};
+
+test_cell{2,:} = {1,2,3,4,5}
