@@ -195,8 +195,10 @@ Pr = state{5,2} / 51850
 Pr = state{6,2} / 51850
 %% High Pressure Compressor
 [state,component] = HPcomp(state,component);
-Pr = state{7,2} / 51850
+Pr = state{7,2} / 51850 %43.4
 %% Combined Compressor
+% [state,component] = combinedcomp(state,component);
+% Pr = state{7,2} / 51850; %43.4, good approx
 %% Burner
 [state,component] = burner(state,component,T_t4);
 Pr = state{9,2}/ 51850
@@ -207,8 +209,11 @@ Pr = state{11,2} / 51850 %NOT WORKING, Fix
 %% Low Pressure Turbine
 [state,component] = LPturb(state,component,mdotep2,PtoL);
 Pr = state{12,2} / 51850
-Pr = state{13,2} / 51850 %NOT WORKING, Fix
+Pr = state{13,2} / 51850 %NOT WORKING, Fix 357,99.6 if wrong
 %% Combined Turbine
+% [state,component] = combinedturb(state,component,mdotep1,mdotep2,PtoL,PtoH);
+% Pr = state{13,2} / 51850 %NOT WORKING, Fix 287
+
 %% Mixer
 [state,component] = mixer(state,component);
 Pr = state{14,2} / 51850
@@ -216,7 +221,7 @@ Pr = state{15,2} / 51850
 % close enough approx, maybe make mixer inneficiencies some middle mach number?
 %% Nozzle
 % Output not working at all!
-[state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, PtoH, PtoL)
+[state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, PtoH, PtoL,pitotal);
 err_T_mdot = 1-performance{1,1} /F_mdot
 err_s = 1-performance{1,2} / S
 err_eff1 = 1-performance{1,3} / .5589
@@ -334,6 +339,22 @@ state(7,2) = {Po3};
 %T.o3 = T.o25*(exp(((gamma-1)/(gamma*ech))*(log(pich))));
 end
 
+function[state,component] = combinedcomp(state,component);
+picl = component{4,2};
+pich = component{5,2};
+pic = picl*pich; 
+
+ecl = component{4,3};
+ech = component{5,3};
+ec = (ecl+ech)/2;
+
+Po2 = state{4,2};
+
+Po3 = Po2*pic^(1/ec);
+state(7,2) = {Po3};
+[state] = unFAIR3(state,7);
+end
+
 function [state,component] = burner(state,component,T_t4)
 
 state(8,2:3) = state(7,2:3);
@@ -381,14 +402,11 @@ state(11,8) = {ho44};
 end
 
 function [state,component] = LPturb(state,component,mdotep2,PtoL)
-%mdot3 = state{7,5};
 mdot2 = state{4,5};
 mdot25 = state{6,5};
 mdot5 = state{13,5};
 mdot44 = state{11,5};
 mdot45 = state{12,5};
-%ho25 = state{6,8};
-%ho3 = state{7,8};
 ho2 = state{4,8};
 ho13 = state{5,8};
 ho25 = state{6,8};
@@ -432,6 +450,41 @@ state(13,8) = {ho5};
 
 end
 
+function [state,component] = combinedturb(state,component,mdotep1,mdotep2,PtoL,PtoH)
+hoep1 = state{8,8};
+hoep2 = state{8,8};
+hoep = hoep1+hoep2;
+ho4 = state{9,8};
+mdot4 = state{9,5};
+mdot45 = state{12,5};
+mdotep = mdotep1+mdotep2;
+
+ho45 = (mdotep*hoep + mdot4*ho4) /(mdot45);
+state(12,8) = {ho45};
+[state] = unFAIR3(state,12);
+
+
+
+
+etamH = component{8,5};
+etamL = component{11,5};
+etam = (etamH+etamL)/2;
+etamPH = component{9,5};
+etamPL = component{12,5};
+etamP = (etamPH+etamPL)/2;
+mdot3 = state{7,5};
+ho3 = state{7,8};
+ho2 = state{4,8};
+Pto = PtoH + PtoL;
+
+fun = @(h5) mdot45*(ho45 - h5)*etam...  %change in energy across turb
+    -mdot3*(ho3-ho2)...                 %change in energy across HP compressor
+    -Pto / etamP;                       %energy draw of takeoff power
+ho5 = fzero(fun,ho45);
+state(13,8) = {ho5};
+[state] = unFAIR3(state,13);
+end
+
 function [state,component] = mixer(state,component)
 %Assume ideal pressure ratio (mach independent)
 %Assume perfect polytropic efficiency
@@ -453,22 +506,26 @@ state(15,2) = {Po6A};
 [state] = unFAIR3(state,15);
 end
 
-function [state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, P_toH, P_toL)
+function [state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, Ptoh, PtoL,pitotal)
 state(16,:) = state(15,:);%assume no afterburner
 pin = component{14,2};
 P6A = state{14,2};
 
-Po9 = pin*P6A;
+%Po9 = pin*P6A; FIX!!!
+Po0 = state{3,2};
+Po9 = Po0*pitotal
+
 state(17,2) = {Po9};
 [state] = unFAIR3(state,17);
 
 %static conditions
 P9 = Po9 / Po9_P9;
 state(18,2) = {P9};
-[state] = unFAIR3(state,18);
+% [state] = unFAIR3(state,18);
 
-% T0 = state{3,2};
+T0 = state{2,2};
 T9 = state{18,2};
+T9 = T0*2.5425
 % To9 = T9;
 % T9_T0 = T9/T0;
 cp9 = state{18,6};
@@ -495,7 +552,7 @@ S = f_0 / F_mdot;
 eta_P = (2*F_mdot/v0)/...
     ((1+f_0-betta/(1+alpha))*(v9/v0)^2 - 1);
 
-eta_TH = (v0^2/2*((1+f_0-(betta/(1+alpha)))*(v9/v0)^2 - 1) + (P_toL + P_toH)*mdot0)/...
+eta_TH = (v0^2/2*((1+f_0-(betta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + Ptoh)*mdot0)/...
     (f_0*h_PR);
 eta_o = eta_TH*eta_P;
 
