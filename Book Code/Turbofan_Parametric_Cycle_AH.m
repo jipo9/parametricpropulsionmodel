@@ -251,20 +251,20 @@ state_t7.T = T_t7;
 while norm(delta_f) > .0001
     [state_t7] = unFAIR(1,f_7i,state_t7.T);
     tau.lambda_AB = state_t7.h/state_0.h;
-    f_AB = (1 + f*(1-betta-epsilon_1 - epsilon_2)/(1+alpha-betta))*...
-        (tau.lambda_AB - tau.lambda*tau.m1*tau.tH*tau.m2*tau.tL*tau.M)/(h_PR*eta.AB/state_0.h - tau.lambda_AB);
+    f_AB = 0
+%     f_AB = (1 + f*(1-betta-epsilon_1 - epsilon_2)/(1+alpha-betta))*...
+%         (tau.lambda_AB - tau.lambda*tau.m1*tau.tH*tau.m2*tau.tL*tau.M)/(h_PR*eta.AB/state_0.h - tau.lambda_AB);
     f_7 = f_6A + f_AB;
     delta_f = f_7i - f_7;
     f_7i = f_7;
 end
 
-
 %% Nozzle
 
 f_0 = f_7;
-state_t9.T = state_t7.T;
-state_t9.h = state_t7.h;
-state_t9.Pr = state_t7.Pr;
+state_t9.T = state_t6A.T;
+state_t9.h = state_t6A.h;
+state_t9.Pr = state_t6A.Pr;
 P_t9_over_P_9 = (P_0_over_P_9) * pi.r * pi.d * pi.cL * pi.cH * pi.b * pi.tH * pi.tL * pi.M * pi.AB * pi.n;
 P_t9_over_P_9 = 12.418
 state_9.Pr = state_t9.Pr/P_t9_over_P_9;

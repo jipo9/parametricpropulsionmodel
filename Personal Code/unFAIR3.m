@@ -16,7 +16,7 @@ if f< 1E-9
 end
 
 T_min = 0;
-T_max = 10000;
+T_max = 100000;
 error = 100;
 ref_Pressure = 7.5205 * 6894.76; %Pa from Psi
 
@@ -46,12 +46,24 @@ elseif size(state{station,8},1) == 1
         state_i(station,8) = state_i(station,2);
         state_i(station,3) = {T* .5556};
         [state_i] = unFAIR3(state_i,station);
-        error = (state_i{station,8} - h)/h;
+        h_i = state_i{station,8};
+        
+        %The following two lines are to detect if a temperature value too
+        %low is input, which would cause this code to break
+%         if h_i <0
+%                 h_i = 0;
+%         end
+        error = (h_i - h)/h;
+%         if isnan(error)
+%             error  = -1;
+%         end
+%         
         if error<0
             T_min = T;
         else
             T_max = T;
         end
+        
     end    
 % elseif size(state{end,3},1) == 1
 elseif state{station,3} ~= 0
@@ -112,11 +124,14 @@ gamma = cp / (cp-R); %unitless
 
 % Comversion to metric
 T = T* .5556; % K
-P = Pr*ref_Pressure; %Pa
+% P = Pr*ref_Pressure; %Pa
+P = Pr; %temporary
 cp = cp* 4186.8; %J/kg K
-h = h* 4186.8; %J/kg K
+h = h* 4186.8*.5556; %J/kg
+phi =( air.phi + f * vitiated.phi ) / (1+f)* 4186.8; %J/kg K
+
 
 state(station,2:3) = {P,T};
-state(station,6:8)  = {cp,gamma,h};
+state(station,6:9)  = {cp,gamma,h,phi};
 end
 
