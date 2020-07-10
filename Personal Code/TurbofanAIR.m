@@ -521,7 +521,7 @@ state(17,2) = {Po9};
 %static conditions
 P9 = Po9 / Po9_P9;
 state(18,2) = {P9};
-% [state] = unFAIR3(state,18);
+[state] = unFAIR3(state,18);
 
 T0 = state{2,2};
 T9 = state{18,2};
