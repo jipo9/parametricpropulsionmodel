@@ -119,45 +119,43 @@ end
 % for now using all mdot/mdot total, in actual it will include units
     mdot_f = S*F_mdot /eta_b; %unitless
 
-    mdot_s0 = 1;
-    f_s0 = 0;
+    mdot0 = 1;
+    f0 = 0;
     
-    mdot_s25 = mdot_s0/(1+alpha); %after bypass leaves
-    mdot_s13 = mdot_s0 - mdot_s25; % bypass mass flow
+    mdot25 = mdot0/(1+alpha); %after bypass leaves
+    mdot13 = mdot0 - mdot25; % bypass mass flow
     
-    mdot_s31 = mdot_s25*(1-betta - ep1 -ep2); %after bleed and coolant leaves
-    mdotbeta = mdot_s25*betta; %bleed air
-    mdotep1 = mdot_s25*ep1; %coolant air 1
-    mdotep2 = mdot_s25*ep2; %coolant air 2
+    mdot31 = mdot25*(1-betta - ep1 -ep2); %after bleed and coolant leaves
+    mdotbeta = mdot25*betta; %bleed air
+    mdotep1 = mdot25*ep1; %coolant air 1
+    mdotep2 = mdot25*ep2; %coolant air 2
     
-    mdot_s4 = mdot_s31 + mdot_f; %after burner
-    f_s4 = mdot_f / mdot_s31;
+    mdot4 = mdot31 + mdot_f; %after burner
+    f4 = mdot_f / mdot31;
     
-    mdot_s41 = mdot_s4 + mdotep1;
-    f_s41 = f_s4*mdot_s4 / mdot_s41;
+    mdot41 = mdot4 + mdotep1;
+    f41 = f4*mdot4 / mdot41;
     
-    mdot_s45 = mdot_s41 + mdotep2;
-    f_s45 = f_s41*mdot_s41 / mdot_s45;  
+    mdot45 = mdot41 + mdotep2;
+    f45 = f41*mdot41 / mdot45;  
     
-    mdot_s6 = mdot_s45 + mdot_s13;
-    f_s6 = f_s45*mdot_s45 / mdot_s6;
+    mdot6A = mdot45 + mdot13;
+    f6A = f45*mdot45 / mdot6A;
 
 
-    state(2:8,4) = {f_s0};
-    state(2:4,5) = {mdot_s0};
-    state(5,5) = {mdot_s13};
-    state(6:7,5) = {mdot_s25};
-    state(8,5) = {mdot_s31};
-    state(9,4) = {f_s4};
-    state(9,5) = {mdot_s4};
-    state(10:11,4) = {f_s41};
-    state(10:11,5) = {mdot_s41};
-    state(12:13,4) = {f_s45};
-    state(12:13,5) = {mdot_s45};
-    state(13:18,4) = {f_s6};
-    state(14:18,5) = {mdot_s6};
-    
-    
+    state(2:8,4) = {f0};
+    state(2:4,5) = {mdot0};
+    state(5,5) = {mdot13};
+    state(6:7,5) = {mdot25};
+    state(8,5) = {mdot31};
+    state(9,4) = {f4};
+    state(9,5) = {mdot4};
+    state(10:11,4) = {f41};
+    state(10:11,5) = {mdot41};
+    state(12:14,4) = {f45};
+    state(12:14,5) = {mdot45};
+    state(15:18,4) = {f6A};
+    state(15:18,5) = {mdot6A};
     
     
     M0 = 1.6;
@@ -298,6 +296,9 @@ Po13 = Po2*pif^(1/ef);
 
 state(5,2) = {Po13};
 [state] = unFAIR3(state,5);
+
+component{3,4} = state{5,8} / state{4,8};
+
 % ho2 = ((gamma*R*T.o2)/(gamma-1)) + ((V2^2)/2);
 end
 
@@ -312,6 +313,7 @@ Po25 = Po2*picl^(1/ecl);
 state(6,2) = {Po25};
 [state] = unFAIR3(state,6);
 
+component{4,4} = state{6,8} / state{4,8};
 
 % P.o25 = P.o2*picl^(1/ecl);
 % [T.o25] = CPG(T.o2,P.o2,gamma, P.o25, 1);
@@ -330,6 +332,8 @@ Po3 = Po25*pich^(1/ech);
 
 state(7,2) = {Po3};
 [state] = unFAIR3(state,7);
+
+component{5,4} = state{7,8} / state{6,8};
 
 
 % P.o3 = P.o25*pich^(1/ech);
@@ -364,6 +368,9 @@ state(9,3) = {T_t4*.5556};
 
 pi_b = state{9,2} / state{8,2};
 component(6,2) = {pi_b};
+
+component{6,4} = state{9,8} / state{7,8};
+
 % fun = @(T.o4) (((mdot_4*cp*T.o4)-(mdot_31*cp*T.o3))/(mdot_f*hPR)) - etab;
 % T.o4 = fzero(fun,T.o3); %gives Pr of 41 million, not good at all
 % T.o4 = 3200*.555556; %gives Pr of 700 (we want 1707)
@@ -386,19 +393,24 @@ etamH = component{8,5};
 etamPH = component{9,5};
 
 %Across mixer
-ho41 = (mdotep1*hoep1 + mdot4*ho4) /(mdot41);
+ho41 = (mdotep1*hoep1 + mdot4*ho4) / (mdot41);
 state(10,8) = {ho41};
 [state] = unFAIR3(state,10);
+
+component{7,4} = state{10,8} / state{9,8};
 
 %Across turbine
 % etH = .89;
 fun = @(ho44) mdot41*(ho41 - ho44)*etamH... %change in energy across HPturb
     -mdot3*(ho3-ho25)...                    %change in energy across HP compressor
-    -PtoH / etamPH;                         %energy draw of takeoff power
-ho44 = fzero(fun,ho41); %.7261
-ho44 = ho41*.8465;
+    -(PtoH) / etamPH;                         %energy draw of takeoff power
+ho44 = fzero(fun,ho41) %.7261
+ho44 = ho41*.8465; % corrected value
+ho44 = 3.0493e6 % corrected value
 state(11,8) = {ho44};
 [state] = unFAIR3(state,11);
+component{8,4} = state{11,8} / state{10,8};
+
 end
 
 function [state,component] = LPturb(state,component,mdotep2,PtoL)
@@ -421,6 +433,8 @@ ho45 = (mdotep2*hoep2 + mdot44*ho44) /(mdot45);
 state(12,8) = {ho45};
 [state] = unFAIR3(state,12);
 
+component{10,4} = state{12,8} / state{11,8};
+
 %Across Turbine
 fun = @(ho5) mdot5*(ho45 - ho5)*etamL...    %change in energy across LP turb
     -mdot25*(ho25-ho2)...                   %change in energy across LP compressor
@@ -431,8 +445,7 @@ ho5 = ho45*.8504;
 state(13,8) = {ho5};
 [state] = unFAIR3(state,13);
 
-
-
+component{11,4} = state{11,8} / state{10,8};
 
 
 %do a simple turbine
@@ -496,7 +509,7 @@ mdotalpha = state{5,5};
 mdot5 = state{13,5};
 mdot6 = state{14,5};
 
-ho6 = (mdotalpha*hoalpha + mdot5*ho5) /(mdot6);
+ho6 = (mdotalpha*hoalpha + mdot5*ho5) / (mdot6);
 state(14,8) = {ho6};
 [state] = unFAIR3(state,14);
 
@@ -504,19 +517,25 @@ Po6 = state{14,2};
 Po6A = Po6*piM;
 state(15,2) = {Po6A};
 [state] = unFAIR3(state,15);
+
+alphap = mdotalpha/mdot5;
+component{13,4} = (1+(alphap*(hoalpha/ho5)))/(1+alphap);
+
 end
 
 function [state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, Ptoh, PtoL,pitotal)
-state(16,:) = state(15,:);%assume no afterburner
+state(16,2:end) = state(15,2:end);%assume no afterburner
 pin = component{14,2};
-P6A = state{14,2};
+P6A = state{15,2};
 
-%Po9 = pin*P6A; FIX!!!
+%Po9 = pin*P6A %FIX!!!
 Po0 = state{3,2};
 Po9 = Po0*pitotal
 
 state(17,2) = {Po9};
 [state] = unFAIR3(state,17);
+
+component{15,4} = state{17,8} / state{16,8};
 
 %static conditions
 P9 = Po9 / Po9_P9;
