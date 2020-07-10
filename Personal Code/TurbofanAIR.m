@@ -19,36 +19,33 @@ clf
 % Read other book?
 
 
+%% Initialize cells
 
-%% Initial Conditions
-
-%---------Air Conditions-----------
-% alt = 35000;
-% altm = alt*3.281;
-% [T0, a0, P0, rho0] = atmosisa(altm);
-
-state = {'Station','Pressure (Pa)', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)'};
+state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)'};
 state(2:18,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9'};
 component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
 component(2:16,1) = {'Inlet(Ideal,Actual)';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
 
-
-
-
+%% Initial Conditions
 %--------Overall Performance (Givens)---------
-% year = ?;
 % T = ; % N (from lbf)
 % mdot.total = ; % kg/s 
 % F_over_mdot. = T / mdot.total;
+alt = 35000/3.281; %m
+M0 = 1.6;
+% mdot0 = 1
 F_mdot = 62.859*9.806655; %N/kg/s from lbf/(lbf/s)
 S = 1.1386*((.453592/3600)/4.44822); %kg/s/N from lbm/(lbf/s)
 % pitotal = ;
 
 alpha = .4; %bypass ratio
-betta = .01; %bleed ratio
-% T4 = 3200* .5556; %turbine inlet temp, deg Rankine!!!
-h_PR = 18400*2326; %J/kg, for a (CH2)n propellant
 
+betta = .01; %bleed ratio
+Ptoh = 301.34*10^3; %Watts
+Ptol = 0;
+
+h_PR = 18400*2326; %J/kg, for a (CH2)n propellant
+% year = ?;
 %-------------Assumed variables------------
 % pi_dA = [.9,.95,.98,.995]; 
 % pi_dB = [.88,.93,.96,.97]; 
@@ -114,18 +111,21 @@ component(10,3) = {1};
 component(13:15,3) = {1};
 
 
+T_t4 = 3200*.5556; %K
+%% Derived Parameters
+Po9_P9 = 12.745;
+%     Po0_P0 = state{3,2} / state{2,2};
+%     P0_P9 = 1;
+%     pitotal = xxx;
+%     Po9_P9 = pitotal * P0_P9 / Po0_P0; 
 
-% M4 = 1; %assume chocked flow at turbine
-% T_t4 = T4*(1+((M0^2)*((gamma-1)/2)));
-T_t4 = 3200;
-if T_t4 > 2400
-    ep1 = (T_t4-2400)/16000; %bypass ratio for mixer 1
-    ep2 = ep1; %bypass ratio for mixer 2
+if T_t4 > 2400*.5556
+    ep1 = (T_t4-2400)/(.5556*16000);    %bypass ratio for mixer 1
+    ep2 = ep1;                          %bypass ratio for mixer 2
 else
     ep1 = 0;
     ep2 = 0;
 end
-
 %% Mass flow and Air Props
 % mdot.f = S*T;
 % mdot.bypass = mdot.total/(1+br); %after bypass leaves
@@ -133,73 +133,47 @@ end
 % f = mdot.f / mdot.burner;
 
 % for now using all mdot/mdot total, in actual it will include units
-    mdot_f = S*F_mdot /eta_b; %unitless
+mdot_f = S*F_mdot /eta_b; %unitless
 
-    mdot0 = 1;
-    f0 = 0;
-    
-    mdot25 = mdot0/(1+alpha); %after bypass leaves
-    mdot13 = mdot0 - mdot25; % bypass mass flow
-    
-    mdot31 = mdot25*(1-betta - ep1 -ep2); %after bleed and coolant leaves
-    mdotbeta = mdot25*betta; %bleed air
-    mdotep1 = mdot25*ep1; %coolant air 1
-    mdotep2 = mdot25*ep2; %coolant air 2
-    
-    mdot4 = mdot31 + mdot_f; %after burner
-    f4 = mdot_f / mdot31;
-    
-    mdot41 = mdot4 + mdotep1;
-    f41 = f4*mdot4 / mdot41;
-    
-    mdot45 = mdot41 + mdotep2;
-    f45 = f41*mdot41 / mdot45;  
-    
-    mdot6A = mdot45 + mdot13;
-    f6A = f45*mdot45 / mdot6A;
+mdot0 = 1;
+f0 = 0;
 
+mdot25 = mdot0/(1+alpha); %after bypass leaves
+mdot13 = mdot0 - mdot25; % bypass mass flow
 
-    state(2:8,4) = {f0};
-    state(2:4,5) = {mdot0};
-    state(5,5) = {mdot13};
-    state(6:7,5) = {mdot25};
-    state(8,5) = {mdot31};
-    state(9,4) = {f4};
-    state(9,5) = {mdot4};
-    state(10:11,4) = {f41};
-    state(10:11,5) = {mdot41};
-    state(12:13,4) = {f45};
-    state(12:13,5) = {mdot45};
-    state(14:18,4) = {f6A};
-    state(14:18,5) = {mdot6A};
-    
-    
-    
-    
-    M0 = 1.6;
-T0 = 394.1 * .5556; %deg Kelvin (from Rankine)
-state(2,3) = {T0};
-[state] = unFAIR3(state,2);
-% P0 = 3.467 * 6895; %Pascal (from psia)
-% M0 = .6;
-cp0 = state{2,6};
-gamma0 = state{2,7};
-R0 = cp0 - cp0/gamma0;
-a0 = sqrt(R0*gamma0*T0); %m/s
-v0 = M0*a0;
+mdot31 = mdot25*(1-betta - ep1 -ep2); %after bleed and coolant leaves
+mdotbeta = mdot25*betta; %bleed air
+mdotep1 = mdot25*ep1; %coolant air 1
+mdotep2 = mdot25*ep2; %coolant air 2
 
-T_o0 = T0*(1+((M0^2)*((gamma0-1)/2)));
-state(3,3) = {T_o0};
-[state] = unFAIR3(state,3);
+mdot4 = mdot31 + mdot_f; %after burner
+f4 = mdot_f / mdot31;
+
+mdot41 = mdot4 + mdotep1;
+f41 = f4*mdot4 / mdot41;
+
+mdot45 = mdot41 + mdotep2;
+f45 = f41*mdot41 / mdot45;
+
+mdot6A = mdot45 + mdot13;
+f6A = f45*mdot45 / mdot6A;
 
 
-% P.o0 = P0*(1+((M0^2)*((gamma-1)/2)))^(gamma/(gamma-1));
-% rhoo0 = rho0*(1+((M0^2)*((gamma-1)/2)))^(1/(gamma-1));
-
-    Po9_P9 = 12.745;
-    Po0_P0 = state{3,2} / state{2,2};
-    P0_P9 = 1;
-    pitotal = Po9_P9 / P0_P9 / Po0_P0; 
+state(2:8,4) = {f0};
+state(2:4,5) = {mdot0};
+state(5,5) = {mdot13};
+state(6:7,5) = {mdot25};
+state(8,5) = {mdot31};
+state(9,4) = {f4};
+state(9,5) = {mdot4};
+state(10:11,4) = {f41};
+state(10:11,5) = {mdot41};
+state(12:13,4) = {f45};
+state(12:13,5) = {mdot45};
+state(14:18,4) = {f6A};
+state(14:18,5) = {mdot6A};
+%% Ambient condition
+[state, v0] = ambient(state,alt,M0);
 %% Inlet 
 [state,component] = inlet(state,component,M0);
 %% Fan
@@ -226,50 +200,42 @@ state(3,3) = {T_o0};
 [state,component] = mixer(state,component);
 % close enough approx, maybe make mixer inneficiencies some middle mach number?
 %% Nozzle
-[state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, PtoH, PtoL,pitotal,M0);
+[state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, Ptoh, PtoL);
 %Pr9 modified a bit
 err_T_mdot = performance{2,1} /F_mdot
 err_s = performance{2,2} / S
 err_effprop = performance{2,3} / .5589
 err_efftherm =performance{2,4} / .6162
-%% Entropy Calcs
-% cp = (gamma*R)/(gamma-1);
-% 
-% ds21 = cp*log(T.o3/T.o0) - R*log(P.o3/P.o0);
-% dt21 = T.o3-T.o0;
-% 
-% ds32 = cp*log(T.o4/T.o3) - R*log(P.o4/P.o3);
-% dt32 = T.o4-T.o3;
-% 
-% ds43 = cp*log(T.o9/T.o4) - R*log(P.o9/P.o4);
-% dt43 = T.o9-T.o4;
-% 
-% h1 = figure(1);
-% h1.WindowStyle = 'docked';
-% scatter(0,0,'filled')
-% hold on
-% plot(linspace(0,ds21,10),linspace(0,dt21,10),'linewidth',2,'color','blue')
-% hold on
-% 
-% scatter(ds21,dt21,'filled')
-% hold on
-% plot(linspace(ds21,ds21+ds32,10),linspace(dt21,dt21+dt32,10),'linewidth',2,'color','blue')
-% hold on
-% 
-% scatter(ds21+ds32,dt21+dt32,'filled')
-% hold on
-% plot(linspace(ds21+ds32,ds21+ds32+ds43,10),linspace(dt21+dt32,dt21+dt32+dt43,10),'linewidth',2,'color','blue')
-% hold on
-% 
-% scatter(ds21+ds32+ds43,dt21+dt32+dt43,'filled')
-% hold on
-% plot(linspace(ds21+ds32+ds43,0,10),linspace(dt21+dt32+dt43,0,10),'--','linewidth',2,'color','blue')
-% title('T-s Diagram for Turbofan Engine')
-% xlabel('Entropy (s)')
-% ylabel('T.otal Temperature (T.o)')
-% grid('on')
+%% Engine Cycle
+
+[To1,To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16,To17] = state{2:18,3};
+To = [To1,To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16,To17];
+
+[s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16,s17] = state{2:18,9};
+s = [s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16,s17];
+
+figure
+plot(s,To)
+title('T-s Diagram for Turbofan Engine')
+xlabel('Entropy (s)')
+ylabel('Total Temperature (T.o)')
+grid('on')
 
 %% Functions
+function[state, v0] = ambient(state,alt,M0)
+[T0, a0, P0, rho0] = atmosisa(alt);
+state(2,3) = {T0};
+[state] = unFAIR3(state,2);
+[~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
+R0 = cp0 - cp0/gamma0;
+a0 = sqrt(R0*gamma0*T0); %m/s
+v0 = M0*a0;
+
+T_o0 = T0*(1+((M0^2)*((gamma0-1)/2)));
+state(3,3) = {T_o0};
+[state] = unFAIR3(state,3);
+end
+
 function [state,component] = inlet(state,component,M0)
 
 pi_dmax = component{2,2};
@@ -380,8 +346,8 @@ end
 function [state,component] = burner(state,component,T_t4)
 
 state(8,2:3) = state(7,2:3);
-state(8,6:8) = state(7,6:8);
-state(9,3) = {T_t4*.5556};
+state(8,6:9) = state(7,6:9);
+state(9,3) = {T_t4};
 [state] = unFAIR3(state,9);
 
 Pro31 = state{8,2};
@@ -552,7 +518,7 @@ tauM = ho6/ho5;
 component{13,4} = tauM;
 end
 
-function [state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, Ptoh, PtoL,pitotal,M0)
+function [state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, Ptoh, PtoL)
 state(16,2:end) = state(15,2:end);%assume no afterburner
 
 %Calculate pressure drop across nozzle
