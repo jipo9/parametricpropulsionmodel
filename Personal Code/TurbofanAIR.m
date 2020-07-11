@@ -120,7 +120,7 @@ Po9_P9 = 12.745;
 %     Po9_P9 = pitotal * P0_P9 / Po0_P0; 
 
 if T_t4 > 2400*.5556
-    ep1 = (T_t4-2400)/(.5556*16000);    %bypass ratio for mixer 1
+    ep1 = (T_t4/.5556-2400)/(16000);    %bypass ratio for mixer 1
     ep2 = ep1;                          %bypass ratio for mixer 2
 else
     ep1 = 0;
@@ -200,7 +200,7 @@ state(14:18,5) = {mdot6A};
 [state,component] = mixer(state,component);
 % close enough approx, maybe make mixer inneficiencies some middle mach number?
 %% Nozzle
-[state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, Ptoh, PtoL);
+[state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, Ptoh, PtoL)
 %Pr9 modified a bit
 err_T_mdot = performance{2,1} /F_mdot
 err_s = performance{2,2} / S
@@ -275,6 +275,9 @@ Po13 = Po2*pif^(1/ef);
 
 state(5,2) = {Po13};
 [state] = unFAIR3(state,5);
+
+component{3,4} = state{5,8} / state{4,8};
+
 % ho2 = ((gamma*R*T.o2)/(gamma-1)) + ((V2^2)/2);
 
 ho2 = state{4,8};
@@ -298,6 +301,8 @@ ho2 = state{4,8};
 ho25 = state{6,8};
 taucl = ho25/ho2;
 component{4,4} = taucl;
+component{4,4} = state{6,8} / state{4,8};
+
 % P.o25 = P.o2*picl^(1/ecl);
 % [T.o25] = CPG(T.o2,P.o2,gamma, P.o25, 1);
 % % fun = @(T.o25) (T.o25/T.o2)^((gamma*ecl)/(gamma-1)) - picl;
@@ -320,6 +325,9 @@ ho25 = state{6,8};
 ho3 = state{7,8};
 taucl = ho3/ho25;
 component{5,4} = taucl;
+component{5,4} = state{7,8} / state{6,8};
+
+
 % P.o3 = P.o25*pich^(1/ech);
 % [T.o3] = CPG(T.o25,P.o25,gamma, P.o3, 1);
 % fun = @(T.o3) (T.o3/T.o25)^((gamma*ech)/(gamma-1)) - pich;
@@ -360,6 +368,7 @@ ho31 = state{7,8};
 ho4 = state{9,8};
 taub = ho4/ho31;
 component{6,4} = taub;
+component{6,4} = state{9,8} / state{7,8};
 
 % fun = @(T.o4) (((mdot_4*cp*T.o4)-(mdot_31*cp*T.o3))/(mdot_f*hPR)) - etab;
 % T.o4 = fzero(fun,T.o3); %gives Pr of 41 million, not good at all
@@ -389,6 +398,7 @@ state(10,8) = {ho41};
 
 taum1 = ho41/ho4;
 component{7,4} = taum1;
+component{7,4} = state{10,8} / state{9,8};
 
 %Across turbine
 % etH = .89;
@@ -404,6 +414,13 @@ state(11,8) = {ho44};
 
 tauth = ho41/ho44;
 component{8,4} = tauth;
+% ho44 = fzero(fun,ho41) %.7261
+% ho44 = ho41*.8465; % corrected value
+% ho44 = 3.0493e6 % corrected value
+% state(11,8) = {ho44};
+% [state] = unFAIR3(state,11);
+% component{8,4} = state{11,8} / state{10,8};
+
 end
 
 function [state,component] = LPturb(state,component,mdotep2,PtoL)
@@ -428,6 +445,7 @@ state(12,8) = {ho45};
 
 taum2 = ho45/ho44;
 component{10,4} = taum2;
+component{10,4} = state{12,8} / state{11,8};
 
 %Across Turbine
 fun = @(ho5) mdot5*(ho45 - ho5)*etamL...    %change in energy across LP turb
@@ -443,6 +461,8 @@ state(13,8) = {ho5};
 
 tautl = ho5/ho45;
 component{11,4} = tautl;
+component{11,4} = state{11,8} / state{10,8};
+
 
 %do a simple turbine
 
@@ -505,7 +525,7 @@ mdotalpha = state{5,5};
 mdot5 = state{13,5};
 mdot6 = state{14,5};
 
-ho6 = (mdotalpha*hoalpha + mdot5*ho5) /(mdot6);
+ho6 = (mdotalpha*hoalpha + mdot5*ho5) / (mdot6);
 state(14,8) = {ho6};
 [state] = unFAIR3(state,14);
 
@@ -520,6 +540,8 @@ end
 
 function [state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, Ptoh, PtoL)
 state(16,2:end) = state(15,2:end);%assume no afterburner
+pin = component{14,2};
+P6A = state{15,2};
 
 %Calculate pressure drop across nozzle
 Pro7 = state{16,2};
@@ -533,6 +555,8 @@ Po9_P9 = 12.745;
 Pr9 = Pro9 / Po9_P9;
 Pr9 = 13.57 %temporary
 state(18,2) = {Pr9};
+component{15,4} = state{17,8} / state{16,8};
+
 [state] = unFAIR3(state,18);
 
 [~,~,~,~,~,~,~,ho9] = state{17,:};
