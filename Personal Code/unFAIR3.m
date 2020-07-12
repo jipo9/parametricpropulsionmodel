@@ -18,7 +18,6 @@ end
 T_min = 0;
 T_max = 100000;
 error = 100;
-ref_Pressure = 7.5205 * 6894.76; %Pa from Psi
 
 %If temperature is being input, proceed. Otherwise, use bisection method to
 %get an estimate of temperature within .1% accuracy of the input value before proceeding

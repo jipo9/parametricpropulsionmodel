@@ -494,20 +494,29 @@ component{15,4} = state{17,8} / state{16,8};
 R9 = cp9 - cp9/gamma9;
 a9 = sqrt(R9*gamma9*T9); %m/s
 v9 = sqrt(2*(ho9-h9));
+% v9 = 2.268*v0
 M9 = v9 / a9;
 
 [~,Pr0,~,~,~,cp0,gamma0,~] = state{2,:};
 R0 = cp0 - cp0/gamma0;
 mdot0 = state{2,5};
-f_0 = mdot_f / mdot0;
+f_0 = state{18,4};
+
+
 
 
 F_mdot = (1+f_0-(betta/(1+alpha)))*v9     -   v0  +   (1+f_0-(betta/(1+alpha)))*R9*T9*(1-Pr0/Pr9)/(R0*v9*gamma0);
 S = f_0 / F_mdot;
 eta_P = (2*F_mdot/v0)/...
     ((1+f_0-betta/(1+alpha))*(v9/v0)^2 - 1);
-eta_TH = (v0^2/2*((1+f_0-(betta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + Ptoh)*mdot0)/...
-    (f_0*h_PR)
+% eta_TH = (v0^2/2*((1+f_0-(betta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + Ptoh)*mdot0)/...
+%     (f_0*h_PR)
+    C_tol = 0;
+    C_toh = .015;
+    h0 = state{2,8};
+    eta_TH = ((1/2)*((1+f_0 - (betta/(1+alpha)))*v9^2 - v0^2)    +(C_tol + C_toh)*h0)   /...
+        (f_0*h_PR);
+
 eta_o = eta_TH*eta_P;
 
 performance(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Exhaust Mach'};
