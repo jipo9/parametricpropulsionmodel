@@ -19,9 +19,6 @@ close all
 % Read other book?
 
 
-%why arent we using pi_b???
-%need to add in thetabreak
-
 %% Initialize cells
 
 state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)'};
@@ -31,24 +28,26 @@ component(2:16,1) = {'Inlet(Ideal,Actual)';'Fan';'LP Compressor';'HP Compressor'
 
 %% Initial Conditions
 %--------Overall Performance (Givens)---------
-% T = ; % N (from lbf)
-% mdot.total = ; % kg/s 
-% F_over_mdot. = T / mdot.total;
+T = 62.859*9.806655; % N (from lbf)
+mdot_total = 1; % kg/s 
+F_over_mdot = T / mdot_total;
 alt = 35000/3.281; %m
 M0 = 1.6;
-% mdot0 = 1
-F_mdot = 62.859*9.806655; %N/kg/s from lbf/(lbf/s)
-S = 1.1386*((.453592/3600)/4.44822); %kg/s/N from lbm/(lbf/s)
 % pitotal = ;
 
 alpha = .4; %bypass ratio
-
 betta = .01; %bleed ratio
 Ptoh = 301.34*10^3; %Watts
 Ptol = 0;
 
 h_PR = 18400*2326; %J/kg, for a (CH2)n propellant
 % year = ?;
+index_diffuser = 1;     %1 = subsonic aircraft w/ engines in nacelles
+                        %2 = subsonic aircraft w/ engines in airframe 
+                        %3 = supersonic aircraft w/ engines in airframe 
+index_nozzle = 1;       %1 = Fixed-area convergent nozzle
+                        %2 = Variable-area convergent nozzle
+                        %3 = Variable-area convergent-divergent nozzle
 %-------------Assumed variables------------
 % pi_dA = [.9,.95,.98,.995]; 
 % pi_dB = [.88,.93,.96,.97]; 
