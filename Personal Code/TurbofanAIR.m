@@ -22,6 +22,7 @@ close all
 %values hardcoded in:
     %mixer pressure ratio
     %no pi_b or pi_AB
+    %Tt/Tt values are off
 %% Initialize cells
 
 state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)'};
@@ -141,7 +142,7 @@ end
 design(4,2) = {ep1};
 design(5,2) = {ep2};
 %% Mass flow and Air Props
-mdot0 = 200*0.45359237; %kg/s form lbm
+mdot0 = 200*0.45359237; %kg/s from lbm
 mdot_f = S*F_mdot*mdot0 /eta_b; %unitless
 
 f0 = 0;
@@ -350,7 +351,7 @@ state(9,3) = {T_t4};
 %Add in pressure losses
 % pi_b = component{7,2};
 % Pro4_ideal  = state{9,2};
-% Pro4_actual = pi_b*Pro4_ideal;
+% Pro4_actual = 1*pi_b*Pro4_ideal;
 % state(9,2:3) = {Pro4_actual,[]};
 % state(9,8) = {[]};
 % [state] = unFAIR3(state,9);
@@ -488,10 +489,77 @@ state(14,8) = {ho6};
 [state] = unFAIR3(state,14);
 
 Po6 = state{14,2};
-Po6A = Po6*piM;
-Po6A = Po6*.9771
+Po6A = Po6*.9771;
 state(15,2) = {Po6A};
 [state] = unFAIR3(state,15);
+% 
+% error = 1;
+% pimax = 1.5;
+% pimin = 1;
+% while norm(error) > .0001
+%     piM_ideal = (pimax + pimin)/2;
+%     Po6Ai = Po6*piM*piM_ideal;
+%     state(15,3) = {[]};
+%     state(15,8) = {[]};
+%     state(15,2) = {Po6Ai};
+%     [state] = unFAIR3(state,15);
+% 
+%     pi_Mideal_i = sqrt((state{7,8}*state{14,3})/(state{14,8}*state{7,3})) * state{7,2}/state{14,2};
+%     
+%     error = 1-pi_Mideal_i/piM_ideal
+%     if error > 1
+%         pimax = piM_ideal;
+%     else
+%         pimin = piM_ideal;
+%     end
+%     Po6A = Po6Ai;
+% end
+% piM*piM_ideal = .9771
+
+% 
+% 
+% 
+% 
+% pi = linspace(.75,1.5);
+% for ii = 1:100
+%     P6A = Po6*piM*pi(ii)
+%     state(15,3) = {[]};
+%     state(15,8) = {[]};
+%     state(15,2) = {P6A};
+%     [state] = unFAIR3(state,15);
+%     X(ii) = sqrt(state{15,8}/state{15,3}) * state{15,2}
+%     
+%     
+%     
+%     [~,~,T6A,~,~,cp6A,gamma6A,h6A] = state{18,:};
+%     R6A = cp6A - cp6A/gamma6A;
+%     a6A = sqrt(R6A*gamma6A*T6A); %m/s
+%     v6A = sqrt(2*(ho9-h6A));
+%     M6A(ii) = v6A / a6A;
+% end
+% plot(X)
+    % while norm(error) > .0001
+%     piM_ideal = (pimax + pimin)/2;
+%     Po6Ai = Po6*piM*piM_ideal;
+%     state(15,3) = {[]};
+%     state(15,8) = {[]};
+%     state(15,2) = {Po6Ai};
+%     [state] = unFAIR3(state,15);
+% 
+%     pi_Mideal_i = sqrt((state{7,8}*state{14,3})/(state{14,8}*state{7,3})) * state{7,2}/state{14,2};
+%     
+%     error = 1-pi_Mideal_i/piM_ideal
+%     if error > 1
+%         pimax = piM_ideal;
+%     else
+%         pimin = piM_ideal;
+%     end
+%     Po6A = Po6Ai;
+% end
+% piM*piM_ideal = .9771
+
+
+
 
 tauM = ho6/ho5;
 component{14,4} = tauM;
