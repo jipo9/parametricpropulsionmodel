@@ -2,22 +2,6 @@ clc
 clear
 close all
 
-% Fix:
-    % Turbine functions
-    % Performance parameters
-% Additions:
-    % Better pressure ratio across mixer
-    % Implement combined turbines
-    % Fill out all pressure and enthalpy ratios
-    
-% Next Model:
-    % Rework to take limited inputs
-    % Repeat analysis w/ same engine
-    % Re-analyze w/ new engine
-
-% Repeat process w/ chapter 5?
-% Read other book?
-
 
 %% Initialize cells
 
@@ -34,100 +18,111 @@ F_over_mdot = T / mdot_total;
 alt = 35000/3.281; %m
 M0 = 1.6;
 % pitotal = ;
+% P0_P9 = 1;
+
 
 alpha = .4; %bypass ratio
-betta = .01; %bleed ratio
+beta = .01; %bleed ratio
 Ptoh = 301.34*10^3; %Watts
 Ptol = 0;
 
 h_PR = 18400*2326; %J/kg, for a (CH2)n propellant
-% year = ?;
+year = 2015;
+index_engine = 1;       %1 = turbofan w// alpha .2-1, no afterburner, Tt4 
+% maybe just iterate???
 index_diffuser = 1;     %1 = subsonic aircraft w/ engines in nacelles
                         %2 = subsonic aircraft w/ engines in airframe 
                         %3 = supersonic aircraft w/ engines in airframe 
+index_turbine = 1;      %1 = uncooled turbine
+                        %2 = cooled turbine
 index_nozzle = 1;       %1 = Fixed-area convergent nozzle
                         %2 = Variable-area convergent nozzle
                         %3 = Variable-area convergent-divergent nozzle
-%-------------Assumed variables------------
-% pi_dA = [.9,.95,.98,.995]; 
-% pi_dB = [.88,.93,.96,.97]; 
-% pi_dC = [.85,.90,.94,.96];
-% e_c = [.8,.84,.88,.9];
-% e_f = [.78,.82,.86,.89];
-% pi_b = [.9,.92,.94,.96];
-% eta_b =[.88,.94,.99,.995];
-% e_t_uncooled =[.8,.85,.89,.91];
-% e_t_cooled = [.75,.83,.87,.89]; %assumed first value
+%-------------Level of tech------------
+pi_d = [.9,.95,.98,.995;
+        .88,.93,.96,.97; 
+        .85,.90,.94,.96];
+e_c = [.8,.84,.88,.9];
+e_f = [.78,.82,.86,.89];
+pi_b = [.9,.92,.94,.96];
+eta_b =[.88,.94,.99,.995];
+e_t =[.8,.85,.89,.91;
+      .75,.83,.87,.89];
 % pi_aB = [.9,.92,.94,.95];
 % eta_AB = [.85,.91,.96,.97];
-% pi_nD = [.95,.97,.98,.995];
-% pi_nE = [.93,.96,.97,.985];
-% pi_nF = [.9,.93,.95,.98];
-% T_t4max = [1110,1390,1780,2000]; %kelvin
-% T_t7max = [1390,1670,2000,2200]; %kelvin
-% years = [1955,1975,1995,2015];
+pi_n = [.95,.97,.98,.995;
+        .93,.96,.97,.985;
+        .9,.93,.95,.98];
+T_t4max = [1110,1390,1780,2000]; %kelvin
+T_t7max = [1390,1670,2000,2200]; %kelvin
 
 
+%-------------Finding our values------------
+ii = floor((year -1925)/20);
 
-pi_dmax = .96;
+%Nozzle
+pi_dmax = pi_d(index_diffuser,ii);
 component(2,2) = {pi_dmax};
 
+%Fan
 pif = 3.8;
-ef = .89;
-component(3,2:3) = {pif,ef};
+e_f = e_f(ii);
+component(3,2:3) = {pif,e_f};
 
+%Low compressor
 picl = 3.8;
-ecl = .89;
-component(4,2:3) = {picl,ecl};
+e_c = e_c(ii);
+component(4,2:3) = {picl,e_c};
 
+%High compressor
 pich = 4.2105;
-ech = .9;
-component(5,2:3) = {pich,ech};
+component(5,2:3) = {pich,e_c};
 
-eta_b = .999;
+%Burner
+pi_b = pi_b(ii);
+eta_b = eta_b(ii);
 
+%High turbine
 etamH = .995;
 etamPH = .99;
 component(8,5) = {etamH};
 component(9,5) = {etamPH}; 
-etH = .89;
-PtoH = 301.34*1000; %Watts
+e_t = e_t(index_turbine,ii);
+T_t4 = T_t4max(ii);
 
-etamL = .995;
-etamPL = 1;
-component(11,5) = {etamL};
-component(12,5) = {etamPL}; 
-etL = .9;
-PtoL = 0; %Watts
-
-pi_M_max = .97;
-component(13,2) = {pi_M_max};
-
-pin = .97;
-component(15,2) = {pin};
-
-
-component(2,3) = {1};
-component(6:7,3) = {1};
-component(10,3) = {1};
-component(13:15,3) = {1};
-
-
-T_t4 = 3200*.5556; %K
-%% Derived Parameters
-Po9_P9 = 12.745;
-%     Po0_P0 = state{3,2} / state{2,2};
-%     P0_P9 = 1;
-%     pitotal = xxx;
-%     Po9_P9 = pitotal * P0_P9 / Po0_P0; 
-
-if T_t4 > 2400*.5556
+if T_t4 > 2400*.5556 && index_turbine == 2
     ep1 = (T_t4/.5556-2400)/(16000);    %bypass ratio for mixer 1
     ep2 = ep1;                          %bypass ratio for mixer 2
 else
     ep1 = 0;
     ep2 = 0;
 end
+
+%Low turbine
+%etamL = .995;
+%etamPL = 1;
+component(11,5) = {etamL};
+component(12,5) = {etamPL}; 
+
+%Mixer
+%pi_M_max = .97;
+component(13,2) = {pi_M_max};
+
+%Nozzle
+pi_n = pi_n(index_nozzle, ii);
+component(15,2) = {pi_n};
+% T_t7max = T_t7max(ii);
+
+%Assume 100% polytropic efficiency outside of turbines
+component(2,3) = {1}; 
+component(6:7,3) = {1};
+component(10,3) = {1};
+component(13:15,3) = {1};
+
+%% To add later
+% In the nozzle eqn
+%     Po0_P0 = state{3,2} / state{2,2};
+%     Po9_P9 = pitotal * P0_P9 / Po0_P0; 
 %% Mass flow and Air Props
 % mdot.f = S*T;
 % mdot.bypass = mdot.total/(1+br); %after bypass leaves
@@ -143,8 +138,8 @@ f0 = 0;
 mdot25 = mdot0/(1+alpha); %after bypass leaves
 mdot13 = mdot0 - mdot25; % bypass mass flow
 
-mdot31 = mdot25*(1-betta - ep1 -ep2); %after bleed and coolant leaves
-mdotbeta = mdot25*betta; %bleed air
+mdot31 = mdot25*(1-beta - ep1 -ep2); %after bleed and coolant leaves
+mdotbeta = mdot25*beta; %bleed air
 mdotep1 = mdot25*ep1; %coolant air 1
 mdotep2 = mdot25*ep2; %coolant air 2
 
@@ -202,7 +197,7 @@ state(14:18,5) = {mdot6A};
 [state,component] = mixer(state,component);
 % close enough approx, maybe make mixer inneficiencies some middle mach number?
 %% Nozzle
-[state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,betta, alpha, h_PR, Ptoh, PtoL);
+[state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,beta, alpha, h_PR, Ptoh, PtoL);
 %Pr9 modified a bit
 err_T_mdot = performance{2,1} /F_mdot
 err_s = performance{2,2} / S
