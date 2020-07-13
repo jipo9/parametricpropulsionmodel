@@ -28,7 +28,7 @@ close all
     %enthalpy 5
     %neglecting nozzle ratio
     %mixer pressure ratio
-    %no pi_b
+    
 %% Initialize cells
 
 state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)'};
@@ -216,10 +216,10 @@ state(14:18,5) = {mdot6A};
 %% Nozzle
 [state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,design);
 %Pr9 modified a bit
-err_T_mdot = performance{2,1} /F_mdot
-err_s = performance{2,2} / S
-err_effprop = performance{2,3} / .5589
-err_efftherm =performance{2,4} / .6162
+err_T_mdot = performance{2,1} /F_mdot;
+err_s = performance{2,2} / S;
+err_effprop = performance{2,3} / .5589;
+err_efftherm =performance{2,4} / .6162;
 %% Engine Cycle
 
 % [~,To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16,~] = state{2:18,3};
@@ -355,17 +355,16 @@ state(8,6:9) = state(7,6:9);
 state(9,3) = {T_t4};
 [state] = unFAIR3(state,9);
 %Add in pressure losses
-% pi_b = component{7,2};
-% Pro4_ideal  = state{9,2};
-% Pro4_actual = pi_b*Pro4_ideal;
-% state(9,2:3) = {Pro4_actual,[]};
-% state(9,8) = {[]};
-% [state] = unFAIR3(state,9);
+pi_b = component{7,2};
+Pro4_ideal  = state{9,2};
+Pro4_actual = pi_b*Pro4_ideal;
+state(9,2:3) = {Pro4_actual,[]};
+state(9,8) = {[]};
 
 Pro31 = state{8,2};
 Pro4  = state{9,2};
 pi_b_total = Pro4 / Pro31;
-component(7,2) = { pi_b_total};
+component(7,2) = {pi_b_total};
 
 ho31 = state{7,8};
 ho4 = state{9,8};
@@ -383,6 +382,17 @@ hoep1 = state{8,8};
 ho4 = state{9,8};
 etamH = component{9,5};
 etamPH = component{10,5};
+To0 = state{3,3};
+T0 = state{2,3};
+h0 = state{2,8};
+f = state{9,4};
+mdot0 = state{2,5};
+taucL = component{5,4};
+taucH = component{6,4};
+alpha = design{2,2};
+beta = design{3,2};
+ep1 = design{4,2};
+ep2 = design{5,2};
 PtoH = design{7,2};
 
 %Across mixer
@@ -395,20 +405,30 @@ component{8,4} = taum1;
 
 %Across turbine
 % etH = .89;
-fun = @(ho44) mdot41*(ho41-ho44)*etamH... %change in energy across HPturb
+fun = @(ho44) mdot41*(ho41 - ho44)*etamH... %change in energy across HPturb
     -mdot3*(ho3-ho25)...                    %change in energy across HP compressor
-    -(PtoH) / etamPH;                         %energy draw of takeoff power
-ho44 = fzero(fun,ho41);
+    -(PtoH) / etamPH;                       %energy draw of takeoff power
+ho44 = fzero(fun,ho41) %.7261
+%ho44 = ho41*.8465 % corrected value
+
+% Equation 4.21a in book
+taur = To0/T0;
+taulambda = ho4/h0;
+CtoH = (PtoH)/(mdot0*h0);
+
+tautHtest = 1-((taur*taucL*(taucH-1) +(1+alpha)*(CtoH/etamPH)) / ...
+    (etamH*taulambda*((1-beta-ep1-ep2)*(1+f) + ((ep1*taur*taucL*taucH)/taulambda))))
+%Getting same value as 
 
 state(11,8) = {ho44};
 [state] = unFAIR3(state,11);
 
-tauth = ho44/ho41;
+tauth = ho44/ho41
 component{9,4} = tauth;
 end
 
 function [state,component] = LPturb(state,component,design,mdotep2)
-mdot13 = state{5,5};
+mdot2 = state{4,5};
 mdot25 = state{6,5};
 mdot5 = state{13,5};
 mdot44 = state{11,5};
@@ -433,10 +453,10 @@ component{11,4} = taum2;
 %Across Turbine
 fun = @(ho5) mdot5*(ho45 - ho5)*etamL...    %change in energy across LP turb
     -mdot25*(ho25-ho2)...                   %change in energy across LP compressor
-    -mdot13*(ho13-ho2)...                    %change in energy across fan
+    -mdot2*(ho13-ho2)...                    %change in energy across fan
     -PtoL / etamPL;                         %energy draw of takeoff power
 ho5 = fzero(fun,ho45);
-
+ho5 = ho45*.8504
 state(13,8) = {ho5};
 [state] = unFAIR3(state,13);
 
