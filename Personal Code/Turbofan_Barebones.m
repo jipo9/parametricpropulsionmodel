@@ -505,7 +505,7 @@ f_0 = state{18,4};
 F_mdot = (1+f_0-(betta/(1+alpha)))*v9     -   v0  +   (1+f_0-(betta/(1+alpha)))*R9*T9*(1-Pr0/Pr9)/(R0*v9*gamma0);
 S = f_0 / F_mdot;
 eta_P = (2*F_mdot/v0)/...
-    ((1+f_0-betta/(1+alpha))*(v9/v0)^2 - 1);
+    ((1+f_0-beta/(1+alpha))*(v9/v0)^2 - 1);
 % eta_TH = (v0^2/2*((1+f_0-(betta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + Ptoh)*mdot0)/...
 %     (f_0*h_PR)
     C_tol = 0;

@@ -2,9 +2,7 @@ clc
 clear
 close all
 
-% Fix:
-    % Turbine functions
-    % Performance parameters
+
 % Additions:
     % Better pressure ratio across mixer
     % Implement combined turbines
@@ -19,16 +17,11 @@ close all
 % Read other book?
 
 
-%turbine broken
-%why arent we using pi_b???
-    %what about pi_ab
+
 %need to add in thetabreak
 %values hardcoded in:
-    %enthalpy 44
-    %enthalpy 5
-    %neglecting nozzle ratio
     %mixer pressure ratio
-    %no pi_b
+    %no pi_b or pi_AB
 %% Initialize cells
 
 state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)'};
@@ -129,6 +122,7 @@ component(14:16,3) = {1};
 
 
 T_t4 = 3200*.5556; %K
+Po9_P9 = 12.745;
 %% Derived Parameters
 Po9_P9 = 12.745;
 %     Po0_P0 = state{3,2} / state{2,2};
@@ -214,12 +208,11 @@ state(14:18,5) = {mdot6A};
 [state,component] = mixer(state,component);
 % close enough approx, maybe make mixer inneficiencies some middle mach number?
 %% Nozzle
-[state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,design);
-%Pr9 modified a bit
-err_T_mdot = performance{2,1} /F_mdot
-err_s = performance{2,2} / S
-err_effprop = performance{2,3} / .5589
-err_efftherm =performance{2,4} / .6162
+[state,component,performance] = nozzle(state,component,Po9_P9,v0,design,PtoL,PtoH);
+err_T_mdot = performance{2,1} /F_mdot;
+err_s = performance{2,2} / S;
+err_efftherm = performance{2,3} / .5589;
+err_effprop =performance{2,4} / .6162;
 %% Engine Cycle
 
 % [~,To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16,~] = state{2:18,3};
@@ -504,7 +497,7 @@ tauM = ho6/ho5;
 component{14,4} = tauM;
 end
 
-function [state,component,performance] = nozzle(state,component,Po9_P9,v0,mdot_f,design)
+function [state,component,performance] = nozzle(state,component,Po9_P9,v0,design,PtoL,PtoH)
 alpha = design{2,2};
 beta = design{3,2};
 h_PR = design{8,2};
@@ -519,7 +512,6 @@ state(17,2) = {Pro9};
 [state] = unFAIR3(state,17);
 
 %Calculate static conditions of exhaust
-Po9_P9 = 12.745;
 Pr9 = Pro9 / Po9_P9;
 state(18,2) = {Pr9};
 component{16,4} = state{17,8} / state{16,8};
@@ -543,19 +535,14 @@ f_0 = state{18,4};
 
 F_mdot = (1+f_0-(beta/(1+alpha)))*v9     -   v0  +   (1+f_0-(beta/(1+alpha)))*R9*T9*(1-Pr0/Pr9)/(R0*v9*gamma0);
 S = f_0 / F_mdot;
+eta_TH = ((v0^2/2*((1+f_0-(beta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + PtoH)/mdot0))/...
+    (f_0*h_PR);
+%eta_P = 2/(1+v9/v0); Simplified case, neglected for now
 eta_P = (2*F_mdot/v0)/...
     ((1+f_0-beta/(1+alpha))*(v9/v0)^2 - 1);
-% eta_TH = (v0^2/2*((1+f_0-(betta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + Ptoh)*mdot0)/...
-%     (f_0*h_PR)
-    C_tol = 0;
-    C_toh = .015;
-    h0 = state{2,8};
-    eta_TH = ((1/2)*((1+f_0 - (beta/(1+alpha)))*v9^2 - v0^2)    +(C_tol + C_toh)*h0)   /...
-        (f_0*h_PR);
-
 eta_o = eta_TH*eta_P;
-
+% eta_o = v0/(h_PR*S); Alternate eqn
 performance(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Exhaust Mach'};
-performance(2,:) = {F_mdot,S,eta_P,eta_TH,eta_o,M9};
+performance(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
 end
 
