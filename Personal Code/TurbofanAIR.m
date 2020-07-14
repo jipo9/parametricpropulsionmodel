@@ -42,6 +42,8 @@ close all
         % All values are averaged between shafts
         % Power takeoff is combined
         % All coolant air is mixed prior to the first turbine
+                % I tried to vary mixing ratios a bit, seems to affect
+                % results negatively to switch things around too much...
         
         
 %% Initialize cells
@@ -153,7 +155,7 @@ mdot31 = mdot25*(1-beta - ep1 -ep2); %after bleed and coolant leaves
 mdotbeta = mdot25*beta; %bleed air
 mdotep1 = mdot25*ep1; %coolant air 1
 mdotep2 = mdot25*ep2; %coolant air 2
-mdotep = 2*mdotep1;
+mdotep = mdotep1+mdotep2;
 
 mdot4 = mdot31 + mdot_f; %mass flow rate post-burner
 f4 = mdot_f / mdot31; %fuel/air ratio post-burner
@@ -436,9 +438,7 @@ component{12,4} = tautl;
 end
 
 function [state,component] = combinedturb(state,component,design,mdotep)
-hoep1 = state{8,8};
-hoep2 = state{8,8};
-hoep = (hoep1+hoep2)/2;
+hoep = state{8,8};
 ho4 = state{9,8};
 mdot4 = state{9,5};
 mdot45 = state{12,5};
