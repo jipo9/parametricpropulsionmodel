@@ -106,12 +106,6 @@ component(14:16,3) = {1};
 T_t4 = 3200*.5556; %K
 Po9_P9 = 12.745;
 %% Derived Parameters
-Po9_P9 = 12.745;
-%     Po0_P0 = state{3,2} / state{2,2};
-%     P0_P9 = 1;
-%     pitotal = xxx;
-%     Po9_P9 = pitotal * P0_P9 / Po0_P0; 
-
 if T_t4 > 2400*.55556
     ep1 = (T_t4/.5556-2400)/(16000);    %bypass ratio for mixer 1
     ep2 = ep1;                          %bypass ratio for mixer 2
