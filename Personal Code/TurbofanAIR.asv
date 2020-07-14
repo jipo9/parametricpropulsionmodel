@@ -36,12 +36,11 @@ close all
         % eta_prop -1.8%
 % With the added benefit of:
         % Ptol and Ptoh simplify to just 1 variable
-        % pi_cH and pi_cL simplify to just 1 variable
+        % pi
 % Assumptions
         % LP and HP shafts are one in the same
         % All values are averaged between shafts
         % Power takeoff is combined
-        % All coolant air is mixed prior to the first turbine
         
         
 %% Initialize cells
@@ -153,7 +152,6 @@ mdot31 = mdot25*(1-beta - ep1 -ep2); %after bleed and coolant leaves
 mdotbeta = mdot25*beta; %bleed air
 mdotep1 = mdot25*ep1; %coolant air 1
 mdotep2 = mdot25*ep2; %coolant air 2
-mdotep = 2*mdotep1;
 
 mdot4 = mdot31 + mdot_f; %mass flow rate post-burner
 f4 = mdot_f / mdot31; %fuel/air ratio post-burner
@@ -188,11 +186,11 @@ state(14:18,5) = {mdot6A};
 %% Fan
 [state,component] = fan(state,component);
 %% Low Pressure Compressor
-% [state,component] = LPcomp(state,component);
+[state,component] = LPcomp(state,component);
 %% High Pressure Compressor
-% [state,component] = HPcomp(state,component);
+[state,component] = HPcomp(state,component);
 %% Combined Compressor
-[state,component] = combinedcomp(state,component);
+% [state,component] = combinedcomp(state,component);
 %% Burner
 [state,component] = burner(state,component,T_t4);
 %% High Pressure Turbine
@@ -200,6 +198,7 @@ state(14:18,5) = {mdot6A};
 %% Low Pressure Turbine
 % [state,component] = LPturb(state,component,design,mdotep2);
 %% Combined Turbine
+mdotep = 2*mdotep1;
 [state,component] = combinedturb(state,component,design,mdotep);
 %% Mixer
 [state,component] = mixer(state,component);
@@ -207,10 +206,10 @@ state(14:18,5) = {mdot6A};
 %% Nozzle
 [state,component,performance] = nozzle(state,component,Po9_P9,v0,design);
 %% Results
-err_T_mdot = performance{2,1} /F_mdot; %T/mdot error compared to book
-err_s = performance{2,2} / S; %S error compared to book
-err_efftherm = performance{2,3} / .5589; %thermal efficiency error compared to book
-err_effprop =performance{2,4} / .6162; %propulsive efficiency compared to book
+err_T_mdot = performance{2,1} /F_mdot %T/mdot error compared to book
+err_s = performance{2,2} / S %S error compared to book
+err_efftherm = performance{2,3} / .5589 %thermal efficiency error compared to book
+err_effprop =performance{2,4} / .6162 %propulsive efficiency compared to book
 %% Engine Cycle
 
 % [~,To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16,~] = state{2:18,3};
