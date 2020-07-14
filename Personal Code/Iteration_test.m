@@ -50,10 +50,10 @@ for ii = 1:29
     [state,component,performance] = turbofan_iteration(in);
     T_low(ii) = performance{2,1};
     S_low(ii) = performance{2,2};
-    sensitivity(ii,1) = (T_high(ii)-T)/T;
-    sensitivity(ii,2) = (T_low(ii)-T)/T;
-    sensitivity(ii,3) = (S_high(ii)-S)/S;
-    sensitivity(ii,4) = (S_low(ii)-S)/S;
+    sensitivity(ii,1) = 200*(T_high(ii)-T)/T;
+    sensitivity(ii,2) = 200*(T_low(ii)-T)/T;
+    sensitivity(ii,3) = 200*(S_high(ii)-S)/S;
+    sensitivity(ii,4) = 200*(S_low(ii)-S)/S;
     in(ii) = A;
     ii
 end
