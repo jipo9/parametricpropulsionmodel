@@ -4,6 +4,10 @@ close all
 
 %% Define inputs
 %input number corresponds to what the analysis is most sensitive too
+
+
+
+
 alt = 35000/3.281; %5
 M0 = 1.6; %2
 mdot0 = 200*0.45359237;
