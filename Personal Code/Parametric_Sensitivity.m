@@ -40,21 +40,21 @@ Po9_P9 = 12.745; %3
 
 %% Define inputs
 in = [alt M0 mdot0 F_mdot S alpha beta PtoH PtoL h_PR pi_dmax pif ef picl ecl pich ech eta_b pi_b etamH etamPH etH etamL etamPL etL pi_M_max pin T_t4 Po9_P9 ];
-[state,component,performance] = turbofan_iteration(in);
+[state,component,performance] = Parametric_Iteration_Function(in);
 T = performance{2,1};
 S = performance{2,2};
 
 for ii = 1:29
     A = in(ii);
     in(ii) = A*1.05;
-    [state,component,performance] = turbofan_iteration(in);
+    [state,component,performance] = Parametric_Iteration_Function(in);
     T_high(ii) = performance{2,1};
     S_high(ii) = performance{2,2};
     in(ii) = A*.95;
-    [state,component,performance] = turbofan_iteration(in);
+    [state,component,performance] = Parametric_Iteration_Function(in);
     T_low(ii) = performance{2,1};
     S_low(ii) = performance{2,2};
-    sensitivity(ii,1) = (T_high(ii)-T)/T;
+    sensitivity(ii,1) = (T_high(ii)-T)/(A*.05);
     sensitivity(ii,2) = (T_low(ii)-T)/T;
     sensitivity(ii,3) = (S_high(ii)-S)/S;
     sensitivity(ii,4) = (S_low(ii)-S)/S;

@@ -1,136 +1,4 @@
-
-function [state,component,performance] = turbofan_iteration(in)
-%% Initialize cells
-
-state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)'};
-state(2:18,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9'};
-component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
-component(2:17,1) = {'Ram Recovery';'Inlet(Ideal,Actual)';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
-design = {'Parameter','Value'};
-design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
-
-%% Initial Conditions
-
-alt = in(1); %m
-M0 = in(2);
-mdot0 = in(3); %kg/s from lbm
-F_mdot = in(4); %N/kg/s from lbf/(lbf/s)
-S = in(5); %kg/s/N from lbm/(lbf/s)
-alpha = in(6); %bypass ratio
-beta = in(7); %bleed ratio
-PtoH = in(8); %Watts
-PtoL = in(9);
-h_PR = in(10); %J/kg, for a (CH2)n propellant
-pi_dmax = in(11);
-pif = in(12);
-ef = in(13);
-picl = in(14);
-ecl = in(15);
-pich = in(16);
-ech = in(17);
-eta_b = in(18);
-pi_b = in(19);
-etamH = in(20);
-etamPH = in(21);
-etH = in(22);
-etamL = in(23);
-etamPL = in(24);
-etL = in(25);
-pi_M_max = in(26);
-pin = in(27);
-T_t4 = in(28); %K
-Po9_P9 = in(29);
-
-%--------Overall Performance (Givens)---------
-
-design(2,2) = {alpha};
-
-design(3,2) = {beta};
-design(7,2) = {PtoH};
-design(6,2) = {PtoL};
-
-design(8,2) = {h_PR};
-
-
-
-component(3,2) = {pi_dmax};
-
-component(4,2:3) = {pif,ef};
-
-component(5,2:3) = {picl,ecl};
-
-component(6,2:3) = {pich,ech};
-
-component(7,2) = {pi_b};
-
-component(9,5) = {etamH};
-component(10,5) = {etamPH}; 
-
-component(12,5) = {etamL};
-component(13,5) = {etamPL}; 
-
-component(14,2) = {pi_M_max};
-
-component(16,2) = {pin};
-
-
-component(2:3,3) = {1};
-component(7:8,3) = {1};
-component(11,3) = {1};
-component(14:16,3) = {1};
-
-
-%% Derived Parameters
-if T_t4 > 2400*.55556
-    ep1 = (T_t4/.5556-2400)/(16000);    %bypass ratio for mixer 1
-    ep2 = ep1;                          %bypass ratio for mixer 2
-else
-    ep1 = 0;
-    ep2 = 0;
-end
-
-design(4,2) = {ep1};
-design(5,2) = {ep2};
-%% Mass flow and Air Props
-mdot0 = 200*0.45359237; %kg/s from lbm
-mdot_f = S*F_mdot*mdot0 /eta_b; %unitless
-
-f0 = 0;
-
-mdot25 = mdot0/(1+alpha); %after bypass leaves
-mdot13 = mdot0 - mdot25; % bypass mass flow
-
-mdot31 = mdot25*(1-beta - ep1 -ep2); %after bleed and coolant leaves
-mdotbeta = mdot25*beta; %bleed air
-mdotep1 = mdot25*ep1; %coolant air 1
-mdotep2 = mdot25*ep2; %coolant air 2
-
-mdot4 = mdot31 + mdot_f; %after burner
-f4 = mdot_f / mdot31;
-
-mdot41 = mdot4 + mdotep1;
-f41 = f4*mdot4 / mdot41;
-
-mdot45 = mdot41 + mdotep2;
-f45 = f41*mdot41 / mdot45;
-
-mdot6A = mdot45 + mdot13;
-f6A = f45*mdot45 / mdot6A;
-
-
-state(2:8,4) = {f0};
-state(2:4,5) = {mdot0};
-state(5,5) = {mdot13};
-state(6:7,5) = {mdot25};
-state(8,5) = {mdot31};
-state(9,4) = {f4};
-state(9,5) = {mdot4};
-state(10:11,4) = {f41};
-state(10:11,5) = {mdot41};
-state(12:13,4) = {f45};
-state(12:13,5) = {mdot45};
-state(14:18,4) = {f6A};
-state(14:18,5) = {mdot6A};
+function[state, component, performance, design,error] = Parametric_Function(state, design, component, M0, alt, mdotep,F_mdot,S)
 %% Ambient condition
 [state, component,v0] = ambient(state,component,alt,M0);
 %% Inlet 
@@ -138,32 +6,37 @@ state(14:18,5) = {mdot6A};
 %% Fan
 [state,component] = fan(state,component);
 %% Low Pressure Compressor
-[state,component] = LPcomp(state,component);
+% [state,component] = LPcomp(state,component);
 %% High Pressure Compressor
-[state,component] = HPcomp(state,component);
+% [state,component] = HPcomp(state,component);
 %% Combined Compressor
-% [state,component] = combinedcomp(state,component);
+[state,component] = combinedcomp(state,component);
 %% Burner
-[state,component] = burner(state,component,T_t4);
+[state,component] = burner(state,component);
 %% High Pressure Turbine
-[state,component] = HPturb(state,component,design,mdotep1);
-%NOT WORKING, Fix
+% [state,component] = HPturb(state,component,design,mdotep1);
 %% Low Pressure Turbine
-[state,component] = LPturb(state,component,design,mdotep2);
- %NOT WORKING, Fix 357,99.6 if wrong
+% [state,component] = LPturb(state,component,design,mdotep2);
 %% Combined Turbine
-% [state,component] = combinedturb(state,component,mdotep1,mdotep2,PtoL,PtoH);
-% Pr = state{13,2} / 51850 %NOT WORKING, Fix 287
-
+[state,component] = combinedturb(state,component,design,mdotep);
 %% Mixer
 [state,component] = mixer(state,component);
 % close enough approx, maybe make mixer inneficiencies some middle mach number?
 %% Nozzle
-[state,component,performance] = nozzle(state,component,Po9_P9,v0,design,PtoL,PtoH);
-err_T_mdot = performance{2,1} /F_mdot;
-err_s = performance{2,2} / S;
-err_efftherm = performance{2,3} / .5589;
-err_effprop =performance{2,4} / .6162;
+[state,component,performance] = nozzle(state,component,v0,design);
+%% Results
+
+F_mdot= 637.533110510502;
+S = 3.17869785560938e-05;
+efftherm = 0.577305593707712;
+effprop = 0.608344703158938;
+
+err_T_mdot = performance{2,1} /F_mdot; %T/mdot error compared to book
+err_s = performance{2,2} / S; %S error compared to book
+err_efftherm = performance{2,3} / efftherm; %thermal efficiency error compared to book
+err_effprop =performance{2,4} / effprop; %propulsive efficiency compared to book
+error = [err_T_mdot,err_s,err_efftherm,err_effprop];
+
 %% Engine Cycle
 
 % [~,To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16,~] = state{2:18,3};
@@ -181,15 +54,15 @@ err_effprop =performance{2,4} / .6162;
 
 %% Functions
 function [state, component,v0] = ambient(state,component,alt,M0)
-[T0, a0, P0, rho0] = atmosisa(alt);
+[T0, ~, ~, ~] = atmosisa(alt); %obtain standard atmospheric conditions
 state(2,3) = {T0};
 [state] = unFAIR3(state,2);
 [~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
 R0 = cp0 - cp0/gamma0;
-a0 = sqrt(R0*gamma0*T0); %m/s
-v0 = M0*a0;
+a0 = sqrt(R0*gamma0*T0); %[m/s]
+v0 = M0*a0; %[m/s]
 
-T_o0 = T0*(1+((M0^2)*((gamma0-1)/2)));
+T_o0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
 state(3,3) = {T_o0};
 [state] = unFAIR3(state,3);
 
@@ -293,10 +166,9 @@ state(7,2) = {Po3};
 [state] = unFAIR3(state,7);
 end
 
-function [state,component] = burner(state,component,T_t4)
+function [state,component] = burner(state,component)
 state(8,2:3) = state(7,2:3);
 state(8,6:9) = state(7,6:9);
-state(9,3) = {T_t4};
 [state] = unFAIR3(state,9);
 %Add in pressure losses
 % pi_b = component{7,2};
@@ -388,32 +260,30 @@ tautl = ho5/ho45;
 component{12,4} = tautl;
 end
 
-function [state,component] = combinedturb(state,component,mdotep1,mdotep2,PtoL,PtoH)
-hoep1 = state{8,8};
-hoep2 = state{8,8};
-hoep = hoep1+hoep2;
+function [state,component] = combinedturb(state,component,design,mdotep)
+hoep = state{8,8};
 ho4 = state{9,8};
 mdot4 = state{9,5};
 mdot45 = state{12,5};
-mdotep = mdotep1+mdotep2;
 
 ho45 = (mdotep*hoep + mdot4*ho4) /(mdot45);
 state(12,8) = {ho45};
 [state] = unFAIR3(state,12);
 
 
-
-
+etamL = component{12,5};
+etamPL = component{13,5};
+Pto = design{6,2};
 etamH = component{9,5};
-etamL = component{11,5};
+etamPH = component{10,5};
+
+
 etam = (etamH+etamL)/2;
-etamPH = component{9,5};
-etamPL = component{12,5};
 etamP = (etamPH+etamPL)/2;
+
 mdot3 = state{7,5};
 ho3 = state{7,8};
 ho2 = state{4,8};
-Pto = PtoH + PtoL;
 
 fun = @(h5) mdot45*(ho45 - h5)*etam...  %change in energy across turb
     -mdot3*(ho3-ho2)...                 %change in energy across HP compressor
@@ -439,88 +309,20 @@ state(14,8) = {ho6};
 [state] = unFAIR3(state,14);
 
 Po6 = state{14,2};
-Po6A = Po6*.9771;
-% Po6A = Po6*.97;
+Po6A = Po6*piM;
 state(15,2) = {Po6A};
 [state] = unFAIR3(state,15);
-% 
-% error = 1;
-% pimax = 1.5;
-% pimin = 1;
-% while norm(error) > .0001
-%     piM_ideal = (pimax + pimin)/2;
-%     Po6Ai = Po6*piM*piM_ideal;
-%     state(15,3) = {[]};
-%     state(15,8) = {[]};
-%     state(15,2) = {Po6Ai};
-%     [state] = unFAIR3(state,15);
-% 
-%     pi_Mideal_i = sqrt((state{7,8}*state{14,3})/(state{14,8}*state{7,3})) * state{7,2}/state{14,2};
-%     
-%     error = 1-pi_Mideal_i/piM_ideal
-%     if error > 1
-%         pimax = piM_ideal;
-%     else
-%         pimin = piM_ideal;
-%     end
-%     Po6A = Po6Ai;
-% end
-% piM*piM_ideal = .9771
-
-% 
-% 
-% 
-% 
-% pi = linspace(.75,1.5);
-% for ii = 1:100
-%     P6A = Po6*piM*pi(ii)
-%     state(15,3) = {[]};
-%     state(15,8) = {[]};
-%     state(15,2) = {P6A};
-%     [state] = unFAIR3(state,15);
-%     X(ii) = sqrt(state{15,8}/state{15,3}) * state{15,2}
-%     
-%     
-%     
-%     [~,~,T6A,~,~,cp6A,gamma6A,h6A] = state{18,:};
-%     R6A = cp6A - cp6A/gamma6A;
-%     a6A = sqrt(R6A*gamma6A*T6A); %m/s
-%     v6A = sqrt(2*(ho9-h6A));
-%     M6A(ii) = v6A / a6A;
-% end
-% plot(X)
-    % while norm(error) > .0001
-%     piM_ideal = (pimax + pimin)/2;
-%     Po6Ai = Po6*piM*piM_ideal;
-%     state(15,3) = {[]};
-%     state(15,8) = {[]};
-%     state(15,2) = {Po6Ai};
-%     [state] = unFAIR3(state,15);
-% 
-%     pi_Mideal_i = sqrt((state{7,8}*state{14,3})/(state{14,8}*state{7,3})) * state{7,2}/state{14,2};
-%     
-%     error = 1-pi_Mideal_i/piM_ideal
-%     if error > 1
-%         pimax = piM_ideal;
-%     else
-%         pimin = piM_ideal;
-%     end
-%     Po6A = Po6Ai;
-% end
-% piM*piM_ideal = .9771
-
-
-
 
 tauM = ho6/ho5;
 component{14,4} = tauM;
 end
 
-function [state,component,performance] = nozzle(state,component,Po9_P9,v0,design,PtoL,PtoH)
+function [state,component,performance] = nozzle(state,component,v0,design)
 alpha = design{2,2};
 beta = design{3,2};
+Pto = design{6,2};
+pitotal = design{7,2};
 h_PR = design{8,2};
-
 state(16,2:end) = state(15,2:end);%assume no afterburner
 
 %Calculate pressure drop across nozzle
@@ -531,6 +333,14 @@ state(17,2) = {Pro9};
 [state] = unFAIR3(state,17);
 
 %Calculate static conditions of exhaust
+[~,Pr0,~,~,~,cp0,gamma0,~] = state{2,:};
+R0 = cp0 - cp0/gamma0;
+mdot0 = state{2,5};
+f_0 = state{18,4};
+
+Po0_P0 = state{3,2} / state{2,2};
+P0_P9 = Pr0/ state{2,2};
+Po9_P9 = pitotal * P0_P9 / Po0_P0; 
 Pr9 = Pro9 / Po9_P9;
 state(18,2) = {Pr9};
 component{16,4} = state{17,8} / state{16,8};
@@ -544,25 +354,19 @@ a9 = sqrt(R9*gamma9*T9); %m/s
 v9 = sqrt(2*(ho9-h9));
 M9 = v9 / a9;
 
-[~,Pr0,~,~,~,cp0,gamma0,~] = state{2,:};
-R0 = cp0 - cp0/gamma0;
-mdot0 = state{2,5};
-f_0 = state{18,4};
 
 
-
-
-F_mdot = (1+f_0-(beta/(1+alpha)))*v9     -   v0  +   (1+f_0-(beta/(1+alpha)))*R9*T9*(1-Pr0/Pr9)/(R0*v9*gamma0);
-S = f_0 / F_mdot;
-eta_TH = ((v0^2/2*((1+f_0-(beta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + PtoH)/mdot0))/...
+F_mdot_ = (1+f_0-(beta/(1+alpha)))*v9     -   v0  +   (1+f_0-(beta/(1+alpha)))*R9*T9*(1-Pr0/Pr9)/(R0*v9*gamma0);
+S_ = f_0 / F_mdot_;
+eta_TH = ((v0^2/2*((1+f_0-(beta/(1+alpha)))*(v9/v0)^2 - 1) + (Pto)/mdot0))/...
     (f_0*h_PR);
 %eta_P = 2/(1+v9/v0); Simplified case, neglected for now
-eta_P = (2*F_mdot/v0)/...
+eta_P = (2*F_mdot_/v0)/...
     ((1+f_0-beta/(1+alpha))*(v9/v0)^2 - 1);
 eta_o = eta_TH*eta_P;
 % eta_o = v0/(h_PR*S); Alternate eqn
 performance(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Exhaust Mach'};
-performance(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
+performance(2,:) = {F_mdot_,S_,eta_TH,eta_P,eta_o,M9};
 end
 end
 
