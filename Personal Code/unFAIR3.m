@@ -128,9 +128,13 @@ P = Pr; %temporary
 cp = cp* 4186.8; %J/kg K
 h = h* 4186.8*.5556; %J/kg
 phi =( air.phi + f * vitiated.phi ) / (1+f)* 4186.8; %J/kg K
+R = ((gamma-1)*cp)/gamma;
+rhor = Pr/(R*T);
+m = state{station,5};
+Vr = m/rhor;
 
 
 state(station,2:3) = {P,T};
-state(station,6:9)  = {cp,gamma,h,phi};
+state(station,6:12)  = {cp,gamma,h,phi,R,rhor,Vr};
 end
 

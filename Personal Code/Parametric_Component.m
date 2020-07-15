@@ -48,7 +48,7 @@ close all
         
 %% Initialize cells
 
-state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)'};
+state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K','Relative Density','Relative Volume'};
 state(2:18,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9'};
 component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
 component(2:17,1) = {'Ram Recovery';'Inlet(Ideal,Actual)';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
@@ -57,12 +57,6 @@ design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
 
 %% Initial Conditions
 %--------Overall Performance (Givens)---------
-% T = ; % N (from lbf)
-% mdot.total = ; % kg/s 
-% F_over_mdot. = T / mdot.total;
-% pitotal = ;
-% mdot0 = 1
-
 alt = 35000/3.281; %altitude [m from feet]
 M0 = 1.6; %freestream mach number
 F_mdot = 62.859*9.806655; %thrust/mdot [N/kg/s from lbf/(lbf/s)]
@@ -142,6 +136,7 @@ end
 
 design(4,2) = {ep1};
 design(5,2) = {ep2};
+
 %% Mass flow and Air Props
 mdot0 = 200*0.45359237; %freestream mass flow rate [kg/s from lbm/s]
 mdot_f = S*F_mdot*mdot0 /eta_b; %mass flow per fuel/air ratio
@@ -190,19 +185,19 @@ state(14:18,5) = {mdot6A};
 %% Fan
 [state,component] = fan(state,component);
 %% Low Pressure Compressor
-% [state,component] = LPcomp(state,component);
+ [state,component] = LPcomp(state,component);
 %% High Pressure Compressor
-% [state,component] = HPcomp(state,component);
+ [state,component] = HPcomp(state,component);
 %% Combined Compressor
-[state,component] = combinedcomp(state,component);
+%[state,component] = combinedcomp(state,component);
 %% Burner
 [state,component] = burner(state,component,T_t4);
 %% High Pressure Turbine
-% [state,component] = HPturb(state,component,design,mdotep1);
+ [state,component] = HPturb(state,component,design,mdotep1);
 %% Low Pressure Turbine
-% [state,component] = LPturb(state,component,design,mdotep2);
+ [state,component] = LPturb(state,component,design,mdotep2);
 %% Combined Turbine
-[state,component] = combinedturb(state,component,design,mdotep);
+%[state,component] = combinedturb(state,component,design,mdotep);
 %% Mixer
 [state,component] = mixer(state,component);
 % close enough approx, maybe make mixer inneficiencies some middle mach number?
@@ -213,20 +208,38 @@ err_T_mdot = performance{2,1} /F_mdot; %T/mdot error compared to book
 err_s = performance{2,2} / S; %S error compared to book
 err_efftherm = performance{2,3} / .5589; %thermal efficiency error compared to book
 err_effprop =performance{2,4} / .6162; %propulsive efficiency compared to book
-%% Engine Cycle
+%% Visuals
 
-% [~,To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16,~] = state{2:18,3};
-% To = [To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16];
-% 
-% [~,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16,~] = state{2:18,9};
-% s = [s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16];
-% 
-% figure
-% plot(s,To)
-% title('T-s Diagram for Turbofan Engine')
-% xlabel('Entropy (s)')
-% ylabel('Total Temperature (T.o)')
-% grid('on')
+%T-s diagram
+[~,To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16,~] = state{2:18,3};
+To = [To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16];
+
+[~,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16,~] = state{2:18,9};
+s = [s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16];
+
+h1 = figure(1);
+h1.WindowStyle = 'docked'; 
+plot(s,To,'linewidth',2)
+title('T-s Diagram for Turbofan Engine')
+xlabel('Entropy (s)')
+ylabel('Total Temperature (T.o)')
+grid('on')
+
+%P-v diagram
+[~,Po2,Po3,Po4,Po5,Po6,Po7,Po8,Po9,Po10,Po11,Po12,Po13,Po14,Po15,Po16,~] = state{2:18,2};
+Por = [Po2,Po3,Po4,Po5,Po6,Po7,Po8,Po9,Po10,Po11,Po12,Po13,Po14,Po15,Po16];
+
+[~,V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14,V15,V16,~] = state{2:18,12};
+Vr = [V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14,V15,V16];
+
+h2 = figure(2);
+h2.WindowStyle = 'docked'; 
+plot(Vr,Por,'linewidth',2)
+title('P-V Diagram for Turbofan Engine')
+xlabel('Relative Volume')
+ylabel('Relative Pressure')
+grid('on')
+
 
 %% Functions
 function [state, component,v0] = ambient(state,component,alt,M0)
@@ -344,7 +357,7 @@ end
 
 function [state,component] = burner(state,component,T_t4)
 state(8,2:3) = state(7,2:3);
-state(8,6:9) = state(7,6:9);
+state(8,6:12) = state(7,6:12);
 state(9,3) = {T_t4};
 [state] = unFAIR3(state,9);
 %Add in pressure losses
