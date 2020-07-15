@@ -4,17 +4,12 @@ close all
 %% Read Me
 % This code is a parametric analysis of a turbofan engine w/out an afterburner.
 % All relavent information is stored in 1 of 4 cells:
-    % Component parameters, both given and found, are stored in
-    % "component". These parameters include pressure ratio, polytropic
-    % efficiency, enthalpy ratio, and mechanical efficiency
+    % Component parameters, both given and found, are sto
 
-    % Inputs general beyond components is stored in "design" 
-    
-    %Thermodynamic states of gas in the engine are modeled at each state
+    % Thermodynamic states of gas in the engine are modeled at each state
     % through the engine and live in "state"
     
-    % Finally, overall performance parameters are given in "performance"
-    % for comparisson
+    % 
 
 %% Assumptions
 %----------------------Book Assumptions----------------------%
