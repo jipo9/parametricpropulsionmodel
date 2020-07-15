@@ -359,27 +359,29 @@ A = [3,2;%pi_dmax
     12,3;%etL
     14,2;%pi_M_max
     16,2];%pin
+F_mdot = performance_s{2,1};
+S = performance_s{2,2};
 
 for n = 1:15
     [ii] = A(n,1);
     [jj] = A(n,2);
     component_i(ii,jj) = {.95*component_i{ii,jj}};
-    delta_val = -.05*component_i{ii,jj};
-    [error(n,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val);
+    delta_val(n) = -.05*component_i{ii,jj};
+    [error(n,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(n));
     component_i(ii,jj) = {component_i{ii,jj}/.95};
 end
 
 alt_i = alt;
 M0_i = M0;
     alt_i = .95*alt_i;
-    delta_val = -.05*component_i{ii,jj};
-    [error(n,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val);
+    delta_val(16) = -.05*alt_i;
+    [error(16,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(16));
     alt_i = alt_i/.95;
     
-    component_i(ii,jj) = {.95*component_i{ii,jj}};
-    delta_val = -.05*component_i{ii,jj};
-    [error(n,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val);
-    component_i(ii,jj) = {component_i{ii,jj}/.95};
+    M0_i = .95*M0_i;
+    delta_val(17) = -.05*M0_i;
+    [error(17,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(17));
+    M0_i = M0_i/.95;
     
 F_mdot = 62.859*9.806655; %thrust/mdot [N/kg/s from lbf/(lbf/s)]
 % 616

@@ -262,48 +262,6 @@ state(14:18,5) = {mdot6A};
 % [state_c,component_c,performance_c] = component_combined(state,component,alt,M0,mdotep,Po9_P9,design);
 
 %% Sensitivity Study
-
-% alt = 35000/3.281; %5
-% M0 = 1.6; %2
-% mdot = 200*0.45359237;
-% F_mdot = 62.859*9.806655; %13
-% S = 1.1386*((.453592/3600)/4.44822); %14
-% alpha = .4; %9
-% beta = .01;
-% PtoH = 301.34*10^3; 
-% PtoL = 0;
-% h_PR = 18400*2326; %8
-% pi_dmax = .96;
-% pif = 3.8;
-% ef = .89;
-% picl = 3.8; %11
-% ecl = .89; %7
-% pich = 4.2105; %12
-% ech = .9; %6
-% eta_b = .999; %15
-% pi_b = .95;
-% etamH = .995;
-% etamPH = .99;
-% etH = .89;
-% etamL = .995; %10
-% etamPL = 1;
-% etL = .9;
-% pi_M_max = .97;
-% pin = .97; %4
-% T_t4 = 3200*.5556; %1
-% Po9_P9 = 12.745; %3
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
-% 
 state_i = state;
 component_i = component;
 alt_i = alt;
@@ -342,8 +300,6 @@ design_i = design;
 % state(9,3) = {T_t4};
 
 
-
-
 A = [3,2;%pi_dmax
     4,2;%pif
     4,3;%ef
@@ -359,37 +315,30 @@ A = [3,2;%pi_dmax
     12,3;%etL
     14,2;%pi_M_max
     16,2];%pin
+F_mdot = performance_s{2,1};
+S = performance_s{2,2};
 
 for n = 1:15
     [ii] = A(n,1);
     [jj] = A(n,2);
-    component_i(ii,jj) = {.95*component_i{ii,jj}};
-    delta_val(n) = -.05*component_i{ii,jj};
+    component_i(ii,jj) = {.99*component_i{ii,jj}};
+    delta_val(n) = .01;
     [error(n,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(n));
-    component_i(ii,jj) = {component_i{ii,jj}/.95};
+    component_i(ii,jj) = {component_i{ii,jj}/.99};
 end
 
 alt_i = alt;
 M0_i = M0;
-    alt_i = .95*alt_i;
-    delta_val(16) = -.05*alt_i;
+    alt_i = .99*alt_i;
+    delta_val(16) = .01;
     [error(16,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(16));
-    alt_i = alt_i/.95;
+    alt_i = alt_i/.99;
     
-    M0_i = .95*M0_i;
-    delta_val(17) = -.05*M0_i;
+    M0_i = .99*M0_i;
+    delta_val(17) = .01;
     [error(17,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(17));
-    M0_i = M0_i/.95;
+    M0_i = M0_i/.99;
     
-F_mdot = 62.859*9.806655; %thrust/mdot [N/kg/s from lbf/(lbf/s)]
-% 616
-
-
-
-
-
-
-
 %% Results
 err_T_mdot = performance_s{2,1} /F_mdot; %T/mdot error compared to book
 err_s = performance_s{2,2} / S; %S error compared to book
@@ -465,8 +414,8 @@ function [error] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i
 F_mdot_i = performance_i{2,1};
 S_i = performance_i{2,2};
 
-delta_F = F_mdot - F_mdot_i;
-delta_S = S - S_i;
+delta_F = (F_mdot_i - F_mdot)/9.806;
+delta_S = (S_i - S)/S;
 error(1,:) = [delta_F/delta_val,delta_S/delta_val];
 end
 
