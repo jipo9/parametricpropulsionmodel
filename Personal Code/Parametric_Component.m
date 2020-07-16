@@ -17,6 +17,7 @@
     % Finally, overall performance parameters are given in "performance"
     % for comparisson
 
+% Sensitivity study is currently unfinished and returning incorrect values
 %% Assumptions
 %----------------------Book Assumptions----------------------%
 
@@ -114,6 +115,7 @@
 % engines will probably be much less accurate
 
 %% FUTURE WORK (ON COMPONENT MODEL):
+% Fix sensitivity study
 % Fill out all pressure and enthalpy ratios
 % no pi_b or pi_AB
 % Tt/T values are off, need to find out why
