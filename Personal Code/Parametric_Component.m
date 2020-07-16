@@ -353,24 +353,29 @@ disp(['Propulsive efficiency of this analysis is ',num2str(100*(1-err_effprop)),
 %% Visuals
 
 %T-s diagram
-[~,To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16,~] = state_s{2:18,3};
-To = [To2,To3,To4,To5,To6,To7,To8,To9,To10,To11,To12,To13,To14,To15,To16];
-[~,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16,~] = state_s{2:18,9};
-s = [s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,s13,s14,s15,s16];
+for i = 1:15
+To(i) = state_s{i+2,3};
+s(i) = state_s{i+2,9};
+
+Ravg = (state_s{i+2,10}+state_s{3,10})/2;
+pratio = (state_s{i+2,2}/state_s{3,2});
+ds(i) = state_s{i+2,9} - state_s{3,9} - (Ravg*log(pratio));
+end
 
 h1 = figure(1);
 h1.WindowStyle = 'docked'; 
-plot(s,To,'linewidth',2)
+%plot(ds,To,'linewidth',2)
+plot([ds(2),ds(6),ds(7),ds(15)],[To(2),To(6),To(7),To(15)],'linewidth',2)
 title('T-s Diagram for Turbofan Engine')
 xlabel('Entropy (s)')
-ylabel('Total Temperature (T.o)')
+ylabel('Total Temperature (To)')
 grid('on')
 
 %P-v diagram
-[~,Po2,Po3,Po4,Po5,Po6,Po7,Po8,Po9,Po10,Po11,Po12,Po13,Po14,Po15,Po16,~] = state_s{2:18,2};
-Por = [Po2,Po3,Po4,Po5,Po6,Po7,Po8,Po9,Po10,Po11,Po12,Po13,Po14,Po15,Po16];
-[~,V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14,V15,V16,~] = state_s{2:18,12};
-Vr = [V2,V3,V4,V5,V6,V7,V8,V9,V10,V11,V12,V13,V14,V15,V16];
+for i = 1:14
+Vr(i) = state_s{i+2,12};
+Por(i) = state_s{i+2,2};
+end
 
 h2 = figure(2);
 h2.WindowStyle = 'docked'; 
