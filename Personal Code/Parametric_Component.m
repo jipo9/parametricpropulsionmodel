@@ -345,10 +345,10 @@ err_s = performance_s{2,2} / S; %S error compared to book
 err_efftherm = performance_s{2,3} / .5589; %thermal efficiency error compared to book
 err_effprop =performance_s{2,4} / .6162; %propulsive efficiency compared to book
 
-disp(['Thrust of this analysis is ',num2str(100*(1-err_T_mdot)),'% off book solution.'])
-disp(['Specific fuel consumption of this analysis is ',num2str(100*(1-err_s)),'% off book solution.'])
-disp(['Thermal efficiency of this analysis is ',num2str(100*(1-err_efftherm)),'% off book solution.'])
-disp(['Propulsive efficiency of this analysis is ',num2str(100*(1-err_effprop)),'% off book solution.'])
+fprintf('%s%.3f%s\n','Thrust                    of this analysis is ',abs(100*(1-err_T_mdot)),'% off book solution.')
+fprintf('%s%.3f%s\n','Specific Fuel Consumption of this analysis is ',abs(100*(1-err_s)),'% off book solution.')
+fprintf('%s%.3f%s\n','Thermal Efficiency        of this analysis is ',abs(100*(1-err_efftherm)),'% off book solution.')
+fprintf('%s%.3f%s\n','Propulsive Efficiency     of this analysis is ',abs(100*(1-err_effprop)),'% off book solution.')
 
 %% Visuals
 
@@ -384,6 +384,47 @@ title('P-V Diagram for Turbofan Engine')
 xlabel('Relative Volume')
 ylabel('Relative Pressure')
 grid('on')
+
+% Error Bar chart
+bookthrme = .5589;
+bookprope = .6162;
+
+h3 = figure(3);
+h3.WindowStyle = 'docked';
+sgtitle('Error Analysis')
+x = categorical({'Calculated','Book'});
+x = reordercats(x,{'Calculated','Book'});
+
+subplot(2,2,1)
+bc = [performance_s{2,1}; F_mdot]; 
+bar(x,bc,.4)
+title('Thrust per unit mass flow')
+
+subplot(2,2,2)
+bc = [performance_s{2,2}; S];
+bar(x,bc,.4)
+title('Specific Fuel Consumption')
+
+subplot(2,2,3)
+bc = [performance_s{2,3}; bookprope]; 
+bar(x,bc,.4)
+title('Propulsive Efficiency')
+
+subplot(2,2,4)
+bc = [performance_s{2,4}; bookthrme];
+bar(x,bc,.4)
+title('Thermal Efficiency')
+
+h4 = figure(4);
+h4.WindowStyle = 'docked';
+x = categorical({'Thrust','SFC','Propulsive','Thermal'});
+x = reordercats(x,{'Thrust','SFC','Propulsive','Thermal'});
+bc = [performance_s{2,1}/F_mdot; performance_s{2,2}/S; performance_s{2,3}/bookprope; performance_s{2,4}/bookthrme];
+bar(x,bc*100,.4,'FaceColor','flat')
+hold on
+yline(100,'--r','linewidth',1.5);
+title('Percent Accuracy')
+ylabel('% Accuracy Compared to Book')
 
 
 %% Functions
