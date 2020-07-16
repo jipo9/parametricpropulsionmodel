@@ -115,6 +115,7 @@
 % engines will probably be much less accurate
 
 %% FUTURE WORK (ON COMPONENT MODEL):
+% Fix combined turbine function
 % Fix sensitivity study
 % Fill out all pressure and enthalpy ratios
 % no pi_b or pi_AB

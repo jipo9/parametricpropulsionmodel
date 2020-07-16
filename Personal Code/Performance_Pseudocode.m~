@@ -1,0 +1,8 @@
+clear
+clc
+close all
+
+
+
+Independent variables: M0, P0, T0, Tt4, Tt7, P0/P9
+Constants: beta, pi_d = f(M0), eta of all components
