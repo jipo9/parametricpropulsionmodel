@@ -209,92 +209,103 @@ inputs(8,2) = {Po9_P9};
 [state,design] = derived_parameters(state,inputs,eta_b,design);
 
 %% Analysis
-[state_s,component_s,performance_s] = component_seperate(state,component,design,inputs);
-%[state_c,component_c,performance_c] = component_combined(state,component,alt,M0,mdotep,Po9_P9,design);
 
-%% Sensitivity Study
-state_i = state;
-component_i = component;
-alt_i = inputs{2,2};
-M0_i = inputs{3,2};
-mdotep1_i = state{21,5};
-Po9_P9_i = inputs{8,2};
-design_i = design;
-
-
-% Define inputs
-% Free: alt M0 Po9_P9
-% Design: alpha beta PtoH h_PR 
-% Component: pi_dmax pif ef picl ecl pich ech pi_b etamH etamPH etH etamL etamPL etL pi_M_max pin T_t4];
-% State: T_t4 (and thus mdot)
-% 
-% design(2,2) = {alpha}; %store values in design
-% design(3,2) = {beta};
-% design(7,2) = {PtoH};
-% design(6,2) = {PtoL};
-% design(8,2) = {h_PR};
-% 
-% component(3,2) = {pi_dmax}; %store values in component
-% component(4,2:3) = {pif,ef};
-% component(5,2:3) = {picL,ecL};
-% component(6,2:3) = {picH,ecH};
-% component(9,5) = {etamH};
-% component(10,5) = {etamPH}; 
-% component(9,3) = {etH};
-% component(12,5) = {etamL};
-% component(13,5) = {etamPL}; 
-% component(12,3) = {etL};
-% component(14,2) = {pi_M_max};
-% component(16,2) = {pin};
-% 
-% 
-% state(9,3) = {T_t4};
-
-
-A = [3,2;%pi_dmax
-    4,2;%pif
-    4,3;%ef
-    5,2;%picL
-    5,3;%ecL
-    6,2;%picH
-    6,3;%ecH
-    9,5;%etamH
-    10,5;%etamPH
-    9,3;%etH
-    12,5;%etamL
-    13,5;%etamPL
-    12,3;%etL
-    14,2;%pi_M_max
-    16,2];%pin
-F_mdot = performance_s{2,1};
-S = performance_s{2,2};
-
-for n = 1:15
-    [ii] = A(n,1);
-    [jj] = A(n,2);
-    component_i(ii,jj) = {.99*component_i{ii,jj}};
-    delta_val(n) = .01;
-    [error(n,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(n),inputs);
-    component_i(ii,jj) = {component_i{ii,jj}/.99};
+prompt = 'Run analysis with combined compressors/turbines? Y/N : ';
+str = input(prompt,'s');
+if str == ('Y')
+    clc
+    [state,component,performance] = component_combined(state,component,design,inputs);
+elseif str == ('N')
+    clc
+    [state,component,performance] = component_seperate(state,component,design,inputs);
+else
+    error('Invalid Input. Try again and only type Y or N you dummy')
 end
 
-alt_i = alt;
-M0_i = M0;
-    alt_i = .99*alt_i;
-    delta_val(16) = .01;
-    [error(16,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(16),inputs);
-    alt_i = alt_i/.99;
-    
-    M0_i = .99*M0_i;
-    delta_val(17) = .01;
-    [error(17,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(17),inputs);
-    M0_i = M0_i/.99;
+
+%% Sensitivity Study
+% state_i = state;
+% component_i = component;
+% alt_i = inputs{2,2};
+% M0_i = inputs{3,2};
+% mdotep1_i = state{21,5};
+% Po9_P9_i = inputs{8,2};
+% design_i = design;
+% 
+% 
+% % Define inputs
+% % Free: alt M0 Po9_P9
+% % Design: alpha beta PtoH h_PR 
+% % Component: pi_dmax pif ef picl ecl pich ech pi_b etamH etamPH etH etamL etamPL etL pi_M_max pin T_t4];
+% % State: T_t4 (and thus mdot)
+% % 
+% % design(2,2) = {alpha}; %store values in design
+% % design(3,2) = {beta};
+% % design(7,2) = {PtoH};
+% % design(6,2) = {PtoL};
+% % design(8,2) = {h_PR};
+% % 
+% % component(3,2) = {pi_dmax}; %store values in component
+% % component(4,2:3) = {pif,ef};
+% % component(5,2:3) = {picL,ecL};
+% % component(6,2:3) = {picH,ecH};
+% % component(9,5) = {etamH};
+% % component(10,5) = {etamPH}; 
+% % component(9,3) = {etH};
+% % component(12,5) = {etamL};
+% % component(13,5) = {etamPL}; 
+% % component(12,3) = {etL};
+% % component(14,2) = {pi_M_max};
+% % component(16,2) = {pin};
+% % 
+% % 
+% % state(9,3) = {T_t4};
+% 
+% 
+% A = [3,2;%pi_dmax
+%     4,2;%pif
+%     4,3;%ef
+%     5,2;%picL
+%     5,3;%ecL
+%     6,2;%picH
+%     6,3;%ecH
+%     9,5;%etamH
+%     10,5;%etamPH
+%     9,3;%etH
+%     12,5;%etamL
+%     13,5;%etamPL
+%     12,3;%etL
+%     14,2;%pi_M_max
+%     16,2];%pin
+% %F_mdot = performance_s{2,1};
+% %S = performance_s{2,2};
+% 
+% for n = 1:15
+%     [ii] = A(n,1);
+%     [jj] = A(n,2);
+%     component_i(ii,jj) = {.99*component_i{ii,jj}};
+%     delta_val(n) = .01;
+%     [error(n,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(n),inputs);
+%     component_i(ii,jj) = {component_i{ii,jj}/.99};
+% end
+% 
+% alt_i = alt;
+% M0_i = M0;
+%     alt_i = .99*alt_i;
+%     delta_val(16) = .01;
+%     [error(16,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(16),inputs);
+%     alt_i = alt_i/.99;
+%     
+%     M0_i = .99*M0_i;
+%     delta_val(17) = .01;
+%     [error(17,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(17),inputs);
+%     M0_i = M0_i/.99;
     
 %% Results
-err_T_mdot = performance_s{2,1} /F_mdot; %T/mdot error compared to book
-err_s = performance_s{2,2} / S; %S error compared to book
-err_efftherm = performance_s{2,3} / .5589; %thermal efficiency error compared to book
-err_effprop =performance_s{2,4} / .6162; %propulsive efficiency compared to book
+err_T_mdot = performance{2,1} /F_mdot; %T/mdot error compared to book
+err_s = performance{2,2} / S; %S error compared to book
+err_efftherm = performance{2,3} / .5589; %thermal efficiency error compared to book
+err_effprop =performance{2,4} / .6162; %propulsive efficiency compared to book
 
 fprintf('%s%.3f%s\n','Thrust                    of this analysis is ',abs(100*(1-err_T_mdot)),'% off book solution.')
 fprintf('%s%.3f%s\n','Specific Fuel Consumption of this analysis is ',abs(100*(1-err_s)),'% off book solution.')
@@ -303,79 +314,79 @@ fprintf('%s%.3f%s\n','Propulsive Efficiency     of this analysis is ',abs(100*(1
 
 %% Visuals
 
-%T-s diagram
-for i = 1:15
-To(i) = state_s{i+2,3};
-s(i) = state_s{i+2,9};
-
-Ravg = (state_s{i+2,10}+state_s{3,10})/2;
-pratio = (state_s{i+2,2}/state_s{3,2});
-ds(i) = state_s{i+2,9} - state_s{3,9} - (Ravg*log(pratio));
-end
-
-h1 = figure(1);
-h1.WindowStyle = 'docked'; 
-%plot(ds,To,'linewidth',2)
-plot([ds(2),ds(6),ds(7),ds(15)],[To(2),To(6),To(7),To(15)],'linewidth',2)
-title('T-s Diagram for Turbofan Engine')
-xlabel('Entropy (s)')
-ylabel('Total Temperature (To)')
-grid('on')
-
-%P-v diagram
-for i = 1:14
-Vr(i) = state_s{i+2,12};
-Por(i) = state_s{i+2,2};
-end
-
-h2 = figure(2);
-h2.WindowStyle = 'docked'; 
-plot(Vr,Por,'linewidth',2)
-title('P-V Diagram for Turbofan Engine')
-xlabel('Relative Volume')
-ylabel('Relative Pressure')
-grid('on')
-
-% Error Bar chart
-bookthrme = .5589;
-bookprope = .6162;
-
-h3 = figure(3);
-h3.WindowStyle = 'docked';
-sgtitle('Error Analysis')
-x = categorical({'Calculated','Book'});
-x = reordercats(x,{'Calculated','Book'});
-
-subplot(2,2,1)
-bc = [performance_s{2,1}; F_mdot]; 
-bar(x,bc,.4)
-title('Thrust per unit mass flow')
-
-subplot(2,2,2)
-bc = [performance_s{2,2}; S];
-bar(x,bc,.4)
-title('Specific Fuel Consumption')
-
-subplot(2,2,3)
-bc = [performance_s{2,3}; bookprope]; 
-bar(x,bc,.4)
-title('Propulsive Efficiency')
-
-subplot(2,2,4)
-bc = [performance_s{2,4}; bookthrme];
-bar(x,bc,.4)
-title('Thermal Efficiency')
-
-h4 = figure(4);
-h4.WindowStyle = 'docked';
-x = categorical({'Thrust','SFC','Propulsive','Thermal'});
-x = reordercats(x,{'Thrust','SFC','Propulsive','Thermal'});
-bc = [performance_s{2,1}/F_mdot; performance_s{2,2}/S; performance_s{2,3}/bookprope; performance_s{2,4}/bookthrme];
-bar(x,bc*100,.4,'FaceColor','flat')
-hold on
-yline(100,'--r','linewidth',1.5);
-title('Percent Accuracy')
-ylabel('% Accuracy Compared to Book')
+% %T-s diagram
+% for i = 1:15
+% To(i) = state{i+2,3};
+% s(i) = state{i+2,9};
+% 
+% Ravg = (state{i+2,10}+state{3,10})/2;
+% pratio = (state{i+2,2}/state{3,2});
+% ds(i) = state{i+2,9} - state{3,9} - (Ravg*log(pratio));
+% end
+% 
+% h1 = figure(1);
+% h1.WindowStyle = 'docked'; 
+% %plot(ds,To,'linewidth',2)
+% plot([ds(2),ds(6),ds(7),ds(15)],[To(2),To(6),To(7),To(15)],'linewidth',2)
+% title('T-s Diagram for Turbofan Engine')
+% xlabel('Entropy (s)')
+% ylabel('Total Temperature (To)')
+% grid('on')
+% 
+% %P-v diagram
+% for i = 1:14
+% Vr(i) = state{i+2,12};
+% Por(i) = state{i+2,2};
+% end
+% 
+% h2 = figure(2);
+% h2.WindowStyle = 'docked'; 
+% plot(Vr,Por,'linewidth',2)
+% title('P-V Diagram for Turbofan Engine')
+% xlabel('Relative Volume')
+% ylabel('Relative Pressure')
+% grid('on')
+% 
+% % Error Bar chart
+% bookthrme = .5589;
+% bookprope = .6162;
+% 
+% h3 = figure(3);
+% h3.WindowStyle = 'docked';
+% sgtitle('Error Analysis')
+% x = categorical({'Calculated','Book'});
+% x = reordercats(x,{'Calculated','Book'});
+% 
+% subplot(2,2,1)
+% bc = [performance_s{2,1}; F_mdot]; 
+% bar(x,bc,.4)
+% title('Thrust per unit mass flow')
+% 
+% subplot(2,2,2)
+% bc = [performance_s{2,2}; S];
+% bar(x,bc,.4)
+% title('Specific Fuel Consumption')
+% 
+% subplot(2,2,3)
+% bc = [performance_s{2,3}; bookprope]; 
+% bar(x,bc,.4)
+% title('Propulsive Efficiency')
+% 
+% subplot(2,2,4)
+% bc = [performance_s{2,4}; bookthrme];
+% bar(x,bc,.4)
+% title('Thermal Efficiency')
+% 
+% h4 = figure(4);
+% h4.WindowStyle = 'docked';
+% x = categorical({'Thrust','SFC','Propulsive','Thermal'});
+% x = reordercats(x,{'Thrust','SFC','Propulsive','Thermal'});
+% bc = [performance_s{2,1}/F_mdot; performance_s{2,2}/S; performance_s{2,3}/bookprope; performance_s{2,4}/bookthrme];
+% bar(x,bc*100,.4,'FaceColor','flat')
+% hold on
+% yline(100,'--r','linewidth',1.5);
+% title('Percent Accuracy')
+% ylabel('% Accuracy Compared to Book')
 
 
 %% Functions
@@ -394,16 +405,16 @@ function [state,component,performance] = component_seperate(state,component,desi
     [state,component,performance] = nozzle(state,component,inputs,v0,design);
 end
 
-function [state,component,performance] = component_combined(state,component,alt,M0,mdotep,Po9_P9,design);
+function [state,component,performance] = component_combined(state,component,design,inputs)
      % Runs an engine analysis w/ a combined LP and HP spools
-    [state, component,v0] = ambient(state,component,alt,M0);
-    [state,component] = inlet(state,component,M0);
+    [state, component,v0] = ambient(state,component,inputs);
+    [state,component] = inlet(state,component,inputs);
     [state,component] = fan(state,component);
     [state,component] = combinedcomp(state,component);
     [state,component] = burner(state,component);
-    [state,component] = combinedturb(state,component,design,mdotep);
+    [state,component] = combinedturb(state,component,design);
     [state,component] = mixer(state,component);
-    [state,component,performance] = nozzle(state,component,Po9_P9,v0,design);
+    [state,component,performance] = nozzle(state,component,inputs,v0,design);
 end
 
 function [error] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val,inputs);
@@ -704,11 +715,12 @@ pitL = state{13,2} / state{12,2};
 component{12,2} = pitL;
 end
 
-function [state,component] = combinedturb(state,component,design,mdotep)
+function [state,component] = combinedturb(state,component,design)
 hoep = state{8,8};
 ho4 = state{9,8};
 mdot4 = state{9,5};
 mdot45 = state{12,5};
+mdotep = state{20,5};
 
 ho45 = (mdotep*hoep + mdot4*ho4) /(mdot45);
 state(12,8) = {ho45};
