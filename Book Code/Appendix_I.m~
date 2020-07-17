@@ -24,6 +24,43 @@ component(2:17,1) = {'Ram Recovery';'Inlet(Ideal,Actual)';'Fan';'LP Compressor';
 design = {'Parameter','Value'};
 design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
 
+%% INPUTS
+
+pi_dmax = .96;
+pi_AB = .95;
+pi_b = .95;
+
+eta_cL = .8674;
+eta_mL = .995;
+eta_f = .8674;
+eta_AB - .99;
+eta_cH = .8751;
+eta_mH = .995;
+eta_b = .999;
+
+
+
+PtoL = 0;
+PtoH = 281900; % W
+
+
+beta = .01;
+ep1 = .05;
+ep2 = .05;
+
+
+gamma_c = 1.4;
+gamma_t = 1.3;
+gamma_AB = 1.3
+%cp_c,cp t. 
+
+
+
+
+
+%Control limits
+To4 = 3200; %rankine!
+pi_c = 20;
 %% Peliminary computations
 
 % run on design analysis!!!
@@ -40,20 +77,36 @@ pi_r = Po0/P0;
 pi_ABdry = 1 - (1-pi_ABR)/2; %for us just assume that this is 1???
 
 %% Set initial values
-% pi_f = component{4,2};
-% pi_cL = component{5,2};
-% pi_cH = component{6,2};
-% pi_tH = component{9,2};
-% pi_tL = component{12,2};
+pi_fR = component{4,2};
+pi_cLR = component{5,2};
+pi_cHR = component{6,2};
+pi_tHR = component{9,2};
+pi_tLR = component{12,2};
+
+tau_fR = component{4,4};
+tau_cLR = component{5,4};
+tau_cHR = component{6,4};
+tau_m1R = component{8,4};
+tau_tHR = component{9,4};
+tau_m2R = component{11,4};
+tau_tLR = component{12,4};
 
 
-% tau_f = component{4,4};
-% tau_cL = component{5,4};
-% tau_cH = component{6,4};
-tau_m1 = component{8,4};
-tau_tH = component{9,4};
-tau_m2 = component{11,4};
-tau_tL = component{12,4};
+
+
+pi_f = pi_fR;
+pi_cL = pi_cLR;
+pi_cH = pi_cHR;
+pi_tH = pi_tHR;
+pi_tL = pi_tLR;
+
+tau_f = tau_fR;
+tau_cL = tau_cLR;
+tau_cH = tau_cHR;
+tau_m1 = tau_m1R;
+tau_tH = tau_tHR;
+tau_m2 = tau_m2R;
+tau_tL = tau_tLR;
 
 mdot4 = state{9,5};
 mdot45 = state{12,5};
@@ -201,7 +254,7 @@ else
     M8 = M9;
 end
 % RGcompr (To6a,M8,f6A)
-MFP6 = MFP8 * (pi_M?*pi_ABdry)/(1+alpha_prime) * (A8/A6) * sqrt(To6/To6A);
+MFP6 = MFP8 * (pi_M*pi_ABdry)/(1+alpha_prime) * (A8/A6) * sqrt(To6/To6A);
 % RGcompr (To6,M6new,f45);
 M6_error = norm(M6 - M6_new);
 if M6_error > .0005
@@ -220,7 +273,7 @@ mdot0_new = mdot0 ...
     / (1+f)*sqrt(To4)/ (P0*(1+alpha)*pi_R*pi_d*pi_cL*pi_cH*MFP4);
 mdot0_error = norm((mdot0_new - mdot0 )/ mdot0R);
 if mdot0_error > .001
-    mdot0 = mdot0_new
+    mdot0 = mdot0_new;
     %goto 1
 end
 f7 = f6A;
@@ -247,14 +300,32 @@ Po9 = P0*Po9_P0;
 A9 = mdot9*sqrt(To9)/(Po9*MFP9);
 T9 = To9/To9_T9;
 %Fair(f7,T9)
-
-
+v9 = M9*a9;
+f0 = (f*(1-betta-ep1-ep2) + fAB*(1+alpha-beta))  /  (1+alpha);
 %% Section 5 overall performance
 
 
 
 
 
+F_mdot = (1+f_0-(beta/(1+alpha)))*v9     -   v0  +   (1+f_0-(beta/(1+alpha)))*R9*T9*(1-Pr0/Pr9)/(R0*v9*gamma0);
+S = f_0 / F_mdot;
+
+
+
+% Remainder of stuff surpressed for now
+% 
+% 
+% 
+% 
+% 
+% eta_TH = ((v0^2/2*((1+f_0-(beta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + PtoH)/mdot0))/...
+%     (f_0*h_PR);
+% %eta_P = 2/(1+v9/v0); Simplified case, neglected for now
+% eta_P = (2*F_mdot/v0)/...
+%     ((1+f_0-beta/(1+alpha))*(v9/v0)^2 - 1);
+% eta_o = eta_TH*eta_P;
+% % eta_o = v0/(h_PR*S); Alternate eqn
 
 
 
