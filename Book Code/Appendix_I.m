@@ -21,12 +21,18 @@ state = {'Station','Relative Pessure', ' Temperature (K)', 'Fuel to air ratio','
 state(2:18,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9'};
 component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
 component(2:17,1) = {'Ram Recovery';'Inlet(Ideal,Actual)';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
+component_ref = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
+component_ref(2:17,1) = {'Ram Recovery';'Inlet(Ideal,Actual)';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
 design = {'Parameter','Value'};
 design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
+inputs = {'Parameter','Value'};
+inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
+
 
 %% INPUTS
 
 pi_dmax = .96;
+pi_M_max = .97;
 pi_AB = .95;
 pi_b = .95;
 pi_n = .97;
@@ -47,55 +53,99 @@ eta_tL = .9074;
 
 PtoL = 0;
 PtoH = 281900; % W
-h_PR = 18400; %BTU/lbm
+h_PR = 18400*2326; %J/kg
 
 beta = .01;
 ep1 = .05;
 ep2 = .05;
 
 
-gamma_c = 1.4;
-gamma_t = 1.3;
-gamma_AB = 1.3;
-%cp_c,cp t, cp_AB
+% gamma_c = 1.4;
+% gamma_t = 1.3;
+% gamma_AB = 1.3;
+% cp_c = .24* 4186.8; %J/kg K
+% cp_t = .295* 4186.8; %J/kg K
+% cp_AB = .295* 4186.8; %J/kg K
 
-
-
-
+M0 = 1.8;
+alt = 40000/3.281; %altitude [m from feet]
 
 %Control limits
-To4 = 3200; %rankine!
+T_t4 = 3200*.5556; %max burner temperature [R to K]
 pi_c = 20;
+
+
+
+design(3,2) = {beta};
+design(7,2) = {PtoH};
+design(6,2) = {PtoL};
+design(8,2) = {h_PR};
+
+state(9,3) = {T_t4};
+
+component(3,2) = {pi_dmax}; %store values in component
+component(14,2) = {pi_M_max};
+component(7,2) = {pi_b};
+component(15,2) = {pi_AB};
+component(16,2) = {pi_n};
+
+component(4,5) = {eta_f};
+component(5,5) = {eta_cL};
+component(6,5) = {eta_cH};
+component(8,5) = {eta_mH};
+component(9,5) = {eta_tH};
+component(10,5) = {eta_PH}; 
+component(11,5) = {eta_mL};
+component(12,5) = {eta_tL};
+component(13,5) = {eta_PL}; 
+
+inputs(2,2) = {alt};
+inputs(3,2) = {M0};
+
+
 %% Peliminary computations
 
 % run on design analysis!!!
-
-% just use ??? [state, component,v0] = ambient(state,component,alt,M0)
-% Fair(f=0,T0)
-v0 = M0*a0;
-ho0 = V0^2 / 2;
-% Fair(f=0,ho0)
-tau_r = h0/ho0;
-pi_r = Po0/P0;
-
-% use function [state,component] = inlet(state,component,M0) to find pi_d
-pi_ABdry = 1 - (1-pi_ABR)/2; %for us just assume that this is 1???
+state(2:18,4) = {0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0};
+[state, component,v0] = ambient(state,component,inputs);
+[state,component] = inlet(state,component,inputs);%Pressures are calculated a bit weird here...)
+pi_ABR = component{15,2}; %??? is this right?/?
+pi_ABdry = 1 - (1-pi_ABR)/2;
 
 %% Set initial values
-pi_fR = component{4,2};
-pi_cLR = component{5,2};
-pi_cHR = component{6,2};
-pi_tHR = component{9,2};
-pi_tLR = component{12,2};
+pi_fR = 3.9;
+pi_cLR = 3.9;
+pi_cHR = 5.1282;
+pi_tHR = .4231;
+pi_tLR = .4831;
 
-tau_fR = component{4,4};
-tau_cLR = component{5,4};
-tau_cHR = component{6,4};
-tau_m1R = component{8,4};
-tau_tHR = component{9,4};
-tau_m2R = component{11,4};
-tau_tLR = component{12,4};
+tau_fR = 1.5479;
+tau_cLR = 1.5479;
+tau_cHR = 1.6803;
+tau_m1R = .9673;
+tau_tHR = .8381;
+tau_m2R = .9731;
+tau_tLR = .8598;
 
+component_ref{4,2} = pi_fR;
+component_ref{5,2} = pi_cLR;
+component_ref{6,2} = pi_cHR;
+component_ref{9,2} = pi_tHR;
+component_ref{12,2} = pi_tLR;
+
+component_ref{4,4} = tau_fR;
+component_ref{5,4} = tau_cLR;
+component_ref{6,4} = tau_cHR;
+component_ref{8,4} = tau_m1R;
+component_ref{9,4} = tau_tHR;
+component_ref{11,4} = tau_m2R;
+component_ref{12,4} = tau_tLR;
+
+fR = .03070;
+tau_MR = .8404;
+alphaR = .449;
+M6AR = .4188;
+M8R = 1; %???
 
 
 
@@ -113,27 +163,59 @@ tau_tH = tau_tHR;
 tau_m2 = tau_m2R;
 tau_tL = tau_tLR;
 
-mdot4 = state{9,5};
-mdot45 = state{12,5};
+component{4,2} = pi_f;
+component{5,2} = pi_cL;
+component{6,2} = pi_cH;
+component{9,2} = pi_tH;
+component{12,2} = pi_tL;
 
-f = state{9,4};
+component{4,4} = tau_f;
+component{5,4} = tau_cL;
+component{6,4} = tau_cH;
+component{8,4} = tau_m1;
+component{9,4} = tau_tH;
+component{11,4} = tau_m2;
+component{12,4} = tau_tL;
+
+% mdot4 = state{9,5};
+% mdot45 = state{12,5};
+
+f = fR;
+state(9,4) = {f};
 
 M4 = 1;
 M45 = 1;
-%M6A
-%M8
+M6A = M6AR;
+M8 = M8R;
 
 
-%Fair(f,Tt4)
+
+%% Initial calcs
+
+[state] = unFAIR3(state,9);
+ho4 = state{9,8};
+
 ho45 = ho4*tau_m1*tau_tH*tau_m2;
-f45 = f*mdot4/mdot45;
-%Fair(f45,ho45)
-ho5 = ho45*tau_tL;
-%Fair(f45,ho5)
-ho6A = ho5*tau_M;
-f6A = state{15,4};
-%Fair (f6A,ho6A)
+state(12,8) = {ho45};
+f45 = f*(1-beta-ep1-ep2)/(1-beta);
+state(12,4) = {f45};
+[state] = unFAIR3(state,12);
 
+ho5 = ho45*tau_tL;
+state(13,8) = {ho5};
+state(13,4) = {f45};
+[state] = unFAIR3(state,13);
+
+ho6A = ho5*tau_MR; %Is this the right eqn?
+f6A = f45*(1-beta)/(1+alphaR-beta); %Is this the right eqn?
+state(15,8) = {ho6A};
+state(15,4) = {f6A};
+[state] = unFAIR3(state,15);
+
+
+%% Current checkpoint
+    % Rewrite RGCompr, Massfp, turb, turbc
+    % then proceed
 %% "" Loop "" 1 (will be in its own function) - Calculates states of comPessors
 
 tau_cL = component{5,4};
@@ -355,3 +437,68 @@ S = f_0 / F_mdot;
 
 
 %go through and change everything to either normal values (f) or iteration? (f_R)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function [state, component,v0] = ambient(state,component,inputs)
+alt = inputs{2,2};
+M0 = inputs{3,2};
+[T0, ~, ~, ~] = atmosisa(alt); %obtain standard atmospheric conditions
+state(2,3) = {T0};
+[state] = unFAIR3(state,2);
+[~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
+R0 = cp0 - cp0/gamma0;
+a0 = sqrt(R0*gamma0*T0); %[m/s]
+v0 = M0*a0; %[m/s]
+
+T_o0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
+state(3,3) = {T_o0};
+[state] = unFAIR3(state,3);
+
+
+P0 = state{2,2};
+Po0 = state{3,2};
+pi_r = Po0/P0;
+component{2,2} = pi_r;
+
+h0 = state{2,8};
+ho0 = state{3,8};
+tau_r = ho0/h0;
+component{2,4} = tau_r;
+end
+function [state,component] = inlet(state,component,inputs)
+M0 = inputs{3,2};
+pi_dmax = component{3,2};
+Po0 = state{3,2};
+
+if M0<1
+pid = pi_dmax; 
+elseif M0>1 && M0<5
+pid = pi_dmax * (1-.075*((M0-1)^1.35));
+else 
+pid = pi_dmax * (800/(M0^4 + 935));
+end
+
+Po2 = pid*Po0;
+
+component{3,2} = [pi_dmax,pid];
+state(4,2) =  {Po2};
+[state] = unFAIR3(state,4);
+
+ho0 = state{3,8};
+ho2 = state{4,8};
+tau_d = ho2/ho0;
+component{3,4} = tau_d;
+end
