@@ -126,13 +126,13 @@ clc
 clear
 close all
 state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
-state(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
+state(2:18,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9'};
 component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
 component(2:17,1) = {'Ram Recovery';'Inlet(Ideal,Actual)';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
 design = {'Parameter','Value'};
 design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
 inputs = {'Parameter','Value'};
-inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
+inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','
 
 %% Initial Conditions
 %--------Overall Performance (Givens)---------
@@ -175,6 +175,7 @@ design(7,2) = {PtoH};
 design(6,2) = {PtoL};
 design(8,2) = {h_PR};
 state(9,3) = {T_t4};
+
 component(3,2) = {pi_dmax}; %store values in component
 component(4,2:3) = {pif,ef};
 component(5,2:3) = {picL,ecL};
@@ -192,13 +193,6 @@ component(2:3,3) = {1};
 component(7:8,3) = {1};
 component(11,3) = {1};
 component(14:16,3) = {1};
-inputs(2,2) = {alt};
-inputs(3,2) = {M0};
-inputs(4,2) = {F_mdot};
-inputs(5,2) = {mdot};
-inputs(6,2) = {S};
-inputs(7,2) = {T_t4};
-inputs(8,2) = {Po9_P9};
 
 
 
@@ -260,7 +254,7 @@ state(14:18,4) = {f6A};
 state(14:18,5) = {mdot6A};
 %% Analysis
 [state_s,component_s,performance_s] = component_seperate(state,component,alt,M0,mdotep1,Po9_P9,design);
-%[state_c,component_c,performance_c] = component_combined(state,component,alt,M0,mdotep,Po9_P9,design);
+% [state_c,component_c,performance_c] = component_combined(state,component,alt,M0,mdotep,Po9_P9,design);
 
 %% Sensitivity Study
 state_i = state;
