@@ -116,8 +116,7 @@
 
 %% FUTURE WORK (ON COMPONENT MODEL):
 % Fix combined turbine function
-%   -> added fan contribution. Pressure ratios are closer but overall...
-%   ...performance values are way off
+%   -> added fan contribution. Pressure ratios are close
 % Fix sensitivity study
 % no pi_b or pi_AB
 % Tt/T values are off, need to find out why
