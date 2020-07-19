@@ -116,7 +116,8 @@
 
 %% FUTURE WORK (ON COMPONENT MODEL):
 % Fix combined turbine function
-%   -> added fan contribution. Pressure ratios are close
+%   -> added fan contribution. Pressure ratios are closer but overall...
+%   ...performance values are way off
 % Fix sensitivity study
 % no pi_b or pi_AB
 % Tt/T values are off, need to find out why
@@ -279,23 +280,25 @@ end
 % for n = 1:15
 %     [ii] = A(n,1);
 %     [jj] = A(n,2);
-%     component_i(ii,jj) = {.99*component_i{ii,jj}};
+%     component_i(ii,jj) = {n*component_i{ii,jj}};
 %     delta_val(n) = .01;
 %     [error(n,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(n),inputs);
-%     component_i(ii,jj) = {component_i{ii,jj}/.99};
+%     component_i(ii,jj) = {component_i{ii,jj}/n};
 % end
 %
 % alt_i = alt;
 % M0_i = M0;
-%     alt_i = .99*alt_i;
+%     alt_i = n*alt_i;
 %     delta_val(16) = .01;
 %     [error(16,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(16),inputs);
-%     alt_i = alt_i/.99;
+%     alt_i = alt_i/n;
 %
-%     M0_i = .99*M0_i;
+%     M0_i = n*M0_i;
 %     delta_val(17) = .01;
 %     [error(17,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(17),inputs);
-%     M0_i = M0_i/.99;
+%     M0_i = M0_i/n;
+
+%
 
 %% Results
 err_T_mdot = performance{2,1} /F_mdot; %T/mdot error compared to book
@@ -347,47 +350,69 @@ if str == ('N') || str == ('n') %only run pv and ts diagrams if using 'seperate'
     
 end
 
-    % Error Bar chart
-    bookthrme = .5589;
-    bookprope = .6162;
-    
-    h3 = figure(3);
-    h3.WindowStyle = 'docked';
-    sgtitle('Error Analysis')
-    x = categorical({'Calculated','Book'});
-    x = reordercats(x,{'Calculated','Book'});
-    
-    subplot(2,2,1)
-    bc = [performance{2,1}; F_mdot];
-    bar(x,bc,.4)
-    title('Thrust per unit mass flow')
-    
-    subplot(2,2,2)
-    bc = [performance{2,2}; S];
-    bar(x,bc,.4)
-    title('Specific Fuel Consumption')
-    
-    subplot(2,2,3)
-    bc = [performance{2,3}; bookprope];
-    bar(x,bc,.4)
-    title('Propulsive Efficiency')
-    
-    subplot(2,2,4)
-    bc = [performance{2,4}; bookthrme];
-    bar(x,bc,.4)
-    title('Thermal Efficiency')
-    
-    h4 = figure(4);
-    h4.WindowStyle = 'docked';
-    x = categorical({'Thrust','SFC','Propulsive','Thermal'});
-    x = reordercats(x,{'Thrust','SFC','Propulsive','Thermal'});
-    bc = [performance{2,1}/F_mdot; performance{2,2}/S; performance{2,3}/bookprope; performance{2,4}/bookthrme];
-    bar(x,bc*100,.4,'FaceColor','flat')
-    hold on
-    yline(100,'--r','linewidth',1.5);
-    title('Percent Accuracy')
-    ylabel('% Accuracy Compared to Book')
-    
+% Error Bar chart
+bookthrme = .5589;
+bookprope = .6162;
+
+h3 = figure(3);
+h3.WindowStyle = 'docked';
+sgtitle('Error Analysis')
+x = categorical({'Calculated','Book'});
+x = reordercats(x,{'Calculated','Book'});
+
+subplot(2,2,1)
+bc = [performance{2,1}; F_mdot];
+bar(x,bc,.4)
+title('Thrust per unit mass flow')
+
+subplot(2,2,2)
+bc = [performance{2,2}; S];
+bar(x,bc,.4)
+title('Specific Fuel Consumption')
+
+subplot(2,2,3)
+bc = [performance{2,3}; bookprope];
+bar(x,bc,.4)
+title('Propulsive Efficiency')
+
+subplot(2,2,4)
+bc = [performance{2,4}; bookthrme];
+bar(x,bc,.4)
+title('Thermal Efficiency')
+
+h4 = figure(4);
+h4.WindowStyle = 'docked';
+x = categorical({'Thrust','SFC','Thermal','Propulsive'});
+x = reordercats(x,{'Thrust','SFC','Thermal','Propulsive'});
+bc = [err_T_mdot; err_s; err_efftherm; err_effprop];
+bar(x,bc*100,.4,'FaceColor','flat')
+hold on
+yline(100,'--r','linewidth',1.5);
+title('Percent Accuracy')
+ylabel('% Accuracy Compared to Book')
+
+%% Sens2
+sens = {'Parameter','Effect on F','Effect on S'};
+sens(2:30,1) = {'alt';'M0';'mdot';'F_mdot';'s';'alpha';'beta';'Ptoh';'PtoL';'h_PR';'pi_dmax';'pif';'ef';'picL';'ecL';'picH';'ecH';'eta_b';'pi_b';'etamH';'etamPH';'etH';'etamL';'etamPL';'etL';'pi_M_max';'pin';'T_t4';'Po9_P9'};
+%sens(2:30,2) = {alt M0 mdot F_mdot S alpha beta PtoH PtoL h_PR pi_dmax pif ef picL ecL picH ecH eta_b pi_b etamH etamPH etH etamL etamPL etL pi_M_max pin T_t4 Po9_P9};
+performance_f = performance;
+state_f = state;
+component_f = component;
+design_f = design;
+inputs_f = inputs;
+
+% for index = 2:length(sens)
+%     [inputs,design,component,state] = sensedit(state_f,component_f,design_f,inputs_f,index,1); %sw1 == change, sw2==revert
+%     [state,design] = derived_parameters(state,inputs,design,component);
+%     [state,component,performance_i] = component_seperate(state,component,design,inputs);
+%     errT = (performance_i{2,1} - performance_f{2,1})/performance_f{2,1};
+%     errS = (performance_i{2,2} - performance_f{2,2})/performance_f{2,2};
+%     sens{index,2} = errT;
+%     sens{index,3} = errS;
+%     %[inputs,design,component,state] = sensedit(state,component,design,inputs,index,0);
+% end
+
+
 %% Functions
 % High level analysis functions
 function [state,component,performance] = component_seperate(state,component,design,inputs)
@@ -418,15 +443,146 @@ function [state,component,performance] = component_combined(state,component,desi
 fprintf('%s\n\n','This analysis was completed using COMBINED high and low spools.')
 end
 
-function [error] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val,inputs);
-[~,~,performance_i] = component_seperate(state_i,component_i,design_i,inputs);
-F_mdot_i = performance_i{2,1};
-S_i = performance_i{2,2};
+function [inputs,design,component,state] = sensedit(state,component,design,inputs,index,sw)
+n = .95;
 
-delta_F = (F_mdot_i - F_mdot)/9.806;
-delta_S = (S_i - S)/S;
-error(1,:) = [delta_F/delta_val,delta_S/delta_val];
+if sw == 1
+    if index == 2
+        inputs{2,2} = inputs{2,2}*n;
+    elseif index == 3
+        inputs{3,2} = inputs{3,2}*n;
+    elseif index == 4
+        inputs{5,2} = inputs{5,2}*n;
+    elseif index == 5
+        inputs{4,2} = inputs{4,2}*n;
+    elseif index == 6
+        inputs{6,2} = inputs{6,2}*n;
+    elseif index == 7
+        design{2,2} = design{2,2}*n;
+    elseif index == 8
+        design{3,2} = design{3,2}*n;
+    elseif index == 9
+        design{7,2} = design{7,2}*n;
+    elseif index == 10
+        design{6,2} = design{6,2}*n;
+    elseif index == 11
+        design{8,2} = design{8,2}*n;
+    elseif index == 12
+        component{3,2} = component{3,2}*n;
+    elseif index == 13
+        component{4,2} = component{4,2}*n;
+    elseif index == 14
+        component{4,3} = component{4,3}*n;
+    elseif index == 15
+        component{5,2} = component{5,2}*n;
+    elseif index == 16
+        component{5,3} = component{5,3}*n;
+    elseif index == 17
+        component{6,2} = component{6,2}*n;
+    elseif index == 18
+        component{6,3} = component{6,3}*n;
+    elseif index == 19
+        component{7,5} = component{7,5}*n;
+    elseif index == 20
+        component{7,2} = component{7,2}*n;
+    elseif index == 21
+        component{9,5} = component{9,5}*n;
+    elseif index == 22
+        component{10,5} = component{10,5}*n;
+    elseif index == 23
+        component{9,3} = component{9,3}*n;
+    elseif index == 24
+        component{12,5} = component{12,5}*n;
+    elseif index == 25
+        component{13,5} = component{13,5}*n;
+    elseif index == 26
+        component{12,3} = component{12,3}*n;
+    elseif index == 27
+        component{14,2} = component{14,2}*n;
+    elseif index == 28
+        component{16,2} = component{16,2}*n;
+    elseif index == 29
+        inputs{7,2} = inputs{7,2}*n;
+        state{9,3} = state{9,3}*n;
+    elseif index == 30
+        inputs{8,2} = inputs{8,2}*n;
+    end
+   
+    
+elseif sw == 0
+    if index == 2
+        inputs{2,2} = inputs{2,2}/n;
+    elseif index == 3
+        inputs{3,2} = inputs{3,2}/n;
+    elseif index == 4
+        inputs{5,2} = inputs{5,2}/n;
+    elseif index == 5
+        inputs{4,2} = inputs{4,2}/n;
+    elseif index == 6
+        inputs{6,2} = inputs{6,2}/n;
+    elseif index == 7
+        design{2,2} = design{2,2}/n;
+    elseif index == 8
+        design{3,2} = design{3,2}/n;
+    elseif index == 9
+        design{7,2} = design{7,2}/n;
+    elseif index == 10
+        design{6,2} = design{6,2}/n;
+    elseif index == 11
+        design{8,2} = design{8,2}/n;
+    elseif index == 12
+        component{3,2} = component{3,2}/n;
+    elseif index == 13
+        component{4,2} = component{4,2}/n;
+    elseif index == 14
+        component{4,3} = component{4,3}/n;
+    elseif index == 15
+        component{5,2} = component{5,2}/n;
+    elseif index == 16
+        component{5,3} = component{5,3}/n;
+    elseif index == 17
+        component{6,2} = component{6,2}/n;
+    elseif index == 18
+        component{6,3} = component{6,3}/n;
+    elseif index == 19
+        component{7,5} = component{7,5}/n;
+    elseif index == 20
+        component{7,2} = component{7,2}/n;
+    elseif index == 21
+        component{9,5} = component{9,5}/n;
+    elseif index == 22
+        component{10,5} = component{10,5}/n;
+    elseif index == 23
+        component{9,3} = component{9,3}/n;
+    elseif index == 24
+        component{12,5} = component{12,5}/n;
+    elseif index == 25
+        component{13,5} = component{13,5}/n;
+    elseif index == 26
+        component{12,3} = component{12,3}/n;
+    elseif index == 27
+        component{14,2} = component{14,2}/n;
+    elseif index == 28
+        component{16,2} = component{16,2}/n;
+    elseif index == 29
+        inputs{7,2} = inputs{7,2}/n;
+        state{9,3} = state{9,3}/n;
+    elseif index == 30
+        inputs{8,2} = inputs{8,2}/n;
+    end
+    
 end
+end
+
+%function [error] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val,inputs);
+% [~,~,performance_i] = component_seperate(state_i,component_i,design_i,inputs);
+% F_mdot_i = performance_i{2,1};
+% S_i = performance_i{2,2};
+%
+% delta_F = (F_mdot_i - F_mdot)/9.806;
+% delta_S = (S_i - S)/S;
+% error(1,:) = [delta_F/delta_val,delta_S/delta_val];
+% end
 
 function [state,design] = derived_parameters(state,inputs,design,component)
 %% Derived Parameters
@@ -755,7 +911,7 @@ fun = @(ho5) mdot45*(ho4-ho5)*etam... %change in energy across turbine
     -mdot13*(ho13-ho2)...             %change in energy across fan
     -(PtoL) / etamPL...               %energy draw off LP spool
     -(PtoH) / etamPH;                 %energy draw off HP spool
-                      
+
 ho5 = fzero(fun,ho45);
 state(13,8) = {ho5};
 [state] = unFAIR3(state,13);

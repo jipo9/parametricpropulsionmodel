@@ -21,7 +21,11 @@ error = 100;
 
 %If temperature is being input, proceed. Otherwise, use bisection method to
 %get an estimate of temperature within .1% accuracy of the input value before proceeding
-if size(state{station,2},1) == 1 
+
+if size(state{station,8},1) == 1 && size(state{station,2},1) == 1  && size(state{station,3},1) == 1 
+    T = state{station,3} / .5556; % R;
+    
+elseif size(state{station,2},1) == 1 
 % if state{station,2} ~= 0 
     P = state{station,2};
     while norm(error) > .00001
