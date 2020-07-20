@@ -17,17 +17,14 @@ close all
 clc
 clear
 close all
-state = {'Station','Relative Pessure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
-state(2:18,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9'};
+state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
+state(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
 component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
 component(2:17,1) = {'Ram Recovery';'Inlet(Ideal,Actual)';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
-component_ref = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
-component_ref(2:17,1) = {'Ram Recovery';'Inlet(Ideal,Actual)';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
 design = {'Parameter','Value'};
 design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
 inputs = {'Parameter','Value'};
 inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
-
 
 %% INPUTS
 
@@ -75,7 +72,8 @@ T_t4 = 3200*.5556; %max burner temperature [R to K]
 pi_c = 20;
 
 
-
+design(4,2) = {ep1};
+design(5,2) = {ep2};
 design(3,2) = {beta};
 design(7,2) = {PtoH};
 design(6,2) = {PtoL};
@@ -97,11 +95,10 @@ component(9,5) = {eta_tH};
 component(10,5) = {eta_PH}; 
 component(11,5) = {eta_mL};
 component(12,5) = {eta_tL};
-component(13,5) = {eta_PL}; 
+component(13,5) = {eta_PL};
 
 inputs(2,2) = {alt};
 inputs(3,2) = {M0};
-
 
 %% Peliminary computations
 
@@ -127,6 +124,9 @@ tau_tHR = .8381;
 tau_m2R = .9731;
 tau_tLR = .8598;
 
+mdot0R = 200*0.45359237; %kg/s
+alphaR = .4;
+
 component_ref{4,2} = pi_fR;
 component_ref{5,2} = pi_cLR;
 component_ref{6,2} = pi_cHR;
@@ -141,9 +141,9 @@ component_ref{9,4} = tau_tHR;
 component_ref{11,4} = tau_m2R;
 component_ref{12,4} = tau_tLR;
 
-fR = .03070;
+fR = .03130;
 tau_MR = .8404;
-alphaR = .449;
+% alphaR = .449;
 M6AR = .4188;
 M8R = 1; %???
 
@@ -163,6 +163,8 @@ tau_tH = tau_tHR;
 tau_m2 = tau_m2R;
 tau_tL = tau_tLR;
 
+mdot0 = mdot0R;
+
 component{4,2} = pi_f;
 component{5,2} = pi_cL;
 component{6,2} = pi_cH;
@@ -177,6 +179,8 @@ component{9,4} = tau_tH;
 component{11,4} = tau_m2;
 component{12,4} = tau_tL;
 
+state{2,5} = mdot0;
+design{2,2} = alphaR;
 % mdot4 = state{9,5};
 % mdot45 = state{12,5};
 
@@ -213,9 +217,6 @@ state(15,4) = {f6A};
 [state] = unFAIR3(state,15);
 
 
-%% Current checkpoint
-    % Rewrite RGCompr, Massfp, turb, turbc
-    % then proceed
 %% "" Loop "" 1 (will be in its own function) - Calculates states of comPessors
 
 tau_cL = component{5,4};
@@ -224,23 +225,50 @@ ho0 = state{3,8};
 To4 = state{8,3};
 alpha = design{2,2};
 
-mdot0 = state{2,5};
-mdot4 = state{9,5}; %make sure to change these w/ new f
-mdot45 = state{12,5}; %make sure to change these w/ new f
-mdotep1 = state{21,5};
-mdotep2 = state{22,5};
+% mdot0 = state{2,5};
+% mdot4 = state{9,5}; %make sure to change these w/ new f
+% mdot45 = state{12,5}; %make sure to change these w/ new f
+% mdotep1 = state{21,5};
+% mdotep2 = state{22,5};
 
 f = state{9,4};
-
-
-
+[state,design] = derived_parameters(state,inputs,design,component); %update w/ every new f or mdot or alpha
 ho3 = ho0*tau_cL*tau_cH;
-%Fair (0,ho3)
-alpha_Pime = alpha* (mdot0/mdot45);
-%Fair (0,To4)
-f45 = f*mdot4/mdot45;
+state(7,8) = {ho3};
+[state] = unFAIR3(state,7);
+alpha_Pime = alpha / ((1+f)*(1-beta-ep1-ep2)+ep1+ep2);
 
-%TurbC and turb???
+state(9,2) = {[]};
+state(9,8) = {[]};
+[state] = unFAIR3(state,9); %reset burner w/ new f
+f45 = state{12,4};
+
+
+
+
+
+
+
+M4 = 1;
+M45 = 1;
+
+
+A4 = 1;
+A45 = 1;
+To45R = state{12,3};
+eta_t = component{9,5};
+
+%% Current checkpoint
+    % Fix turb and turb c w/ precalcs
+    % Eventually rewrite RGCompr
+    % Proceed
+    
+% First find A4, A45, and A6 from reference code (M6 must be known)! Need to try to implement!!!
+% [state] = turbc(state,M4,M45,A4,A45,To45R,eta_t); % HP turbine, driven by mach and area constant
+% turb needs to be added
+
+
+
 tau_lambda = ho4/h0;
 tau_f = 1 ...
     + ( (1-tau_tL)*eta_mL* ((mdot4*tau_lambda*tau_tH/tau_r  +  (mdotep1*tau_tH + mdotep2)*tau_cL*tau_cH)/mdot0)   -   (1+alpha)*PtoL/(tau_r*eta_mPL*mdot0*h0)) ...
@@ -501,4 +529,63 @@ ho0 = state{3,8};
 ho2 = state{4,8};
 tau_d = ho2/ho0;
 component{3,4} = tau_d;
+end
+
+function [state,design] = derived_parameters(state,inputs,design,component)
+%% Derived Parameters
+% COOLING AIR CALCULATIONS
+% Found in Aircraft Engine Design - Mattingly but
+% unable to find rationale...
+
+mdot = state{2,5};
+alpha = design{2,2};
+beta = design{3,2};
+ep1 = design{4,2};
+ep2 = design{5,2};
+f = state{9,4};
+f0 = 0;
+
+% MASS FLOW AND FUEL TO AIR CALCULATIONS
+
+mdot25 = mdot/(1+alpha); %after bypass leaves
+mdot13 = mdot - mdot25; % bypass mass flow
+
+mdot31 = mdot25*(1-beta - ep1 -ep2); %after bleed and coolant leaves
+mdotbeta = mdot25*beta; %bleed air
+mdotep1 = mdot25*ep1; %coolant air 1
+mdotep2 = mdot25*ep2; %coolant air 2
+mdotep = mdotep1+mdotep2; %combined coolant air
+
+mdot_f = mdot31 * f; %mass flow per fuel/air ratio
+mdot4 = mdot31 + mdot_f; %mass flow rate post-burner
+f4 = mdot_f / mdot31; %fuel/air ratio post-burner
+
+mdot41 = mdot4 + mdotep1; %mass flow rate after addtion of cooling air 1
+f41 = f4*mdot4 / mdot41; %fuel/air ratio after addtion of cooling air 1
+
+mdot45 = mdot41 + mdotep2; %mass flow rate after addtion of cooling air 2
+f45 = f41*mdot41 / mdot45; %fuel/air ratio after addtion of cooling air 2
+
+mdot6A = mdot45 + mdot13; %mass flow rate after addtion of bypass air
+f6A = f45*mdot45 / mdot6A; %fuel/air ratio after addtion of bypass air
+
+% Store all values
+state(2:8,4) = {f0};
+state(2:4,5) = {mdot};
+state(5,5) = {mdot13};
+state(6:7,5) = {mdot25};
+state(8,5) = {mdot31};
+state(9,4) = {f4};
+state(9,5) = {mdot4};
+state(10:11,4) = {f41};
+state(10:11,5) = {mdot41};
+state(12:13,4) = {f45};
+state(12:13,5) = {mdot45};
+state(14:18,4) = {f6A};
+state(14:18,5) = {mdot6A};
+state(19,5) = {mdotbeta};
+state(20,5) = {mdotep};
+state(21,5) = {mdotep1};
+state(22,5) = {mdotep2};
+
 end
