@@ -149,7 +149,7 @@ Po9_P9 = 12.745; %stagnation to static pressure ratio at the nozzle (note: in fu
 alpha = .4; %bypass ratio
 beta = .01; %bleed ratio
 PtoH = 301.34*10^3; %power takeoff high spool [W]
-PtoL = 0; %power takeoff low spool [W]
+PtoL = 0.000000001; %power takeoff low spool [W]
 h_PR = 18400*2326; %fuel heating value for a (CH2)n propellant [J/kg]
 
 pi_dmax = .96; %diffuser pressure ratio
@@ -205,6 +205,10 @@ inputs(8,2) = {Po9_P9};
 
 %% Derived Parameters
 [state,design] = derived_parameters(state,inputs,design,component);
+state_joey = state;
+design_joey = design;
+inputs_joey = inputs;
+component_joey = component;
 
 %% Analysis
 
@@ -228,37 +232,37 @@ end
 % mdotep1_i = state{21,5};
 % Po9_P9_i = inputs{8,2};
 % design_i = design;
+
+
+% Define inputs
+% Free: alt M0 Po9_P9
+% Design: alpha beta PtoH h_PR
+% Component: pi_dmax pif ef picl ecl pich ech pi_b etamH etamPH etH etamL etamPL etL pi_M_max pin T_t4];
+% State: T_t4 (and thus mdot)
+%
+% design(2,2) = {alpha}; %store values in design
+% design(3,2) = {beta};
+% design(7,2) = {PtoH};
+% design(6,2) = {PtoL};
+% design(8,2) = {h_PR};
+%
+% component(3,2) = {pi_dmax}; %store values in component
+% component(4,2:3) = {pif,ef};
+% component(5,2:3) = {picL,ecL};
+% component(6,2:3) = {picH,ecH};
+% component(9,5) = {etamH};
+% component(10,5) = {etamPH};
+% component(9,3) = {etH};
+% component(12,5) = {etamL};
+% component(13,5) = {etamPL};
+% component(12,3) = {etL};
+% component(14,2) = {pi_M_max};
+% component(16,2) = {pin};
 %
 %
-% % Define inputs
-% % Free: alt M0 Po9_P9
-% % Design: alpha beta PtoH h_PR
-% % Component: pi_dmax pif ef picl ecl pich ech pi_b etamH etamPH etH etamL etamPL etL pi_M_max pin T_t4];
-% % State: T_t4 (and thus mdot)
-% %
-% % design(2,2) = {alpha}; %store values in design
-% % design(3,2) = {beta};
-% % design(7,2) = {PtoH};
-% % design(6,2) = {PtoL};
-% % design(8,2) = {h_PR};
-% %
-% % component(3,2) = {pi_dmax}; %store values in component
-% % component(4,2:3) = {pif,ef};
-% % component(5,2:3) = {picL,ecL};
-% % component(6,2:3) = {picH,ecH};
-% % component(9,5) = {etamH};
-% % component(10,5) = {etamPH};
-% % component(9,3) = {etH};
-% % component(12,5) = {etamL};
-% % component(13,5) = {etamPL};
-% % component(12,3) = {etL};
-% % component(14,2) = {pi_M_max};
-% % component(16,2) = {pin};
-% %
-% %
-% % state(9,3) = {T_t4};
-%
-%
+% state(9,3) = {T_t4};
+
+
 % A = [3,2;%pi_dmax
 %     4,2;%pif
 %     4,3;%ef
@@ -276,7 +280,7 @@ end
 %     16,2];%pin
 % %F_mdot = performance_s{2,1};
 % %S = performance_s{2,2};
-%
+% 
 % for n = 1:15
 %     [ii] = A(n,1);
 %     [jj] = A(n,2);
@@ -285,20 +289,18 @@ end
 %     [error(n,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(n),inputs);
 %     component_i(ii,jj) = {component_i{ii,jj}/n};
 % end
-%
+% 
 % alt_i = alt;
 % M0_i = M0;
 %     alt_i = n*alt_i;
 %     delta_val(16) = .01;
 %     [error(16,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(16),inputs);
 %     alt_i = alt_i/n;
-%
+% 
 %     M0_i = n*M0_i;
 %     delta_val(17) = .01;
 %     [error(17,:)] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val(17),inputs);
 %     M0_i = M0_i/n;
-
-%
 
 %% Results
 err_T_mdot = performance{2,1} /F_mdot; %T/mdot error compared to book
@@ -392,29 +394,32 @@ title('Percent Accuracy')
 ylabel('% Accuracy Compared to Book')
 
 %% Sens2
-sens = {'Parameter','Effect on F','Effect on S'};
+sens = {'Parameter','Value','Effect on F','Effect on S'};
 sens(2:30,1) = {'alt';'M0';'mdot';'F_mdot';'s';'alpha';'beta';'Ptoh';'PtoL';'h_PR';'pi_dmax';'pif';'ef';'picL';'ecL';'picH';'ecH';'eta_b';'pi_b';'etamH';'etamPH';'etH';'etamL';'etamPL';'etL';'pi_M_max';'pin';'T_t4';'Po9_P9'};
-%sens(2:30,2) = {alt M0 mdot F_mdot S alpha beta PtoH PtoL h_PR pi_dmax pif ef picL ecL picH ecH eta_b pi_b etamH etamPH etH etamL etamPL etL pi_M_max pin T_t4 Po9_P9};
-performance_f = performance;
-state_f = state;
-component_f = component;
-design_f = design;
-inputs_f = inputs;
+sens(2:30,2) = {alt M0 mdot F_mdot S alpha beta PtoH PtoL h_PR pi_dmax pif ef picL ecL picH ecH eta_b pi_b etamH etamPH etH etamL etamPL etL pi_M_max pin T_t4 Po9_P9};
 
-% for index = 2:length(sens)
-%     [inputs,design,component,state] = sensedit(state_f,component_f,design_f,inputs_f,index,1); %sw1 == change, sw2==revert
-%     [state,design] = derived_parameters(state,inputs,design,component);
-%     [state,component,performance_i] = component_seperate(state,component,design,inputs);
-%     errT = (performance_i{2,1} - performance_f{2,1})/performance_f{2,1};
-%     errS = (performance_i{2,2} - performance_f{2,2})/performance_f{2,2};
-%     sens{index,2} = errT;
-%     sens{index,3} = errS;
-%     %[inputs,design,component,state] = sensedit(state,component,design,inputs,index,0);
-% end
+performance_f = performance;
+
+
+for i = 2:length(sens)
+    clear state;clear component;clear design;clear inputs
+    state_f = state_joey;
+    component_f = component_joey;
+    design_f = design_joey;
+    inputs_f = inputs_joey;
+    [inputs,design,component,state,changedval] = sensedit(state_f,component_f,design_f,inputs_f,i); %sw1 == change, sw2==revert
+    [state,design] = derived_parameters(state,inputs,design,component);
+    [~,~,performance_i] = component_seperate(state,component,design,inputs);
+    errT = ((performance_i{2,1} - performance_f{2,1})/(performance_f{2,1}))/((changedval(1,1)-sens{i,2})/(sens{i,2}));
+    errS = ((performance_i{2,2} - performance_f{2,2})/(performance_f{2,2}))/((changedval(1,1)-sens{i,2})/(sens{i,2}));
+    sens{i,3} = abs(errT); %take abs out eventually
+    sens{i,4} = abs(errS);
+end
 
 
 %% Functions
 % High level analysis functions
+
 function [state,component,performance] = component_seperate(state,component,design,inputs)
 % Runs an engine analysis w/ a seperated LP and HP spools
 [state, component,v0] = ambient(state,component,inputs);
@@ -443,146 +448,113 @@ function [state,component,performance] = component_combined(state,component,desi
 fprintf('%s\n\n','This analysis was completed using COMBINED high and low spools.')
 end
 
-function [inputs,design,component,state] = sensedit(state,component,design,inputs,index,sw)
+function [inputs,design,component,state,changedval] = sensedit(state,component,design,inputs,index)
+
 n = .95;
 
-if sw == 1
     if index == 2
         inputs{2,2} = inputs{2,2}*n;
+        changedval = inputs{2,2};
     elseif index == 3
         inputs{3,2} = inputs{3,2}*n;
+        changedval = inputs{3,2};
     elseif index == 4
         inputs{5,2} = inputs{5,2}*n;
+        changedval = inputs{5,2};
     elseif index == 5
         inputs{4,2} = inputs{4,2}*n;
+        changedval = inputs{4,2};
     elseif index == 6
         inputs{6,2} = inputs{6,2}*n;
+        changedval = inputs{6,2};
     elseif index == 7
         design{2,2} = design{2,2}*n;
+        changedval = design{2,2};
     elseif index == 8
         design{3,2} = design{3,2}*n;
+        changedval = design{3,2};
     elseif index == 9
         design{7,2} = design{7,2}*n;
+        changedval = design{7,2};
     elseif index == 10
         design{6,2} = design{6,2}*n;
+        changedval = design{6,2};
     elseif index == 11
         design{8,2} = design{8,2}*n;
+        changedval = design{8,2};
     elseif index == 12
         component{3,2} = component{3,2}*n;
+        changedval = component{3,2};
     elseif index == 13
         component{4,2} = component{4,2}*n;
+        changedval = component{4,2};
     elseif index == 14
         component{4,3} = component{4,3}*n;
+        changedval = component{4,3};
     elseif index == 15
         component{5,2} = component{5,2}*n;
+        changedval = component{5,2};
     elseif index == 16
         component{5,3} = component{5,3}*n;
+        changedval = component{5,3};
     elseif index == 17
         component{6,2} = component{6,2}*n;
+        changedval = component{6,2};
     elseif index == 18
         component{6,3} = component{6,3}*n;
+        changedval = component{6,3};
     elseif index == 19
         component{7,5} = component{7,5}*n;
+        changedval = component{7,5};
     elseif index == 20
         component{7,2} = component{7,2}*n;
+        changedval = component{7,2};
     elseif index == 21
         component{9,5} = component{9,5}*n;
+        changedval = component{9,5};
     elseif index == 22
         component{10,5} = component{10,5}*n;
+        changedval = component{10,5};
     elseif index == 23
         component{9,3} = component{9,3}*n;
+        changedval = component{9,3};
     elseif index == 24
         component{12,5} = component{12,5}*n;
+        changedval = component{12,5};
     elseif index == 25
         component{13,5} = component{13,5}*n;
+        changedval = component{13,5};
     elseif index == 26
         component{12,3} = component{12,3}*n;
+        changedval = component{12,3};
     elseif index == 27
         component{14,2} = component{14,2}*n;
+        changedval = component{14,2};
     elseif index == 28
         component{16,2} = component{16,2}*n;
+        changedval = component{16,2};
     elseif index == 29
         inputs{7,2} = inputs{7,2}*n;
         state{9,3} = state{9,3}*n;
+        changedval = inputs{7,2};
     elseif index == 30
         inputs{8,2} = inputs{8,2}*n;
+        changedval = inputs{8,2};
     end
    
     
-elseif sw == 0
-    if index == 2
-        inputs{2,2} = inputs{2,2}/n;
-    elseif index == 3
-        inputs{3,2} = inputs{3,2}/n;
-    elseif index == 4
-        inputs{5,2} = inputs{5,2}/n;
-    elseif index == 5
-        inputs{4,2} = inputs{4,2}/n;
-    elseif index == 6
-        inputs{6,2} = inputs{6,2}/n;
-    elseif index == 7
-        design{2,2} = design{2,2}/n;
-    elseif index == 8
-        design{3,2} = design{3,2}/n;
-    elseif index == 9
-        design{7,2} = design{7,2}/n;
-    elseif index == 10
-        design{6,2} = design{6,2}/n;
-    elseif index == 11
-        design{8,2} = design{8,2}/n;
-    elseif index == 12
-        component{3,2} = component{3,2}/n;
-    elseif index == 13
-        component{4,2} = component{4,2}/n;
-    elseif index == 14
-        component{4,3} = component{4,3}/n;
-    elseif index == 15
-        component{5,2} = component{5,2}/n;
-    elseif index == 16
-        component{5,3} = component{5,3}/n;
-    elseif index == 17
-        component{6,2} = component{6,2}/n;
-    elseif index == 18
-        component{6,3} = component{6,3}/n;
-    elseif index == 19
-        component{7,5} = component{7,5}/n;
-    elseif index == 20
-        component{7,2} = component{7,2}/n;
-    elseif index == 21
-        component{9,5} = component{9,5}/n;
-    elseif index == 22
-        component{10,5} = component{10,5}/n;
-    elseif index == 23
-        component{9,3} = component{9,3}/n;
-    elseif index == 24
-        component{12,5} = component{12,5}/n;
-    elseif index == 25
-        component{13,5} = component{13,5}/n;
-    elseif index == 26
-        component{12,3} = component{12,3}/n;
-    elseif index == 27
-        component{14,2} = component{14,2}/n;
-    elseif index == 28
-        component{16,2} = component{16,2}/n;
-    elseif index == 29
-        inputs{7,2} = inputs{7,2}/n;
-        state{9,3} = state{9,3}/n;
-    elseif index == 30
-        inputs{8,2} = inputs{8,2}/n;
-    end
-    
-end
 end
 
-%function [error] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val,inputs);
-% [~,~,performance_i] = component_seperate(state_i,component_i,design_i,inputs);
-% F_mdot_i = performance_i{2,1};
-% S_i = performance_i{2,2};
-%
-% delta_F = (F_mdot_i - F_mdot)/9.806;
-% delta_S = (S_i - S)/S;
-% error(1,:) = [delta_F/delta_val,delta_S/delta_val];
-% end
+function [error] = sensitivity(S,F_mdot,state_i,component_i,alt_i,M0_i,mdotep1_i,Po9_P9_i,design_i,delta_val,inputs);
+[~,~,performance_i] = component_seperate(state_i,component_i,design_i,inputs);
+F_mdot_i = performance_i{2,1};
+S_i = performance_i{2,2};
+
+delta_F = (F_mdot_i - F_mdot)/9.806;
+delta_S = (S_i - S)/S;
+error(1,:) = [delta_F/delta_val,delta_S/delta_val];
+end
+
 
 function [state,design] = derived_parameters(state,inputs,design,component)
 %% Derived Parameters
@@ -659,6 +631,7 @@ state(21,5) = {mdotep1};
 state(22,5) = {mdotep2};
 
 end
+
 
 % Component analysis functions
 function [state, component,v0] = ambient(state,component,inputs)
