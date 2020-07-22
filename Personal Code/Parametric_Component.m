@@ -416,6 +416,17 @@ for i = 2:length(sens)
     sens{i,4} = abs(errS);
 end
 
+h5 = figure(5);
+h5.WindowStyle = 'docked';
+pie(cell2mat(sens(2:end,3)),{'Alt','M0','','F/mdot','SFC','\alpha','\beta','','PtoL','h_PR','','\pi_f','','\pi_cL','ecL','\pi_cH','ecH','\eta_b','\pi_b','\eta_mH','','etH','\eta_mL','\eta_mPL','etL','\pi_Mmax','\pi_n','To4','Po9/P9'})
+warning off
+title('Input Sensitivity to Overall Thrust')
+
+h6 = figure(6);
+h6.WindowStyle = 'docked';
+pie(cell2mat(sens(2:end,4)),{'Alt','M0','','F/mdot','SFC','\alpha','\beta','','PtoL','h_PR','','\pi_f','','\pi_cL','ecL','\pi_cH','ecH','\eta_b','\pi_b','\eta_mH','','etH','\eta_mL','\eta_mPL','etL','\pi_Mmax','\pi_n','To4','Po9/P9'})
+warning off
+title('Input Sensitivity to Specific Fuel Consumption')
 
 %% Functions
 % High level analysis functions

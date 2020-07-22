@@ -205,6 +205,10 @@ inputs(8,2) = {Po9_P9};
 
 %% Derived Parameters
 [state,design] = derived_parameters(state,inputs,design,component);
+state_joey = state;
+design_joey = design;
+inputs_joey = inputs;
+component_joey = component;
 
 %% Analysis
 
@@ -395,23 +399,27 @@ sens(2:30,1) = {'alt';'M0';'mdot';'F_mdot';'s';'alpha';'beta';'Ptoh';'PtoL';'h_P
 sens(2:30,2) = {alt M0 mdot F_mdot S alpha beta PtoH PtoL h_PR pi_dmax pif ef picL ecL picH ecH eta_b pi_b etamH etamPH etH etamL etamPL etL pi_M_max pin T_t4 Po9_P9};
 
 performance_f = performance;
-state_f = state;
-component_f = component;
-design_f = design;
-inputs_f = inputs;
 
 
-for i = 15:length(sens)
-    clear state
+for i = 2:length(sens)
+    clear state;clear component;clear design;clear inputs
+    state_f = state_joey;
+    component_f = component_joey;
+    design_f = design_joey;
+    inputs_f = inputs_joey;
     [inputs,design,component,state,changedval] = sensedit(state_f,component_f,design_f,inputs_f,i); %sw1 == change, sw2==revert
     [state,design] = derived_parameters(state,inputs,design,component);
     [~,~,performance_i] = component_seperate(state,component,design,inputs);
     errT = ((performance_i{2,1} - performance_f{2,1})/(performance_f{2,1}))/((changedval(1,1)-sens{i,2})/(sens{i,2}));
     errS = ((performance_i{2,2} - performance_f{2,2})/(performance_f{2,2}))/((changedval(1,1)-sens{i,2})/(sens{i,2}));
-    sens{i,3} = errT;
-    sens{i,4} = errS;
+    sens{i,3} = abs(errT); %take abs out eventually
+    sens{i,4} = abs(errS);
 end
 
+h5 = figure(5);
+h5.WindowStyle = 'docked';
+pie(cell2mat(sens(2:end,3)),{'Alt','M0','','F/mdot','SFC','ecH','ecL','Alt','etamH','\alpha','etamL','pi_cL','picH','eta_b','F/mdot','SFC','pi_dmax','\beta','hi','hi','hi','hi','hi','hi','hi','hi','hi','hi','hi'})
+    
 
 %% Functions
 % High level analysis functions
