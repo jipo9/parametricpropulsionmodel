@@ -565,6 +565,7 @@ state(22,5) = {mdotep2};
 
 end
 
+
 % Component analysis functions
 function [state, component,v0] = ambient(state,component,inputs)
 alt = inputs{2,2};
@@ -767,8 +768,8 @@ Po44 = state{11,2};
 
 tauth = ho44/ho41;
 component{9,4} = tauth;
-eth = component{9,3};
-pitH = (state{11,2} / state{10,2})^(1/eth);
+eth = componen
+pitH = (state{11,2} / state{10,2})^;
 component{9,2} = pitH;
 
 statet = state;
@@ -824,8 +825,7 @@ Po5 = state{13,2};
 
 tautl = ho5/ho45;
 component{12,4} = tautl;
-etl = component{12,3};
-pitL = (state{13,2} / state{12,2})^(1/etl);
+pitL = state{13,2} / state{12,2};
 component{12,2} = pitL;
 
 Po5i = Po45*pitL; %mechanical efficiency
