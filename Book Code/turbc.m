@@ -1,5 +1,10 @@
 function [state] = turbc(state,M4,M45,A4,A45,To45R,eta_t)
+%take in state r and component R??
+
+
 %take in M4, M45, A5,A45,To45R, eta_t
+
+
 %fair(f,To4)
 ho3 = state{7,8};
 

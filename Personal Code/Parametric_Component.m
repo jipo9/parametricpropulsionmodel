@@ -412,8 +412,11 @@ for i = 2:length(sens)
     [~,~,performance_i] = component_seperate(state,component,design,inputs);
     errT = ((performance_i{2,1} - performance_f{2,1})/(performance_f{2,1}))/((changedval(1,1)-sens{i,2})/(sens{i,2}));
     errS = ((performance_i{2,2} - performance_f{2,2})/(performance_f{2,2}))/((changedval(1,1)-sens{i,2})/(sens{i,2}));
-    sens{i,3} = abs(errT); %take abs out eventually
-    sens{i,4} = abs(errS);
+    sens{i,3} = errT; %take abs out eventually
+    sens{i,4} = errS;
+    
+    %     sens{i,3} = abs(errT); %take abs out eventually
+%     sens{i,4} = abs(errS);
 end
 
 
