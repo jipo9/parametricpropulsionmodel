@@ -20,7 +20,7 @@ pi_n = .97;
 component(2:16,2) = {3.4211; .9354; 3.9000; 3.9000; 5.1282; []; [];    .4231; []; [];    .4831; []; .9779; []; pi_n};
 component(2:16,4) = {1.4211; [];    1.5479; 1.5479; 1.6803; []; .9673; .8381; []; .9731; .8598; []; .8404; []; []};
 
-mdot = 187.45*0.45359237;
+mdot = 188.72*0.45359237;
 alpha = .449;
 beta = .01;
 ep1 = .05;
@@ -42,6 +42,9 @@ design{5,2} = ep2;
 
 
 [state,design] = derived_parameters_performance(state,inputs,design,component);
+[state,component] = a(state,component,alt,To4);
+
+function [state,component] = a(state,component,alt,To4)
 
 %% State 0
 [T0, ~, ~, ~] = atmosisa(alt);
@@ -114,9 +117,7 @@ state{13,3} = T_o5;
 [state] = unFAIR3(state,13);
 
 %% State 6o (stop here)
-
-
-
+end
 
 function [state,design] = derived_parameters_performance(state,inputs,design,component)
 %Derived parameters for performance model, w/ changing values
