@@ -12,6 +12,19 @@ close all
 % Assumption changes:
 % - A lot of misc stuff
 % - They assume calorically perfect???
+
+
+
+
+
+
+
+% If everything else is correct and using traditional method for
+% calculating turbines, we get:
+    % .1% enthalpy error in m1
+    % 2.1% enthalpy error in tH
+    % .3% enthalpy error in m2
+    % 1.3% enthalpy error in tC
 %% On Design Analysis
 
 
@@ -351,16 +364,16 @@ f45 = state{12,4};
 
 
 
-M45 = .3;
-M6 = .4;
-[a] = turb_R(stateR,M45,M6)
+% M45 = .3;
+% M6 = .4;
+% [a] = turb_R(stateR,M45,M6)
 
 
-M4 = 1;
-
-
-A4 = 1;
-A45 = 1;
+% M4 = 1;
+% 
+% 
+% A4 = 1;
+% A45 = 1;
 To45R = state{12,3};
 eta_t = component{9,5};
 
