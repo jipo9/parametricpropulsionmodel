@@ -592,7 +592,6 @@ ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
 end
-
 function [state,component] = inlet(state,component,inputs)
 M0 = inputs{3,2};
 pi_dmax = component{3,2};
@@ -617,7 +616,6 @@ ho2 = state{4,8};
 tau_d = ho2/ho0;
 component{3,4} = tau_d;
 end
-
 function [state,component] = fan(state,component)
 pif = component{4,2};
 ef = component{4,3};
@@ -644,7 +642,6 @@ state = statet;
 etaf = (ho13i-ho2)/(ho13-ho2);
 component{4,5} = etaf;
 end
-
 function [state,component] = LPcomp(state,component)
 
 picl = component{5,2};
@@ -671,7 +668,6 @@ state = statet;
 etacL = (ho25i-ho2)/(ho25-ho2);
 component{5,5} = etacL;
 end
-
 function [state,component] = HPcomp(state,component)
 pich = component{6,2};
 ech = component{6,3};
@@ -697,7 +693,6 @@ state = statet;
 etach = (ho3i-ho25)/(ho3-ho25);
 component{6,5} = etach;
 end
-
 function [state,component] = combinedcomp(state,component)
 picl = component{4,2};
 pich = component{5,2};
@@ -713,7 +708,6 @@ Po3 = Po2*pic^(1/ec);
 state(7,2) = {Po3};
 [state] = unFAIR3(state,7);
 end
-
 function [state,component] = burner(state,component)
 state(8,2:3) = state(7,2:3);
 state(8,6:12) = state(7,6:12);
@@ -729,7 +723,6 @@ ho4 = state{9,8};
 taub = ho4/ho31;
 component{7,4} = taub;
 end
-
 function [state,component] = HPturb(state,component,design)
 mdot3 = state{7,5};
 mdot4 = state{9,5};
@@ -783,7 +776,6 @@ etatH = (ho41-ho44)/(ho41-ho44i);
 component{9,5} = etatH;
 
 end
-
 function [state,component] = LPturb(state,component,design)
 mdot13 = state{5,5};
 mdot25 = state{6,5};
@@ -841,7 +833,6 @@ state(13,8) = {[]};
 etatH = (ho45-ho5)/(ho45-ho5i);
 component{12,5} = etatH;
 end
-
 function [state,component] = combinedturb(state,component,design)
 hoep = state{8,8};
 ho4 = state{9,8};
@@ -892,7 +883,6 @@ pit = state{13,2} / state{12,2};
 component{12,2} = pit;
 component{9,2} = pit;
 end
-
 function [state,component] = mixer(state,component)
 %Assume ideal pressure ratio (mach independent)
 %Assume perfect polytropic efficiency
@@ -916,7 +906,6 @@ state(15,2) = {Po6A};
 tauM = ho6/ho5;
 component{14,4} = tauM;
 end
-
 function [state,component] = afterburner(state,component)
 [state] = unFAIR3(state,16);
 
@@ -930,7 +919,6 @@ ho4 = state{9,8};
 tauab = ho4/ho31;
 component{7,4} = tauab;
 end
-
 function [state,component,performance] = nozzle(state,component,inputs,v0,design)
 alpha = design{2,2};
 beta = design{3,2};

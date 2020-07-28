@@ -41,6 +41,7 @@ if item == 2 || item == 3
         state.M = 0;
         %T = statet.T; %why is this here
     else
+        a = statex.a;
         state.M = (sqrt(Vsq))/a;
     end
     [T_t_over_T,P_t_over_P,MFP] = MASSFP(Tt,f,state.M);
