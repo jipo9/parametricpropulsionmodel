@@ -194,7 +194,6 @@ design(7,2) = {PtoH};
 % f0 = 0;
 
 M6 = .5; %inital guess
-A16_A6 = .2715;
 %% Peliminary computations
 
 
@@ -479,8 +478,8 @@ MFP16 = statex.MFP;
 M16 = statex.M;
 
 T16 = To16/ToT16;
-alpha_prime_new = Po16*A16_A6*MFP16*sqrt(To6) ... 
-    / (Po6*MFP6*sqrt(To16));
+alpha_prime_new = Po16*A16*MFP16/sqrt(To16) ... % A16??
+    / (Po6*A6*MFP6/sqrt(To6));
 alpha_prime_error = norm((alpha_prime_new-alpha_prime)/alpha_prime);
 alpha = alpha_prime_new *(mdot5/mdot0);
 
