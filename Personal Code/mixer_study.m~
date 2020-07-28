@@ -9,8 +9,7 @@ close all
 
 % With an endgoal of approximating an area ratio and mach number, known
 % values are plotted against our approximations and used as a reference to
-% check accuracy. Inputs come from the text, and equations are a mixture of
-% self derived and found in the text
+% check accuracy
 %% Notes
 % Current state
     % M6/M16 seems accurate
