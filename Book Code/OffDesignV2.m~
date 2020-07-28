@@ -43,13 +43,41 @@ A6 = 1; %placeholder
 A16 = 1; %placeholder
 A6A = 1; %placeholder
 pi_ABdry = 1;
-pi_AB = 1;
+pi_AB = .95;
 pi_n = componentR{16,2};
 A8dry = 1; %placeholder
+
+%constants from on-design
+eta_cL = .8674;
+eta_mL = .995;
+eta_f = .8674;
+pi_b = .95;
+Cp_c = .24;
+Cp_t = .295;
+eta_AB = .99;
+eta_cH = .8751;
+eta_mH = .995;
+eta_b = .999;
+gamma_c = 1.4;
+Cp_AB = .295;
+eta_tH = .8995;
+eta_PL = 1;
+pi_c = 20;
+pi_n = .97;
+gamma_t = 1.3;
+gamma_AB = 1.3;
+eta_tL = .9074;
+eta_PH = 1;
+PtoL = designR{6,2};
+
+
+
+
 
 %%
 state = stateR;
 component = componentR;
+design = designR;
 
 %% Box 1
 
@@ -65,10 +93,57 @@ pi_tH = component{9,2};
 tau_tH = component{9,4};
 tau_m1 = component{8,4};
 tau_m2 = component{11,4};
+tau_tL = component{12,4};
 
 
-fun51 = @(To45) ((1+(ep1+ep2)/((1-beta-ep1-ep2)*(1+f))) * (mdot4/mdot45) * (Po45/Po4) * (1/sqrt(To45/To4))) - (pi_tH/(sqrt(To45/To4)));
-To45 = fzero(fun51,To4);
+%fun51 = @(To45) ((1+(ep1+ep2)/((1-beta-ep1-ep2)*(1+f))) * (mdot4/mdot45) * (Po45/Po4) * (1/sqrt(To45/To4))) - (pi_tH/(sqrt(To45/To4)));
+%To45 = fzero(fun51,To4);
+
+
+mdot4_mdotc = (1-beta-ep1-ep2)*(1+f);
+tau_lambda = state{9,8}/state{2,8};
+tau_r = state{3,3}/state{2,3};
+tau_cL = component{5,4};
+tau_cH = component{6,4};
+alpha = design{2,2};
+eta_mPL = 1;
+eta_mPH = 1;
+h0 = 1;
+tau_fR = componentR{4,4};
+tau_cLR = componentR{5,4};
+
+tau_f = 1+(((1-tau_tL)*eta_mL*((mdot4_mdotc*(tau_lambda*tau_tH/tau_r))+((ep1*tau_tH+ep2)*tau_cL*tau_cH)) - (((1+alpha)*PtoL)/(tau_r*eta_mPL*mdot0*h0))) / ((tau_cLR-1)/(tau_fR-1)+alpha));
+
+tau_cL = 1+(tau_f-1)*((tau_cLR-1)/(tau_fR-1));
+
+ho13i = state{4,8}*(1+eta_f*(tau_f-1));
+state(5,8) = {ho13i};
+state(5,2) = {[]}; state(5,3) = {[]};
+[state] = unFAIR3(state,5);
+Pro13i = state{5,2};
+Pro2 = state{4,2};
+state(5,:) = stateR(5,:);
+pi_f = Pro13i/Pro2;
+
+ho25i = state{4,8}*(1+eta_cL*(tau_cL-1));
+state(6,8) = {ho25i};
+state(6,2) = {[]}; state(6,3) = {[]};
+[state] = unFAIR3(state,6);
+Pro25i = state{6,2};
+Pro2 = state{4,2};
+state(6,:) = stateR(6,:);
+pi_cL = Pro25i/Pro2;
+
+tau_cH = (1+((1-tau_tH)*eta_mH*((1-beta-ep1-ep2)*(1+f)*(tau_lambda/(tau_r*tau_cL)))) - (((1+alpha)/(tau_r*tau_cL*eta_mPH))*(PtoL/(mdot0*h0)))) / (1-ep1*(1-tau_tH)*eta_mH);
+
+ho3i = state{6,8}*(1+eta_cH*(tau_cH-1));
+state(7,8) = {ho3i};
+state(7,2) = {[]}; state(7,3) = {[]};
+[state] = unFAIR3(state,7);
+Pro3i = state{7,2};
+Pro25 = state{6,2};
+state(7,:) = stateR(7,:);
+pi_cH = Pro3i/Pro25;
 
 
 
