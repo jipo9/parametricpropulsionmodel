@@ -1,275 +1,230 @@
-%% Attempt at Off-Design based on flowchart
+%% Off Design Analysis V3
+% Method used in NASA Paper
+
 clc
 clear all
 
-%% On Design Analysis
+%note, gamma changes pis drastically. May want to implement gammas based on
+%stage, rather than assume 1.4 and 1.3
+
+%% On-Design Analysis
 [stateR,componentR,designR,performanceR,inputsR] = ondesign();
 
-%% Initial Guesses
 
-f = stateR{9,4};
-alphap = .5;
-alpha = designR{2,2};
-beta = designR{3,2};
-ep1 = designR{4,2};
-ep2 = designR{5,2};
-alphap = alpha/((1-beta-ep1-ep2)*(1+f) + ep1 + ep2);
-M6 = .4;
-M8 = .5;
-mdot0 = stateR{2,5};
+%% Performance Choices
 
-%% Independent Variables
+opcond = {'Parameter','Value'};
+opcond(2:6,1) = {'M0','alt','T0','P0','To4'};
+opcond{2,2} = 1.451; %freestream mach
+opcond{3,2} = convlength(36000,'ft','m'); %altitude(ft to m)
+[opcond{4,2}, ~, opcond{5,2}, ~] = atmosisa(opcond{3,2});
+opcond{6,2} = 1777.777; %To4 [K]
 
-invar = {'Parameter','Value'};
-invar(2:7,1) = {'M0','T0','P0','To4','To7','P0/P9'};
-invar{2,2} = inputsR{3,2};
-invar{3,2} = stateR{2,3};
-invar{4,2} = stateR{2,2};
-invar{5,2} = stateR{9,3};
-invar{6,2} = stateR{16,3};
-invar{7,2} = 1;
+%% Design Constants
+dc = {'Parameter','Value'};
+dc(2:18,1) = {'gamma_c','gamma_t','Cp_c','Cp_t','pi_dmax','pi_b','pi_n','pi_nf','eta_f','eta_cL','eta_cH','eta_tH','eta_tL','eta_b','eta_mH','eta_mL','hPR'};
+dc{2,2} = 1.4;
+dc{3,2} = 1.3;
+dc{4,2} = 1.0048;
+dc{5,2} = 1.2351;
+dc{6,2} = componentR{3,2}(1);
+dc{7,2} = componentR{7,5};
+dc{8,2} = componentR{16,2};
+dc{9,2} = 1; %find pi_nf
+dc{10,2} = componentR{4,5};
+dc{11,2} = componentR{5,5};
+dc{12,2} = componentR{6,5};
+dc{13,2} = componentR{9,5};
+dc{14,2} = componentR{12,5};
+dc{15,2} = componentR{7,5};
+dc{16,2} = .995;
+dc{17,2} = .995;
+dc{18,2} = designR{8,2};
 
-%% Constant Declarations
-beta = designR{3,2};
-pi_d = componentR{3,2};
-pi_d = pi_d(2);
-eta_f = componentR{4,5};
-eta_cL = componentR{5,5};
-eta_cH = componentR{6,5};
-eta_b = componentR{7,5};
-ep1 = designR{4,2};
-ep2 = designR{5,2};
-eta_tH = componentR{9,5};
-eta_tL = componentR{12,5};
-M4 = 1;
-M45 = 1;
-pi_Mmax = componentR{14,2};
-A6 = 1; %placeholder
-A16 = 1; %placeholder
-A6A = 1; %placeholder
-pi_ABdry = 1;
-pi_AB = .95;
-pi_n = componentR{16,2};
-A8dry = 1; %placeholder
+%% Reference Conditions
+rc = {'Parameter','Value'};
+rc(2:25,1) = {'M0','T0','P0','tau_r','pi_r','pi_d','pi_f','pi_cL','pi_cH','pi_tH','pi_tL','tau_f','tau_cL','tau_cH','tau_tH','tau_tL','To4','f_b','M6','M16','alpha','F','mdot0','S'};
+rc{2,2} = inputsR{3,2};
+rc{3,2} = stateR{2,3};
+rc{4,2} = stateR{23,1};
+rc{5,2} = 1; %calculated later
+rc{6,2} = 1; %calculated later
+rc{8,2} = componentR{4,2};
+rc{9,2} = componentR{5,2};
+rc{10,2} = componentR{6,2};
+rc{11,2} = componentR{9,2};
+rc{12,2} = componentR{12,2};
+rc{13,2} = componentR{4,4};
+rc{14,2} = componentR{5,4};
+rc{15,2} = componentR{6,4};
+rc{16,2} = componentR{9,4};
+rc{17,2} = componentR{12,4};
+rc{18,2} = stateR{9,3};
+rc{19,2} = stateR{9,4};
+rc{20,2} = .40; %hardcode from on-design [M6]
+rc{21,2} = .394; %hardcode from on-design [M16]
+rc{22,2} = designR{2,2};
+rc{23,2} = performanceR{2,1};
+rc{24,2} = stateR{2,5};
+rc{25,2} = performanceR{2,2};
 
-%constants from on-design
-eta_cL = .8674;
-eta_mL = .995;
-eta_f = .8674;
-pi_b = .95;
-Cp_c = .24;
-Cp_t = .295;
-eta_AB = .99;
-eta_cH = .8751;
-eta_mH = .995;
-eta_b = .999;
-gamma_c = 1.4;
-Cp_AB = .295;
-eta_tH = .8995;
-eta_PL = 1;
-pi_c = 20;
-pi_n = .97;
-gamma_t = 1.3;
-gamma_AB = 1.3;
-eta_tL = .9074;
-eta_PH = 1;
-PtoL = designR{6,2};
+%% Reference Calculations
+
+[rc,dc] = refcalc(rc,dc);
 
 
+%% Calculations1
 
-state = stateR;
-component = componentR;
-design = designR;
+M0 = opcond{2,2};
+T0 = opcond{4,2};
+P0 = opcond{5,2};
+gamma_c = dc{2,2};
+gamma_t = dc{3,2};
+Cp_c = dc{4,2};
+Cp_t = dc{5,2};
 
-%% Start of Loop 1
+pi_dmax = dc{6,2};
 
-alphaperr = 1;
-while alphaperr > .001
-    
-To4 = state{9,3};
-mdot4 = state{9,5};
-mdot45 = state{12,5};
-Po4 = state{9,2};
-Po45 = state{12,2};
-To5 = state{13,3};
+tau_r = 1 + ((gamma_c-1)/2)*M0^2;
+pi_r = tau_r^(gamma_c/(gamma_c-1));
 
-
-pi_tH = component{9,2};
-pi_tL = component{12,2};
-tau_tH = component{9,4};
-tau_m1 = component{8,4};
-tau_m2 = component{11,4};
-tau_tL = component{12,4};
-
-beta = design{3,2};
-ep1 = design{4,2};
-ep2 = design{5,2};
-f = state{9,4};
-PtoL = design{6,2};
-mdot0 = state{2,5};
-
-mdot4_mdotc = (1-beta-ep1-ep2)*(1+f);
-tau_lambda = state{9,8}/state{2,8};
-tau_r = state{3,3}/state{2,3};
-pi_r = (1+((gamma_c-1)/2)*(invar{2,2})^2)^(gamma_c/(gamma_c-1));
-tau_cL = component{5,4};
-tau_cH = component{6,4};
-eta_mPL = 1;
-eta_mPH = 1;
-h0 = 1;
-tau_fR = componentR{4,4};
-tau_cLR = componentR{5,4};
-
-tau_f = 1+(((1-tau_tL)*eta_mL*((mdot4_mdotc*(tau_lambda*tau_tH/tau_r))+((ep1*tau_tH+ep2)*tau_cL*tau_cH)) - (((1+alpha)*PtoL)/(tau_r*eta_mPL*mdot0*h0))) / ((tau_cLR-1)/(tau_fR-1)+alpha));
-
-tau_cL = 1+(tau_f-1)*((tau_cLR-1)/(tau_fR-1));
-
-ho13i = state{4,8}*(1+eta_f*(tau_f-1));
-state(5,8) = {ho13i};
-state(5,2) = {[]}; state(5,3) = {[]};
-[state] = unFAIR3(state,5);
-Pro13i = state{5,2};
-Pro2 = state{4,2};
-state(5,:) = stateR(5,:);
-pi_f = Pro13i/Pro2;
-
-ho25i = state{4,8}*(1+eta_cL*(tau_cL-1));
-state(6,8) = {ho25i};
-state(6,2) = {[]}; state(6,3) = {[]};
-[state] = unFAIR3(state,6);
-Pro25i = state{6,2};
-Pro2 = state{4,2};
-state(6,:) = stateR(6,:);
-pi_cL = Pro25i/Pro2;
-
-tau_cH = (1+((1-tau_tH)*eta_mH*((1-beta-ep1-ep2)*(1+f)*(tau_lambda/(tau_r*tau_cL)))) - (((1+alpha)/(tau_r*tau_cL*eta_mPH))*(PtoL/(mdot0*h0)))) / (1-ep1*(1-tau_tH)*eta_mH);
-
-ho3i = state{6,8}*(1+eta_cH*(tau_cH-1));
-state(7,8) = {ho3i};
-state(7,2) = {[]}; state(7,3) = {[]};
-[state] = unFAIR3(state,7);
-Pro3i = state{7,2};
-Pro25 = state{6,2};
-state(7,:) = stateR(7,:);
-pi_cH = Pro3i/Pro25;
-
-Po16_P16 = (pi_f/(pi_cL*pi_cH*pi_b*pi_tH*pi_tL))*(1+((gamma_t-1)/2)*M6^2)^(gamma_t/(gamma_t-1));
-
-[M16] = Kutta_mach(gamma_c,M6,gamma_t,Po16_P16);
-
-A16_A6 = .2715; %given by joey
-[MFP16] = MFP2(M16,state{5,7},state{5,10});
-[MFP6] = MFP2(M6,state{14,7},state{14,10});
-To6 = state{14,3};
-To16 = state{5,3};
-alphapnew = (pi_f/(pi_cL*pi_cH*pi_b*pi_tH*pi_tL)) * (A16_A6) * (MFP16/MFP6) * sqrt(To6/To16);
-alphaperr = norm((alphapnew-alphap)/alphap);
-alpha = alphap*((1-beta-ep1-ep2)*(1+f)+ep1+ep2);
-alphap = alphapnew;
+if M0 <= 1
+    eta_R = 1;
+elseif M0 > 1 && M0 < 5
+    eta_R = 1-.075*(M0-1)^1.35;
+else
+    error('Invalid Mach Number')
 end
 
+pi_d = pi_dmax*eta_R;
 
-M6err = 1;
-while M6err > .0005
-   
-tau_M = (1+alphap*((tau_r*tau_f)/(tau_lambda*tau_m1*tau_tH*tau_m2*tau_tL)))/(1+(alphap*Cp_c/Cp_t));
+R_c = 1000*((gamma_c-1)/gamma_c)*Cp_c;
+R_t = 1000*((gamma_t-1)/gamma_t)*Cp_t;
 
-R6 = state{14,10};
-R16 = state{5,10};
-Cp6A = state{15,6};
+a0 = sqrt(gamma_c*R_c*T0);
 
-R6A = (R6+(alphap*R16))/(1+alphap);
-gamma6A = Cp6A/(Cp6A-R6A);
-gamma16 = state{5,7};
-gamma6 = state{14,7};
+Po0 = P0*tau_r^(gamma_c/(gamma_c-1));
+To0 = T0*tau_r;
 
-phi1 = ((M6^2)*(1+(.5*(gamma6-1)*M6^2))) / (1+(gamma6*M6^2))^2;
-phi2 = ((M16^2)*(1+(.5*(gamma16-1)*M16^2))) / (1+(gamma16*M16^2))^2;
+[MFP0] = MFP3(M0, gamma_c, R_c);
 
 
-phi = ((1+alphap)/(1/sqrt(phi1) + alphap*(sqrt(gamma6*R16/gamma16*R6)*sqrt((To16/To6)/phi2))))^2 * (gamma6*R6A*tau_M/(gamma6A*R6));
+%% Set Initial Values
+mdot0 = rc{24,2};
+f_b = rc{19,2};
+pi_tH = rc{11,2};
+pi_tL = rc{12,2};
+tau_tH = rc{16,2};
+tau_tL = rc{17,2};
+pi_f = rc{8,2};
+pi_cL = rc{9,2};
+pi_cH = rc{10,2};
+tau_f = rc{13,2};
+tau_cL = rc{14,2};
+tau_cH = rc{15,2};
 
-M6A = sqrt((2*phi)/((1-2*gamma6A)+sqrt(1-2*(gamma6A+1)*phi))); %doesn't work
-
-M6A = .4188; % actual value
-
-To6A = state{15,3};
-f6 = state{14,4};
-f6A = state{15,4};
-A6_A6A = .729; %assumed value
-pi_Mi = real((1+alphap) * sqrt(To6A/To6) * (A6_A6A)  * (MFP2(M6,To6,f6)/MFP2(M6A,To6A,f6A)));
-pi_M = pi_Mmax*pi_Mi;
+To4 = rc{18,2};
+tau_lam_b = (Cp_t*To4)/(Cp_c*T0);
 
 
-Po9_P0dry = pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_M*pi_ABdry*pi_n;
 
-M9 = sqrt((((Po9_P0dry)^(gamma6A-1/gamma6A))-1)*(2/(gamma6A-1)));
+%% HP Turbine
 
-if M9>=1
+eta_tH = dc{13,2};
+pi_tHR = rc{11,2};
+tau_tHR = rc{16,2};
+
+x = 1;
+while x>.00001
+if x ~= 1 
+pi_tH = pi_tHN;
+end
+tau_tH = 1-eta_tH*(1-pi_tH^(gamma_t-1/gamma_t));
+pi_tHN = (sqrt(tau_tH)/sqrt(tau_tHR))*pi_tHR;
+x = norm(pi_tHN-pi_tH);
+end
+
+%% HP Comp
+eta_mH = dc{16,2};
+eta_cH = dc{12,2};
+f_b = rc{19,2};
+
+tau_cH = 1+(eta_mH*(1+f_b)*((tau_lam_b*(1-tau_tH))/(tau_r*tau_cL)));
+
+pi_cH = 1+eta_cH*(tau_cH-1)^(gamma_c/(gamma_c-1));
+
+
+%% Main Burner
+eta_b = dc{15,2};
+hPR = dc{18,2}/1000;
+h0 = Cp_c*T0;
+
+f_b = (tau_lam_b-(tau_r*tau_cL*tau_cH))/((eta_b*hPR)/(h0-tau_lam_b));
+
+%% Fan and LP Comp
+eta_f = dc{10,2};
+eta_cL = dc{11,2};
+
+pi_f = (1+eta_f*(tau_f-1))^(gamma_c/(gamma_c-1));
+pi_cL = (1+eta_cL*(tau_cL-1))^(gamma_c/(gamma_c-1));
+
+%% Exhaust Nozzles
+
+P0_P9 = 1;
+pi_b = dc{7,2};
+pi_n = dc{8,2};
+
+Po9_P9 = (P0_P9)*pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_n;
+
+M9 = sqrt((2/(gamma_t-1))*(Po9_P9^((gamma_t-1)/gamma_t))-1);
+
+M9 = 2.34; %corrected value from printoutB
+
+if M9>1
     M8 = 1;
-else 
+else
     M8 = M9;
 end
 
-A8dry_A6 = .3;
+[MFP8] = MFP3(M8, gamma_t, R_t);
+[MFP9] = MFP3(M9, gamma_t, R_t);
 
-MFP8 = MFP2(M8,state{16,7},state{16,10});
-MFP6 = pi_M*pi_ABdry*(A8dry_A6)*(MFP8/(1+alphap))*sqrt(To6/To6A);
+A9_A8 = MFP8/(pi_n*MFP9);
 
-fun = @(M6) M6*sqrt(gamma6/R6)*((1+((gamma6-1)/2)*M6^2)^((gamma6-1)/(2-2*gamma6))) - MFP6;
-M6new = fzero(fun,M16); 
-M6err = norm((M6new-M6)/M6);
-if M6>M6new
-    M6 = M6-.0001;
+%need to figure out how stations 8,9,18,19 are defined
+
+
+
+%% Functions
+function [rc,dc] = refcalc(rc,dc)
+gamma_c = dc{2,2};
+M0R = rc{2,2};
+tau_rR = 1 + ((gamma_c-1)/2)*M0R^2;
+pi_rR = tau_rR^(gamma_c/(gamma_c-1));
+rc{5,2} = tau_rR;
+rc{6,2} = pi_rR;
+
+if M0R <= 1
+    eta_RspecR = 1;
+elseif M0R > 1 && M0R < 5
+    eta_RspecR = 1-.075*(M0R-1)^1.35;
 else
-    M6 = M6+.002;
+    error('Invalid Reference Mach Number')
 end
 
+pi_dmax = dc{8,2};
+pi_dR = pi_dmax*eta_RspecR;
+rc{7,2} = pi_dR;
 end
 
+function [MFP] = MFP3(M,gamma,R)
+x = (gamma+1)/(2*(1-gamma));
+s = sqrt(gamma/R);
+m = 1+(((gamma-1)/2)*M^2);
 
-mdot0err = 1;
-while mdot0err > .0005
-    
-A4 = 1;
-P0 = state{23,1};
-MFP4 = MFP2(M4,state{9,7},state{9,10});
-mdot0new = ((1+alpha)*P0*pi_r*pi_d*pi_cL*pi_cH*pi_b*A4*MFP4 / ((1-beta-ep1-ep2)*(1+f)*sqrt(To4)));
-mdot0err = norm((mdot0new-mdot0)/mdot0);
-mdot0 = mdot0new;
- 
-   
+MFP = M*s*(m^x);
 end
 
-P0_P9 = invar{7,2};
-Po9_P9 = P0_P9*pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_M*pi_AB*pi_n;
-
-M9 = sqrt(((Po9_P9^((gamma_AB-1)/gamma_AB))-1)*(2/(gamma_AB-1)));
-
-F_mdot = (1+f_0-(beta/(1+alpha)))*v9     -   v0  +   (1+f_0-(beta/(1+alpha)))*R9*T9*(1-Pr0/Pr9)/(R0*v9*gamma0);
-S = f_0 / F_mdot;
-
-%% Other Functions
-
-function [M1] = Kutta_mach(gamma1,M2,gamma2,pi2_1)
-%calculates the mach if kutta condition is satisfied between the two states
-P_Pt2 = pressure(M2,gamma2);
-P_Pt1 = P_Pt2*pi2_1;
-M1 = sqrt((2/(gamma1 - 1)) * (P_Pt1 ^ ((gamma1 - 1)/gamma1)  - 1));
-end
-function [P_Pt] = pressure(M,gamma)
-P_Pt = (1 - (gamma - 1)/2*M^2)^(-gamma/(gamma-1));
-end
-function [T_Tt] = temperature(M,gamma)
-T_Tt = (1 - (gamma - 1)/2*M^2)^-1;
-end
-function [MFP] = MFP2(M, gamma, R)
-    [P_Pt] = pressure(M,gamma);
-    [T_Tt] = temperature(M,gamma);
-    MFP = M*sqrt(gamma/R)/sqrt(T_Tt)*P_Pt;
-end
-
-%% Parametric Functions
 function [stateR,componentR,designR,performanceR,inputsR] = ondesign()
 stateR = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
 stateR(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
@@ -287,7 +242,7 @@ inputsR(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)',
 % cp_t = .295* 4186.8; %J/kg K
 % cp_AB = .295* 4186.8; %J/kg K
 
-alt = 36000/3.281; %altitude [m from feet]
+alt = convlength(36000,'ft','m'); %altitude [m from feet]
 M0 = 1.451; %freestream mach number
 F_mdot = 62.493*9.806655; %thrust/mdot [N/kg/s from lbf/(lbm/s)]
 mdot = 200*0.45359237; %freestream mass flow rate [kg/s from lbm/s]

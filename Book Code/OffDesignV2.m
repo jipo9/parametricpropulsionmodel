@@ -9,6 +9,11 @@ clear all
 
 f = stateR{9,4};
 alphap = .5;
+alpha = designR{2,2};
+beta = designR{3,2};
+ep1 = designR{4,2};
+ep2 = designR{5,2};
+alphap = alpha/((1-beta-ep1-ep2)*(1+f) + ep1 + ep2);
 M6 = .4;
 M8 = .5;
 mdot0 = stateR{2,5};
@@ -72,15 +77,13 @@ PtoL = designR{6,2};
 
 
 
-
-
-%%
 state = stateR;
 component = componentR;
 design = designR;
-alpha = design{2,2};
-alphaperr = 1;
 
+%% Start of Loop 1
+
+alphaperr = 1;
 while alphaperr > .001
     
 To4 = state{9,3};
@@ -108,7 +111,7 @@ mdot0 = state{2,5};
 mdot4_mdotc = (1-beta-ep1-ep2)*(1+f);
 tau_lambda = state{9,8}/state{2,8};
 tau_r = state{3,3}/state{2,3};
-pi_r = tau_r^(gamma_c/gamma_c-1);
+pi_r = (1+((gamma_c-1)/2)*(invar{2,2})^2)^(gamma_c/(gamma_c-1));
 tau_cL = component{5,4};
 tau_cH = component{6,4};
 eta_mPL = 1;
@@ -241,7 +244,8 @@ end
 P0_P9 = invar{7,2};
 Po9_P9 = P0_P9*pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_M*pi_AB*pi_n;
 
-M9 = sqrt(((2/(gamma_AB-1)*(Po9_P9^(gamma_AB-1/gamma_AB) - 1))))
+M9 = sqrt(((Po9_P9^((gamma_AB-1)/gamma_AB))-1)*(2/(gamma_AB-1)));
+
 
 %% Other Functions
 
