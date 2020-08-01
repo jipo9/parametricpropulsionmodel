@@ -57,24 +57,25 @@ if item == 4 || 5
         state.M = 2;
     elseif item == 5
         state.M = .5;
-        dM = .1;
-        [~,~,MFP0] = MASSFP(Tt,f,state.M);
-        MFPerr = 1;
-        while MFPerr>.00001
-            state.M = state.M+dM;
-            [T_t_over_T,P_t_over_P,MFPn] = MASSFP(Tt,f,state.M);
-            MFPerr = abs(MFPn-MFP0);
-            if MFPerr > .00001
-                dM = ((MFP-MFPn)/(MFPn-MFP0))*dM;
-                MFP0 = MFPn;
-            else
-                state.M = state.M;
-                state.T_t_over_T = T_t_over_T;
-                state.P_t_over_P = P_t_over_P;
-                state.MFP = MFP;
-            end
+    end
+    dM = .1;
+    [~,~,MFP0] = MASSFP(Tt,f,state.M);
+    MFPerr = 1;
+    while MFPerr>.00001
+        state.M = state.M+dM;
+        [T_t_over_T,P_t_over_P,MFPn] = MASSFP(Tt,f,state.M);
+        MFPerr = abs(MFPn-MFP0);
+        if MFPerr > .00001
+            dM = ((MFP-MFPn)/(MFPn-MFP0))*dM;
+            MFP0 = MFPn;
+        else
+            state.M = state.M;
+            state.T_t_over_T = T_t_over_T;
+            state.P_t_over_P = P_t_over_P;
+            state.MFP = MFP;
         end
-        
-    end    
+    end
+    
 end
+
 

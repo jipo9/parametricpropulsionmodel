@@ -9,7 +9,12 @@ clear all
 
 f = stateR{9,4};
 alphap = .5;
-M6 = .5;
+alpha = designR{2,2};
+beta = designR{3,2};
+ep1 = designR{4,2};
+ep2 = designR{5,2};
+alphap = alpha/((1-beta-ep1-ep2)*(1+f) + ep1 + ep2);
+M6 = .4;
 M8 = .5;
 mdot0 = stateR{2,5};
 
@@ -72,15 +77,15 @@ PtoL = designR{6,2};
 
 
 
-
-
-%%
 state = stateR;
 component = componentR;
 design = designR;
 
-%% Box 1
+%% Start of Loop 1
 
+alphaperr = 1;
+while alphaperr > .001
+    
 To4 = state{9,3};
 mdot4 = state{9,5};
 mdot45 = state{12,5};
@@ -90,22 +95,25 @@ To5 = state{13,3};
 
 
 pi_tH = component{9,2};
+pi_tL = component{12,2};
 tau_tH = component{9,4};
 tau_m1 = component{8,4};
 tau_m2 = component{11,4};
 tau_tL = component{12,4};
 
-
-%fun51 = @(To45) ((1+(ep1+ep2)/((1-beta-ep1-ep2)*(1+f))) * (mdot4/mdot45) * (Po45/Po4) * (1/sqrt(To45/To4))) - (pi_tH/(sqrt(To45/To4)));
-%To45 = fzero(fun51,To4);
-
+beta = design{3,2};
+ep1 = design{4,2};
+ep2 = design{5,2};
+f = state{9,4};
+PtoL = design{6,2};
+mdot0 = state{2,5};
 
 mdot4_mdotc = (1-beta-ep1-ep2)*(1+f);
 tau_lambda = state{9,8}/state{2,8};
 tau_r = state{3,3}/state{2,3};
+pi_r = (1+((gamma_c-1)/2)*(invar{2,2})^2)^(gamma_c/(gamma_c-1));
 tau_cL = component{5,4};
 tau_cH = component{6,4};
-alpha = design{2,2};
 eta_mPL = 1;
 eta_mPH = 1;
 h0 = 1;
@@ -145,10 +153,119 @@ Pro25 = state{6,2};
 state(7,:) = stateR(7,:);
 pi_cH = Pro3i/Pro25;
 
-%next step: find M16 and alphas
+Po16_P16 = (pi_f/(pi_cL*pi_cH*pi_b*pi_tH*pi_tL))*(1+((gamma_t-1)/2)*M6^2)^(gamma_t/(gamma_t-1));
+
+[M16] = Kutta_mach(gamma_c,M6,gamma_t,Po16_P16);
+
+A16_A6 = .2715; %given by joey
+[MFP16] = MFP2(M16,state{5,7},state{5,10});
+[MFP6] = MFP2(M6,state{14,7},state{14,10});
+To6 = state{14,3};
+To16 = state{5,3};
+alphapnew = (pi_f/(pi_cL*pi_cH*pi_b*pi_tH*pi_tL)) * (A16_A6) * (MFP16/MFP6) * sqrt(To6/To16);
+alphaperr = norm((alphapnew-alphap)/alphap);
+alpha = alphap*((1-beta-ep1-ep2)*(1+f)+ep1+ep2);
+alphap = alphapnew;
+end
 
 
+M6err = 1;
+while M6err > .0005
+   
+tau_M = (1+alphap*((tau_r*tau_f)/(tau_lambda*tau_m1*tau_tH*tau_m2*tau_tL)))/(1+(alphap*Cp_c/Cp_t));
 
+R6 = state{14,10};
+R16 = state{5,10};
+Cp6A = state{15,6};
+
+R6A = (R6+(alphap*R16))/(1+alphap);
+gamma6A = Cp6A/(Cp6A-R6A);
+gamma16 = state{5,7};
+gamma6 = state{14,7};
+
+phi1 = ((M6^2)*(1+(.5*(gamma6-1)*M6^2))) / (1+(gamma6*M6^2))^2;
+phi2 = ((M16^2)*(1+(.5*(gamma16-1)*M16^2))) / (1+(gamma16*M16^2))^2;
+
+
+phi = ((1+alphap)/(1/sqrt(phi1) + alphap*(sqrt(gamma6*R16/gamma16*R6)*sqrt((To16/To6)/phi2))))^2 * (gamma6*R6A*tau_M/(gamma6A*R6));
+
+M6A = sqrt((2*phi)/((1-2*gamma6A)+sqrt(1-2*(gamma6A+1)*phi))); %doesn't work
+
+M6A = .4188; % actual value
+
+To6A = state{15,3};
+f6 = state{14,4};
+f6A = state{15,4};
+A6_A6A = .729; %assumed value
+pi_Mi = real((1+alphap) * sqrt(To6A/To6) * (A6_A6A)  * (MFP2(M6,To6,f6)/MFP2(M6A,To6A,f6A)));
+pi_M = pi_Mmax*pi_Mi;
+
+
+Po9_P0dry = pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_M*pi_ABdry*pi_n;
+
+M9 = sqrt((((Po9_P0dry)^(gamma6A-1/gamma6A))-1)*(2/(gamma6A-1)));
+
+if M9>=1
+    M8 = 1;
+else 
+    M8 = M9;
+end
+
+A8dry_A6 = .3;
+
+MFP8 = MFP2(M8,state{16,7},state{16,10});
+MFP6 = pi_M*pi_ABdry*(A8dry_A6)*(MFP8/(1+alphap))*sqrt(To6/To6A);
+
+fun = @(M6) M6*sqrt(gamma6/R6)*((1+((gamma6-1)/2)*M6^2)^((gamma6-1)/(2-2*gamma6))) - MFP6;
+M6new = fzero(fun,M16); 
+M6err = norm((M6new-M6)/M6);
+if M6>M6new
+    M6 = M6-.0001;
+else
+    M6 = M6+.002;
+end
+
+end
+
+
+mdot0err = 1;
+while mdot0err > .0005
+    
+A4 = 1;
+P0 = state{23,1};
+MFP4 = MFP2(M4,state{9,7},state{9,10});
+mdot0new = ((1+alpha)*P0*pi_r*pi_d*pi_cL*pi_cH*pi_b*A4*MFP4 / ((1-beta-ep1-ep2)*(1+f)*sqrt(To4)));
+mdot0err = norm((mdot0new-mdot0)/mdot0);
+mdot0 = mdot0new;
+ 
+   
+end
+
+P0_P9 = invar{7,2};
+Po9_P9 = P0_P9*pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_M*pi_AB*pi_n;
+
+M9 = sqrt(((Po9_P9^((gamma_AB-1)/gamma_AB))-1)*(2/(gamma_AB-1)));
+
+
+%% Other Functions
+
+function [M1] = Kutta_mach(gamma1,M2,gamma2,pi2_1)
+%calculates the mach if kutta condition is satisfied between the two states
+P_Pt2 = pressure(M2,gamma2);
+P_Pt1 = P_Pt2*pi2_1;
+M1 = sqrt((2/(gamma1 - 1)) * (P_Pt1 ^ ((gamma1 - 1)/gamma1)  - 1));
+end
+function [P_Pt] = pressure(M,gamma)
+P_Pt = (1 - (gamma - 1)/2*M^2)^(-gamma/(gamma-1));
+end
+function [T_Tt] = temperature(M,gamma)
+T_Tt = (1 - (gamma - 1)/2*M^2)^-1;
+end
+function [MFP] = MFP2(M, gamma, R)
+    [P_Pt] = pressure(M,gamma);
+    [T_Tt] = temperature(M,gamma);
+    MFP = M*sqrt(gamma/R)/sqrt(T_Tt)*P_Pt;
+end
 
 %% Parametric Functions
 function [stateR,componentR,designR,performanceR,inputsR] = ondesign()
@@ -366,7 +483,7 @@ end
 function [state, component,v0] = ambient(state,component,inputs)
 alt = inputs{2,2};
 M0 = inputs{3,2};
-[T0, ~, ~, ~] = atmosisa(alt); %obtain standard atmospheric conditions
+[T0, ~, P00, ~] = atmosisa(alt); %obtain standard atmospheric conditions
 state(2,3) = {T0};
 [state] = unFAIR3(state,2);
 [~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
@@ -388,6 +505,7 @@ h0 = state{2,8};
 ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
+state{23,1} = P00;
 end
 function [state,component] = inlet(state,component,inputs)
 M0 = inputs{3,2};

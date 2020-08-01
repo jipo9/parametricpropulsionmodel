@@ -6,7 +6,7 @@ g_c = 25037.00; %conversion from BTU lbm to ft^2 s^2
 v = M*stag_state.a / (1+((stag_state.gamma - 1)/2)*M^2); %ft/s
 v_error = 1;
 
-while norm(v_error) > .00001
+while norm(v_error) > .0001
     state.h = stag_state.h - v^2 / (2*g_c);
     [state] = unFAIR(2,f,state.h);
     v_n = M*state.a;
