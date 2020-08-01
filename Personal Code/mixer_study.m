@@ -1,6 +1,6 @@
 clear
 clc
-close all
+% close all
 
 %% Read Me
 % This study looks at the mixer of a turbofan engine and aims to develop
@@ -28,15 +28,18 @@ close all
     % Cry a bit then move on to a more rudimentary model?
 
 %% Analyze M6 vs M16 at each P6/P16 (fixed A16_6)
-A16_6 = 0.2485;
-pi = [1.0042,1.0492];
+A16_6 = 0.2715;
+
+pi = [1.0042,1.0492,1.0706];
 M_mixer = linspace(.01,1);
 
 Pro16 = 8; %Assumption: Relative pressure at the fan. Has almost no effect on M16 vs M6, small noticeable (max of 5%) effect on Area Ratio
+Pro6 = 300;
 f = .03; %Assumption: fuel to air ratio at the mixer entry, very close to both cases
 beta = .01; %Assumption, used in book results
 ep1 = .05; %Assumption, used in book results
 ep2 = .05; %Assumption, used in book results
+R = 287; %J/kg k 
 
 alpha_ref = .5; %For reset on iteration
 
@@ -50,46 +53,56 @@ state(5,2) = {Pro16};
 [state] = unFAIR3(state,5);
 [~,~,To16,~,~,cp16,gamma16,~,~,R16,~] = state{5,:};
 
+state(14,2) = {Pro6};
+[state] = unFAIR3(state,14);
+[~,~,To6,~,~,~,~,~,~,~,~] = state{14,:};
+
 for ii = 1:size(pi,2)
     pi_bypass = pi(ii);
-    %Setup state of core air
     Pro6 = Pro16*pi_bypass;
-    state(14,2) = {Pro6};
-    state(14,3) = {[]};
-    state(14,8) = {[]};
-    [state] = unFAIR3(state,14);
-    [~,~,To6,~,~,cp6,gamma6,~,~,R6,~] = state{14,:};
+    %Setup state of core air
+%     state(14,2) = {Pro6};
+%     state(14,3) = {[]};
+%     state(14,8) = {[]};
+%     [state] = unFAIR3(state,14);
+%     [~,~,~,~,~,cp6,gamma6,~,~,R6,~] = state{14,:};
     for jj = 1:100
         error =1; %error on alpha value, iterated due to small changes in 
         alpha = alpha_ref;
         while error > .00016
+            gamma16 = 1.4;
+            gamma6 = 1.3;
+            
             %Iterate M6 and find MFP
             M6 = M_mixer(jj);
-            MFP6 = MFP2(M6, gamma6, R6);
+            MFP6 = MFP2(M6, gamma6, R);
             %Calculate M16 and MFP16
             [M16] = Kutta_mach(gamma16,M6,gamma6,pi_bypass);
-            MFP16 = MFP2(M16, gamma16, R16);
+            MFP16 = MFP2(M16, gamma16, R);
             %Find bypass ratios and quantify error
             [alpha_prime,alpha_i] = bypass_ratio(MFP16,Pro16,To16,MFP6,Pro6,To6,A16_6,beta,ep1,ep2,f);
             error = norm((alpha-alpha_i)/alpha);
             alpha = alpha_i;
             
             %Cell housekeeping
-            [state] = derived_parameters(state,alpha,beta,ep1,ep2,f);
-            state(5,2) = {[]};
-            state(5,8) = {[]};
-            [state] = unFAIR3(state,5);
-            [~,~,To16,~,~,cp16,gamma16,~,~,R16,~] = state{5,:};
-            Pro6 = Pro16*pi_bypass;
-            state(14,2) = {[]};
-            state(14,8) = {[]};
-            [state] = unFAIR3(state,14);
-            [~,~,To6,~,~,cp6,gamma6,~,~,R6,~] = state{14,:};
+%             [state] = derived_parameters(state,alpha,beta,ep1,ep2,f);
+%             state(5,2) = {[]};
+%             state(5,8) = {[]};
+%             [state] = unFAIR3(state,5);
+%             [~,~,To16,~,~,cp16,gamma16,~,~,~,~] = state{5,:};
+%             state(14,2) = {[]};
+%             state(14,8) = {[]};
+%             [state] = unFAIR3(state,14);
+%             [~,~,~,~,~,cp6,gamma6,~,~,~,~] = state{14,:};
         end
         %Find pressure ratio
-        [pi_M_ideal] = mixer_ideal(state,alpha_prime,A16_6,M16,M6);
+        state(15,2) = {[]};
+        state(15,3) = {[]};
+        state(15,8) = {[]};
+        [pi_M_ideal,M6A,state] = mixer_ideal(state,alpha_prime,A16_6,M16,M6);
         %Store values
         M_bypass(ii,jj) = M16;
+        M_post_mixer(ii,jj) = M6A;
         alpha_p(ii,jj) = alpha_prime;
         alpha_(ii,jj) = alpha;
         pi_M(ii,jj) = pi_M_ideal;
@@ -98,28 +111,34 @@ end
 
 
 
+figure  
+plot(M_mixer,M_bypass(1,:),M_mixer,M_bypass(2,:),M_mixer,M_bypass(3,:),[.4,.3835, .3748],[.394,.4559,.4814],'x')
+xlabel('Mixer Mach Number (M_6)')
+ylabel('Bypass Mach Number (M_1_6)')
+legend('reference','test1','test2')
+
 figure
-plot(M_mixer,M_bypass(1,:),M_mixer,M_bypass(2,:),[.4,.3835],[.394,.4559],'x')
-xlabel('Mixer Mach Number')
-ylabel('Bypass Mach Number')
-legend('reference','test')
+plot(M_mixer,M_post_mixer(1,:),M_mixer,M_post_mixer(2,:),M_mixer,M_post_mixer(3,:),[.4,.3835, .3748],[.4188,.4187,.4185],'x')
+xlabel('Mixer Mach Number (M_6)')
+ylabel('Post Mixer Mach Number (M_6_A)')
+legend('reference','test1','test2')
 
 % figure
 % plot(M_mixer(30:70),alpha_p(1,30:70),M_mixer(30:70),alpha_p(2,30:70))
 % xlabel('Mixer Mach Number')
-% ylabel('Alpha Prime')
+% ylabel('Alpha Prime (\alpha')')
 % legend('reference','test')
 
 figure
-plot(M_mixer(30:70),alpha_(1,30:70),M_mixer(30:70),alpha_(2,30:70),[.4,.3835],[.449,.520],'x')
-xlabel('Mixer Mach Number')
-ylabel('Alpha')
-legend('reference','test')
+plot(M_mixer(30:70),alpha_(1,30:70),M_mixer(30:70),alpha_(2,30:70),M_mixer(30:70),alpha_(3,30:70),[.4,.3835,.3748],[.449,.520,.576],'x')
+xlabel('Mixer Mach Number (M_6)')
+ylabel('Bypass Ratio (\alpha)')
+legend('reference','test1','test2')
 
 figure
 plot(M_mixer(30:70),pi_M(1,30:70),M_mixer(30:70),pi_M(2,30:70),[.4,.3835],[.9935,1],'x')
-xlabel('Mixer Mach Number')
-ylabel('Pi_mixer_ideal')
+xlabel('Mixer Mach Number (M_6)')
+ylabel('\pi_i_d_e_a_l')
 legend('reference','test')
 
 %% Archived Code
@@ -228,10 +247,11 @@ end
 function [alpha_prime,alpha] = bypass_ratio(MFP16,Pt16,Tt16,MFP6,Pt6,Tt6,A16_6,beta,ep1,ep2,f)
 %Calculates bypass ratio at mixer
 alpha_prime = Pt16/Pt6 * MFP16/MFP6 * sqrt(Tt6/Tt16) * A16_6;
+% alpha_prime = MFP16/MFP6 * A16_6 * 1.65;
 alpha = alpha_prime * ((1-beta-ep1-ep2)*(1+f) + ep1 +ep2);
 end
 
-function [pi] = mixer_ideal(state,alpha_prime,A16_6,M16,M6)
+function [pi,M6A,state] = mixer_ideal(state,alpha_prime,A16_6,M16,M6)
 %Calculates state and ideal pressure ratio of the mixer
 [~,~,To16,~,~,cp16,gamma16,ho16,~,R16,~] = state{5,:};
 [~,~,To6,~,mdot6,cp6,gamma6,ho6,~,R6,~] = state{14,:};
@@ -272,14 +292,14 @@ end
 
 function [MFP] = MFP1(mdot, Tt, Pt, A)
 %Calculates mass flow, stagnation temp and pressure, and Area dependent MFP
-MFP = mdot*sqrt(Tt) / (Pt*A);
+MFP = mdot*sqrt(Tt) / (Pt*A); %kg/s*K^.5 / Pa*m^2 = s*K^.5 / m
 end
 
 function [MFP] = MFP2(M, gamma, R)
 %Calculates Mach, gamma, and R dependent MFP
 [P_Pt] = pressure(M,gamma);
 [T_Tt] = temperature(M,gamma);
-MFP = M*sqrt(gamma/R)/sqrt(T_Tt)*P_Pt;
+MFP = M*sqrt(gamma/R)/sqrt(T_Tt)*sqrt(P_Pt); %sqrt(s^2*K / m^2) = s*K^.5 / m
 end
 
 function [P_Pt] = pressure(M,gamma)
