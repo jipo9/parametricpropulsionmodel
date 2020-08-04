@@ -1,6 +1,6 @@
 clear
 clc
-% close all
+close all
 
 %% Read Me
 % This study looks at the mixer of a turbofan engine and aims to develop
@@ -31,6 +31,8 @@ clc
 A16_6 = 0.2715;
 
 pi = [1.0042,1.0492,1.0706];
+pi = [1.0492];
+
 M_mixer = linspace(.01,1);
 
 Pro16 = 8; %Assumption: Relative pressure at the fan. Has almost no effect on M16 vs M6, small noticeable (max of 5%) effect on Area Ratio
@@ -51,11 +53,11 @@ state(2:22,1) = {'0';'o0';'o2';'o16';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5
 %Setup state of bypass air
 state(5,2) = {Pro16};
 [state] = unFAIR3(state,5);
-[~,~,To16,~,~,cp16,gamma16,~,~,R16,~] = state{5,:};
+[~,~,To16,~,~,~,gamma16,~,~,R16,~] = state{5,:};
 
 state(14,2) = {Pro6};
 [state] = unFAIR3(state,14);
-[~,~,To6,~,~,~,~,~,~,~,~] = state{14,:};
+[~,~,To6,~,~,~,gamma6,~,~,R6,~] = state{14,:};
 
 for ii = 1:size(pi,2)
     pi_bypass = pi(ii);
@@ -136,10 +138,118 @@ ylabel('Bypass Ratio (\alpha)')
 legend('reference','test1','test2')
 
 figure
-plot(M_mixer(30:70),pi_M(1,30:70),M_mixer(30:70),pi_M(2,30:70),[.4,.3835],[.9935,1],'x')
+plot(M_mixer(30:70),pi_M(1,30:70),M_mixer(30:70),pi_M(2,30:70))
 xlabel('Mixer Mach Number (M_6)')
 ylabel('\pi_i_d_e_a_l')
 legend('reference','test')
+
+
+
+
+
+A = M_bypass(1,:)./M_mixer;
+B = M_bypass(2,:)./M_mixer;
+C = M_bypass(3,:)./M_mixer;
+
+
+figure  
+plot(M_mixer,A,M_mixer,B,M_mixer,C)
+xlabel('Mixer Mach Number (M_6)')
+ylabel('Bypass Mach Number (M_1_6 / M_6)')
+legend('reference','test1','test2')
+
+
+%% Area
+clear
+clc
+close all
+
+A = [.1,.2,.4,.8,1.6];
+pi = [1/.90,1/.92,1/.94,1/.96];
+
+M_mixer = linspace(.01,1);
+
+Pro16 = 8; %Assumption: Relative pressure at the fan. Has almost no effect on M16 vs M6, small noticeable (max of 5%) effect on Area Ratio
+Pro6 = 300;
+f = .03; %Assumption: fuel to air ratio at the mixer entry, very close to both cases
+beta = .01; %Assumption, used in book results
+ep1 = .05; %Assumption, used in book results
+ep2 = .05; %Assumption, used in book results
+R = 287; %J/kg k 
+
+alpha_ref = .5; %For reset on iteration
+
+%Setup state cell
+state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
+state(2:22,1) = {'0';'o0';'o2';'o16';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
+[state] = derived_parameters(state,alpha_ref,beta,ep1,ep2,f);
+
+% Setup state of bypass air
+state(5,2) = {Pro16};
+[state] = unFAIR3(state,5);
+[~,~,To16,~,~,cp16,gamma16,~,~,R16,~] = state{5,:};
+
+state(14,2) = {Pro6};
+[state] = unFAIR3(state,14);
+[~,~,To6,~,~,~,~,~,~,~,~] = state{14,:};
+
+figure
+hold on
+xlabel('Mixer Mach Number (M_6)')
+ylabel('Bypass Ratio (\alpha)')
+
+for hh = 1:size(A,2)
+A16_6 = A(hh);
+
+for ii = 1:size(pi,2)
+    pi_bypass = pi(ii);
+    Pro6 = Pro16*pi_bypass;
+    for jj = 1:100
+        error =1; %error on alpha value, iterated due to small changes in 
+        alpha = alpha_ref;
+        while error > .0001
+            gamma16 = 1.4;
+            gamma6 = 1.3;
+            
+            %Iterate M6 and find MFP
+            M6 = M_mixer(jj);
+            MFP6 = MFP2(M6, gamma6, R);
+            %Calculate M16 and MFP16
+            [M16] = Kutta_mach(gamma16,M6,gamma6,pi_bypass);
+            MFP16 = MFP2(M16, gamma16, R);
+            %Find bypass ratios and quantify error
+            [alpha_prime,alpha_i] = bypass_ratio(MFP16,Pro16,To16,MFP6,Pro6,To6,A16_6,beta,ep1,ep2,f);
+            error = norm((alpha-alpha_i)/alpha);
+            alpha = alpha_i;
+        end
+        %Find pressure ratio
+        state(15,2) = {[]};
+        state(15,3) = {[]};
+        state(15,8) = {[]};
+        [pi_M_ideal,M6A,state] = mixer_ideal(state,alpha_prime,A16_6,M16,M6);
+        %Store values
+        M_bypass(ii,jj) = M16;
+        M_post_mixer(ii,jj) = M6A;
+        alpha_p(ii,jj) = alpha_prime;
+        alpha_(ii,jj) = alpha;
+        pi_M(ii,jj) = pi_M_ideal;
+    end
+    plot(M_mixer(20:80),alpha_(ii,20:80))
+end
+
+% legend('1945-1965','1965-1985','1985-2005','2005-2025')
+
+
+end
+
+%% Edits:
+% Fix pi mixer?
+
+% Find estimate for alpha
+    % Estimate P16/P6 as pi_burner
+    % Estimate M6 as .5?
+
+% Turn into function
 
 %% Archived Code
 

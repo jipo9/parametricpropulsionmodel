@@ -85,7 +85,7 @@ M6A_ref = .4188;
 
 %% Function
 
-function [state,component] = a(state,component,alt,To4)
+function [state,component] = a(state,component,alt)
 
 %% State 0
 [T0, ~, ~, ~] = atmosisa(alt);
@@ -130,6 +130,7 @@ state{8,3} = T_o31;
 [state] = unFAIR3(state,8);
 
 %% State 4o
+state{9,3} = To4;
 [state] = unFAIR3(state,9);
 
 %% State 4.1o
@@ -167,7 +168,10 @@ state{15,2} = Pro6A;
 [state] = unFAIR3(state,15);
 
 %% State 7o
-[state] = unFAIR3(state,16);
+fAB = state{16,4};
+
+state{16,3} = To7;
+
 end
 
 function [state,design] = derived_parameters_performance(state,inputs,design,component)
@@ -219,12 +223,12 @@ state(9,4) = {f4};
 state(9,5) = {mdot4};
 state(10:11,4) = {f41};
 state(10:11,5) = {mdot41};
-state(12:14,4) = {f45};
-state(12:14,5) = {mdot45};
-state(15,4) = {f6A};
-state(15,5) = {mdot6A};
-state(16:18,4) = {f7};
-state(16:18,5) = {mdot7};
+state(12:13,4) = {f45};
+state(12:13,5) = {mdot45};
+state(14,4) = {f6A};
+state(14,5) = {mdot6A};
+state(15:18,4) = {f7};
+state(15:18,5) = {mdot7};
 
 state(19,4) = {0};
 state(19,5) = {mdotbeta};
