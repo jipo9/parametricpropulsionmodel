@@ -11,14 +11,15 @@ design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
 inputs = {'Parameter','Value'};
 inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
 
+%% Reference
 M0 = 1.8000;
 alt = 40000/3.281; %altitude [m from feet]
 To4 = 3200*.555556;
 To7 = 3600*.555556;
 pi_n = .97;
 
-component(2:16,2) = {5.7458; .9067; 3.0054; 3.0054; 4.7208; []; [];    .4231; []; [];    .5023; []; .9735; []; pi_n};
-component(2:16,4) = {1.6480; [];    1.4259; 1.4259; 1.6377; []; .9673; .8381; []; .9731; .8667; []; .8268; []; []};
+component(2:16,2) = {5.7458; .9067; 3.0054; 3.0054; 4.7208; .95;    [];    .4231; []; [];    .5023; []; .9735; .95; pi_n};
+component(2:16,4) = {1.6480; [];    1.4259; 1.4259; 1.6377;  []; .9673;    .8381; []; .9731; .8667; []; .8268;  []; []};
 
 mdot = 188.72*0.45359237;
 alpha = .530;
@@ -28,14 +29,15 @@ ep2 = .05;
 f = .02875;
 fAB = .03371;
 
-% M0 = 1.451;
-% alt = 36000/3.281; %altitude [m from feet]
-% To4 = 3200*.555556;
-% To7 = 3600*.555556;
-% pi_n = .97;
-% 
-% component(2:16,2) = {3.4211; .9354; 3.9000; 3.9000; 5.1282; []; [];    .4231; []; [];    .4831; []; .9779; []; pi_n};
-% component(2:16,4) = {1.4211; [];    1.5479; 1.5479; 1.6803; []; .9673; .8381; []; .9731; .8598; []; .8404; []; []};
+%% Test 1
+M0 = 1.451;
+alt = 36000/3.281; %altitude [m from feet]
+To4 = 3200*.555556;
+To7 = 3600*.555556;
+pi_n = .97;
+
+component(2:16,2) = {3.4211; .9354; 3.9000; 3.9000; 5.1282; .95; [];    .4231; []; [];    .4831; []; .9779; .95; pi_n};
+component(2:16,4) = {1.4211; [];    1.5479; 1.5479; 1.6803;  []; .9673; .8381; []; .9731; .8598; []; .8404;  []; []};
 
 mdot = 188.72*0.45359237;
 alpha = .449;
@@ -45,6 +47,7 @@ ep2 = .05;
 f = .03070;
 fAB = .03353;
 
+%% Analysis
 state{2,5} = mdot;
 state{9,4} = f;
 state{9,3} = To4;
@@ -62,6 +65,12 @@ design{5,2} = ep2;
 
 [state,design] = derived_parameters_performance(state,inputs,design,component);
 [state,component] = a(state,component,alt,To4);
+
+
+A16_6 = .2715;
+M6 = .4;
+M6A_ref = .4188;
+[state,design,check,M6] = mixer(state,component,design,A16_6,M6,M6A_ref)
 
 % .1% enthalpy error in m1
 % 2.1% enthalpy error in tH
@@ -121,7 +130,6 @@ state{8,3} = T_o31;
 [state] = unFAIR3(state,8);
 
 %% State 4o
-state{9,3} = To4;
 [state] = unFAIR3(state,9);
 
 %% State 4.1o
@@ -148,7 +156,18 @@ T_o5 = T_o45*tau_tL;
 state{13,3} = T_o5;
 [state] = unFAIR3(state,13);
 
-%% State 6o (stop here)
+%% State 6o
+state(14,2:end) = state(13,2:end);
+
+%% State 6Ao
+pi_mixer = component{14,2};
+Pro6 = state{14,2};
+Pro6A = Pro6*pi_mixer;
+state{15,2} = Pro6A;
+[state] = unFAIR3(state,15);
+
+%% State 7o
+[state] = unFAIR3(state,16);
 end
 
 function [state,design] = derived_parameters_performance(state,inputs,design,component)
@@ -200,12 +219,12 @@ state(9,4) = {f4};
 state(9,5) = {mdot4};
 state(10:11,4) = {f41};
 state(10:11,5) = {mdot41};
-state(12:13,4) = {f45};
-state(12:13,5) = {mdot45};
-state(14,4) = {f6A};
-state(14,5) = {mdot6A};
-state(15:18,4) = {f7};
-state(15:18,5) = {mdot7};
+state(12:14,4) = {f45};
+state(12:14,5) = {mdot45};
+state(15,4) = {f6A};
+state(15,5) = {mdot6A};
+state(16:18,4) = {f7};
+state(16:18,5) = {mdot7};
 
 state(19,4) = {0};
 state(19,5) = {mdotbeta};

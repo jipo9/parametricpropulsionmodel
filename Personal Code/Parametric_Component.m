@@ -361,6 +361,30 @@ title('Input Sensitivity to Specific Fuel Consumption')
     
 end
 
+
+
+
+
+
+
+
+
+M6_est = .4;
+[A16_6] = A_mixer(state,component,design,M6_est) %all error comes from errors in turbines
+pi_error = 1.0228/1.0786
+A16_6_actual = .1844
+
+
+M6_est = .5;
+[A16_6] = A_mixer(state,component,design,M6_est) %all error comes from errors in turbines
+
+M6_est = .6;
+[A16_6] = A_mixer(state,component,design,M6_est) %all error comes from errors in turbines
+
+
+
+
+
 %% Functions
 % High level analysis functions
 
@@ -715,8 +739,8 @@ state(8,6:12) = state(7,6:12);
 
 Pro31 = state{8,2};
 Pro4  = state{9,2};
-pi_b_total = Pro4 / Pro31;
-component(7,2) = { pi_b_total};
+% pi_b_total = Pro4 / Pro31;
+% component(7,2) = { pi_b_total};
 
 ho31 = state{7,8};
 ho4 = state{9,8};
