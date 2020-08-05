@@ -29,7 +29,7 @@ else
     [M6A_i,state] = mixer_state(state,alpha_prime,A16_6,M16,M6);
     M6A_err = norm((M6A_ref - M6A_i)/M6A_ref)
     if M6A_err > .02
-        M6 = M6 + (M6A_ref - M6A_i); %maybe needs a damper in there? (IE multiply difference by .9)
+        M6 = M6 + .1*(M6A_ref - M6A_i); %maybe needs a damper in there? (IE multiply difference by .9)
         check = 0;
         
     else

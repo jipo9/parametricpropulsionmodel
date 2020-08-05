@@ -6,7 +6,8 @@ function [A16_6] = A_mixer(state,component,design,M6_est)
 [~,~,To6,~,~,~,gamma6,~,~,R6,~] = state{14,:};
 
 Po16_Po6 = pi_f / (pi_cL * pi_cH * pi_b * pi_tH * pi_tL);
-Po16_Po6 = 1.0786;
+% Po16_Po6 = 1.0042;
+% Po16_Po6 = 1.0786;
 
 upper_bound = 100;
 lower_bound = 0;
