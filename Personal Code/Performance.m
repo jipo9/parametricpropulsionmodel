@@ -19,6 +19,9 @@ close all
 % Fix efficiency in nozzle function, and specific fuel consumption
 % Fix  iterative plots
         
+
+
+
 % Need to fix fan and compressor functions
 % Need to fix A estimator
 % Need to fix turbine functions
@@ -218,32 +221,34 @@ M6
 
 %% Off Design Plots
 
-% n = 10;
-% M_SL = linspace(.1,1,n);
-% M_10 = linspace(.2,1.2,n);
-% M_20 = linspace(.3,1.5,n);
-% M_30 = linspace(.4,1.7,n);
-% M_36 = linspace(.5,1.8,n);
-% M_40 = linspace(.6,1.9,n);
-% M_50 = linspace(.7,1.9,n);
-% 
-% M = [M_SL;M_10;M_20;M_30;M_36;M_40;M_50];
-% altitude = [0,10,20,30,36,40,50] ./ 3.281;
-% 
-% figure
-% hold on
-% for ii = 1:size(altitude,2)
-%     for jj = 1:size(M,2)
-%         M0 = M(ii,jj);
-%         alt = altitude(ii);
-%         inputs(2,2) = {alt};
-%         inputs(3,2) = {M0};
-%         [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
-%         T = performance_i{2,1} * state{2,5};
-%         F(ii,jj) = T;
-%     end
-%     plot(M(ii,:),F(ii,:))
-% end
+n = 10;
+M_SL = linspace(.1,1,n);
+M_10 = linspace(.2,1.2,n);
+M_20 = linspace(.3,1.5,n);
+M_30 = linspace(.4,1.7,n);
+M_36 = linspace(.5,1.8,n);
+M_40 = linspace(.6,1.9,n);
+M_50 = linspace(.7,1.9,n);
+
+M = [M_SL;M_10;M_20;M_30;M_36;M_40;M_50];
+altitude = [0,10000,20000,30000,36000,40000,50000] ./ 3.281;
+
+figure
+hold on
+for ii = 1:size(altitude,2)
+    for jj = 1:size(M,2)
+        M0 = M(ii,jj);
+        alt = altitude(ii);
+        inputs(2,2) = {alt};
+        inputs(3,2) = {M0};
+        %change inputed mdot based on alt, M0 and A_inlet
+        [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
+        % Find thurst based on F/ mdot * mdot
+        T = performance_i{2,1} * state{2,5};
+        F(ii,jj) = T;
+    end
+    plot(M(ii,:),F(ii,:))
+end
 
 %% Printout Checks
 
