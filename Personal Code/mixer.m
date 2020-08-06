@@ -8,6 +8,7 @@ function [state,design,check,M6] = mixer(state,component,design,A16_6,M6,M6A_ref
 [~,~,To6,~,~,~,gamma6,~,~,R6,~] = state{14,:};
 
 Po16_Po6 = pi_f / (pi_cL * pi_cH * pi_b * pi_tH * pi_tL);
+%         Po16_Po6 = 1/1.0042;
 
 MFP6 = MFP2(M6, gamma6, R6);
 
@@ -20,15 +21,15 @@ MFP16 = MFP2(M16, gamma16, R16);
 [alpha_prime,alpha_i] = bypass_ratio(MFP16,To16,MFP6,Po16_Po6,To6,A16_6,beta,ep1,ep2,f);
 
 alpha_err = norm((alpha - alpha_i)/alpha)
-if alpha_err > .02
-    design{2,2} = alpha_i;
+if alpha_err > .001
+    design{2,2} = alpha - .9*(alpha - alpha_i);
     check = 0;
     %Run new mdots and fs after restarting analysis
     
 else
     [M6A_i,state] = mixer_state(state,alpha_prime,A16_6,M16,M6);
     M6A_err = norm((M6A_ref - M6A_i)/M6A_ref)
-    if M6A_err > .02
+    if M6A_err > .001
         M6 = M6 + .1*(M6A_ref - M6A_i); %maybe needs a damper in there? (IE multiply difference by .9)
         check = 0;
         

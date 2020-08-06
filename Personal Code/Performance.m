@@ -2,7 +2,12 @@ clear
 clc
 close all
 
+% Need to add efficiency calcs to off design analysis
+% Need to fix fan and compressor functions
 % Need to fix A estimator
+% Need to fix turbine functions
+% Need to fix mdot estimate
+% Need to corraborate afterburner
 %% On Design Analysis
 
 for setup = 1:1
@@ -184,7 +189,7 @@ state{2,5} = mdot;
     state{9,4} = f;
     fAB = .03353;
     
-    M6 = .5; %inital guess
+    M6 = .4; %inital guess
     A16_6 = .2715;
     M6A_ref = .4188;
 end
@@ -192,8 +197,39 @@ end
 
 % actual  M6 = .4;
 % actual alpha = ??;
-[performance,inputs,state,design,component] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
-performance
+[performance_results,inputs_results,state_results,design_results,component_results,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
+performance_results
+alpha = design_results{2,2}
+M6
+
+%% Off Design Plots
+
+% n = 10;
+% M_SL = linspace(.1,1,n);
+% M_10 = linspace(.2,1.2,n);
+% M_20 = linspace(.3,1.5,n);
+% M_30 = linspace(.4,1.7,n);
+% M_36 = linspace(.5,1.8,n);
+% M_40 = linspace(.6,1.9,n);
+% M_50 = linspace(.7,1.9,n);
+% 
+% M = [M_SL;M_10;M_20;M_30;M_36;M_40;M_50];
+% altitude = [0,10,20,30,36,40,50] ./ 3.281;
+% 
+% figure
+% hold on
+% for ii = 1:size(altitude,2)
+%     for jj = 1:size(M,2)
+%         M0 = M(ii,jj);
+%         alt = altitude(ii);
+%         inputs(2,2) = {alt};
+%         inputs(3,2) = {M0};
+%         [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
+%         T = performance_i{2,1} * state{2,5};
+%         F(ii,jj) = T;
+%     end
+%     plot(M(ii,:),F(ii,:))
+% end
 
 %% Printout Checks
 
@@ -226,6 +262,7 @@ for ref = 1:1
     
     state_check{2,5} = mdot;
     state_check{9,3} = To4;
+    state_check{9,4} = f;
     state_check{16,3} = To7;
     
     inputs_check{2,2} = alt;
@@ -236,7 +273,7 @@ for ref = 1:1
     design_check{4,2} = ep1;
     design_check{5,2} = ep2;
     
-    [state_check,design_check] = off_derived_parameters(state_check,inputs_check,design_check,component_check,f,fAB);
+    [state_check,design_check] = off_derived_parameters(state_check,design_check,fAB);
     [state_check,component_check] = a(state_check,component_check,alt,To4);
 end
 for test = 1:1
@@ -268,6 +305,7 @@ for test = 1:1
     
     state{2,5} = mdot;
     state{9,3} = To4;
+    state_check{9,4} = f;
     state{16,3} = To7;
     
     inputs{2,2} = alt;
@@ -278,8 +316,8 @@ for test = 1:1
     design{4,2} = ep1;
     design{5,2} = ep2;
     
-    [state,design] = off_derived_parameters(state,inputs,design,component,f,fAB);
-    [state,component] = a(state,component,alt,To4);
+    [state_check,design_check] = off_derived_parameters(state_check,design_check,fAB);
+    [state_check,component_check] = a(state_check,component_check,alt,To4);
 end
 
 %% On Design Functions
@@ -792,7 +830,7 @@ performance(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency'
 performance(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
 end
 %% Off Design Functions
-function [performance,inputs,state,design,component] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
+function [performance,inputs,state,design,component,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
     [state,design] = off_derived_parameters(state,design,fAB);    
     [state, component,v0] = off_ambient(state,component,inputs);
     [state,component] = off_inlet(state,component,inputs);
@@ -1091,6 +1129,20 @@ while error > .0000001
     end
 end
 
+
+
+%         tau_tL = 0.8598;
+%         pi_tL = 0.4831;
+%         
+%         tau_m1 = 0.9673;
+%         tau_tH = 0.8381;
+%         tau_m2 = 0.9731;
+%         
+%         component{8,4} = tau_m1;
+%         component{9,4} = tau_tH;
+%         component{11,4} = tau_m2;
+        
+
 state{10,2} = [];
 state{10,3} = [];
 ho41 = ho4*tau_m1;
@@ -1114,6 +1166,10 @@ state{13,3} = [];
 ho5 = ho45*tau_tL;
 state{13,8} = ho5;
 [state] = unFAIR3(state,13);
+
+%         component{9,2} = (state{11,2} / state{10,2})^(1/.89);
+%         component{9,2} = 0.4231;
+
 
 component{12,2} = pi_tL;
 component{12,4} = tau_tL;
