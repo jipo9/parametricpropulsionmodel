@@ -2,7 +2,23 @@ clear
 clc
 close all
 
-% Need to add efficiency calcs to off design analysis
+% Error 1: Mixer area (hardcodded in)
+        % Comes from error in turbine pressure ratios
+        % Maybe somewhere else?
+% M6 initiial guess is correct, most of the time itll off (were gonna say
+        % M6i = .5
+% Inputs for off design hardcoded
+% Hardcoded in mdot
+        % Use alt, M0, and user input diameter?
+        % Add in limiters later
+% Hardcoded in F
+        % Use change in enthalpy across burner to find f
+        % Eventually get rid of afterburner
+% Hardcode in M6A reference, find it via A16_6 estimator
+% Fix compressor and fan slightly lower pressures
+% Fix efficiency in nozzle function, and specific fuel consumption
+% Fix  iterative plots
+        
 % Need to fix fan and compressor functions
 % Need to fix A estimator
 % Need to fix turbine functions
@@ -20,7 +36,7 @@ for setup = 1:1
     inputsR = {'Parameter','Value'};
     inputsR(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
 end
-for inputs = 1:1
+for input = 1:1
     % gamma_c = 1.4;
     % gamma_t = 1.3;
     % gamma_AB = 1.3;
@@ -100,17 +116,17 @@ for storing_values = 1:1
 end
 for run_offdesign = 1:1
     [stateR,designR] = on_derived_parameters(stateR,inputsR,designR,componentR);
-    prompt = 'Run analysis with combined compressors/turbines? Y/N : ';
-    str = input(prompt,'s');
-    if str == ('Y') || str == ('y')
-        clc
-        [stateR,componentR,performanceR] = component_combined(stateR,componentR,designR,inputsR);
-    elseif str == ('N') || str == ('n')
-        clc
+%     prompt = 'Run analysis with combined compressors/turbines? Y/N : ';
+%     str = input(prompt,'s');
+%     if str == ('Y') || str == ('y')
+%         clc
+%         [stateR,componentR,performanceR] = component_combined(stateR,componentR,designR,inputsR);
+%     elseif str == ('N') || str == ('n')
+%         clc
         [stateR,componentR,performanceR] = component_seperate(stateR,componentR,designR,inputsR);
-    else
-        error('Invalid Input. Try again and only type Y or N you dummy')
-    end
+%     else
+%         error('Invalid Input. Try again and only type Y or N you dummy')
+%     end
     
     err_T_mdot = performanceR{2,1} /F_mdot; %T/mdot error compared to book
     err_s = performanceR{2,2} / S; %S error compared to book
@@ -123,11 +139,12 @@ for run_offdesign = 1:1
     fprintf('%s%.3f%s\n','Propulsive Efficiency     of this analysis is ',abs(100*(1-err_effprop)),'% off book solution.')
 end
 
-
-M6_est = .4;
-[A16_6] = A_mixer(stateR,componentR,designR,M6_est); %all error comes from errors in turbines
-A16_6 = .2715
-[A45_6] = A_turb(componentR, M6_est)
+for estimating_mixer_props = 1:1
+    M6_est = .4;
+    [A16_6] = A_mixer(stateR,componentR,designR,M6_est); %all error comes from errors in turbines
+    A16_6 = .2715
+    [A45_6] = A_turb(componentR, M6_est)
+end
 %% Off Design Analysis
 
 for setup = 1:1
@@ -140,7 +157,7 @@ for setup = 1:1
     inputs = {'Parameter','Value'};
     inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
 end
-for half_hardcoded_inputs = 1:1
+for input = 1:1
     component = componentR;
     
         %should be automatically input, not hardcoded in
@@ -190,13 +207,10 @@ state{2,5} = mdot;
     fAB = .03353;
     
     M6 = .4; %inital guess
-    A16_6 = .2715;
     M6A_ref = .4188;
 end
 
 
-% actual  M6 = .4;
-% actual alpha = ??;
 [performance_results,inputs_results,state_results,design_results,component_results,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
 performance_results
 alpha = design_results{2,2}
@@ -277,51 +291,50 @@ for ref = 1:1
     [state_check,component_check] = a(state_check,component_check,alt,To4);
 end
 for test = 1:1
-    state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
-    state(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
-    component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
-    component(2:17,1) = {'Ram Recovery';'Inlet Actual';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
-    design = {'Parameter','Value'};
-    design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
-    inputs = {'Parameter','Value'};
-    inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
-    
-    M0 = 1.8000;
-    alt = 40000/3.281; %altitude [m from feet]
-    To4 = 3200*.555556;
-    To7 = 3600*.555556;
-    pi_n = .97;
-    
-    component(2:16,2) = {5.7458; .9067; 3.0054; 3.0054; 4.7208; .95;    [];    .4231; []; [];    .5023; []; .9735; .95; pi_n};
-    component(2:16,4) = {1.6480; [];    1.4259; 1.4259; 1.6377;  []; .9673;    .8381; []; .9731; .8667; []; .8268;  []; []};
-    
-    mdot = 188.72*0.45359237;
-    alpha = .530;
-    beta = .01;
-    ep1 = .05;
-    ep2 = .05;
-    f = .02875;
-    fAB = .03371;
-    
-    state{2,5} = mdot;
-    state{9,3} = To4;
-    state_check{9,4} = f;
-    state{16,3} = To7;
-    
-    inputs{2,2} = alt;
-    inputs{3,2} = M0;
-    
-    design{2,2} = alpha;
-    design{3,2} = beta;
-    design{4,2} = ep1;
-    design{5,2} = ep2;
-    
-    [state_check,design_check] = off_derived_parameters(state_check,design_check,fAB);
-    [state_check,component_check] = a(state_check,component_check,alt,To4);
+%     state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
+%     state(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
+%     component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
+%     component(2:17,1) = {'Ram Recovery';'Inlet Actual';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
+%     design = {'Parameter','Value'};
+%     design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
+%     inputs = {'Parameter','Value'};
+%     inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
+%     
+%     M0 = 1.8000;
+%     alt = 40000/3.281; %altitude [m from feet]
+%     To4 = 3200*.555556;
+%     To7 = 3600*.555556;
+%     pi_n = .97;
+%     
+%     component(2:16,2) = {5.7458; .9067; 3.0054; 3.0054; 4.7208; .95;    [];    .4231; []; [];    .5023; []; .9735; .95; pi_n};
+%     component(2:16,4) = {1.6480; [];    1.4259; 1.4259; 1.6377;  []; .9673;    .8381; []; .9731; .8667; []; .8268;  []; []};
+%     
+%     mdot = 188.72*0.45359237;
+%     alpha = .530;
+%     beta = .01;
+%     ep1 = .05;
+%     ep2 = .05;
+%     f = .02875;
+%     fAB = .03371;
+%     
+%     state{2,5} = mdot;
+%     state{9,3} = To4;
+%     state_check{9,4} = f;
+%     state{16,3} = To7;
+%     
+%     inputs{2,2} = alt;
+%     inputs{3,2} = M0;
+%     
+%     design{2,2} = alpha;
+%     design{3,2} = beta;
+%     design{4,2} = ep1;
+%     design{5,2} = ep2;
+%     
+%     [state_check,design_check] = off_derived_parameters(state_check,design_check,fAB);
+%     [state_check,component_check] = a(state_check,component_check,alt,To4);
 end
 
 %% On Design Functions
-
 function [state,component,performance] = component_seperate(state,component,design,inputs)
 % Runs an engine analysis w/ a seperated LP and HP spools
 [state, component,v0] = on_ambient(state,component,inputs);
@@ -423,7 +436,6 @@ state(21,5) = {mdotep1};
 state(22,5) = {mdotep2};
 
 end
-
 % Component analysis functions
 function [state, component,v0] = on_ambient(state,component,inputs)
 alt = inputs{2,2};
@@ -834,8 +846,8 @@ function [performance,inputs,state,design,component,M6] = offdesign(inputs,state
     [state,design] = off_derived_parameters(state,design,fAB);    
     [state, component,v0] = off_ambient(state,component,inputs);
     [state,component] = off_inlet(state,component,inputs);
-    
     check = 0;
+    
     while check == 0
         [state,design] = off_derived_parameters(state,design,fAB);
         [state,component] = off_fan(state,component,componentR,design); %flag
@@ -844,6 +856,7 @@ function [performance,inputs,state,design,component,M6] = offdesign(inputs,state
         [state,component] = off_turb(state,component,M6,A45_6); %flag
         [state,design,check,M6] = mixer(state,component,design,A16_6,M6,M6A_ref);
     end
+    
     state = off_afterburner(state);
     [state,component,performance] = off_nozzle(state,component,v0,design);
 end
@@ -1174,117 +1187,6 @@ state{13,8} = ho5;
 component{12,2} = pi_tL;
 component{12,4} = tau_tL;
 end
-function [state,component] = off_HPturb(state,component,design)
-mdot3 = state{7,5};
-mdot4 = state{9,5};
-mdot41 = state{10,5};
-ho25 = state{6,8};
-ho3 = state{7,8};
-hoep1 = state{8,8};
-ho4 = state{9,8};
-etamH = component{9,5};
-etamPH = component{10,5};
-PtoH = design{7,2};
-mdotep1 = state{21,5};
-
-%Across mixer
-ho41 = (mdotep1*hoep1 + mdot4*ho4) / (mdot41);
-state(10,8) = {ho41};
-
-[state] = unFAIR3(state,10);
-
-taum1 = ho41/ho4;
-component{8,4} = taum1;
-pim1 = state{10,2} / state{9,2};
-component{8,2} = pim1;
-Po41 = state{10,2};
-
-%Across turbine
-% etH = .89;
-fun = @(ho44) mdot41*(ho41-ho44)*etamH... %change in energy across HPturb
-    -mdot3*(ho3-ho25)...                  %change in energy across HP compressor
-    -(PtoH) / etamPH;                     %energy draw of takeoff power
-ho44 = fzero(fun,ho41);
-
-state(11,8) = {ho44};
-[state] = unFAIR3(state,11);
-Po44 = state{11,2};
-
-tauth = ho44/ho41;
-component{9,4} = tauth;
-eth = component{9,3};
-pitH = (state{11,2} / state{10,2})^(1/eth);
-component{9,2} = pitH;
-
-statet = state;
-Po44i = Po41*pitH; %mechanical efficiency
-state(11,2) = {Po44i};
-state(11,3) = {[]};
-state(11,8) = {[]};
-[state] = unFAIR3(state,11);
-ho44i = state{11,8};
-state = statet;
-etatH = (ho41-ho44)/(ho41-ho44i);
-component{9,6} = etatH;
-
-end
-function [state,component] = off_LPturb(state,component,design)
-mdot13 = state{5,5};
-mdot25 = state{6,5};
-mdot5 = state{13,5};
-mdot44 = state{11,5};
-mdot45 = state{12,5};
-ho2 = state{4,8};
-ho13 = state{5,8};
-ho25 = state{6,8};
-hoep2 = state{8,8};
-ho44 = state{11,8};
-etamL = component{12,5};
-etamPL = component{13,5};
-PtoL = design{6,2};
-mdotep2 = state{22,5};
-
-%Across mixer
-ho45 = (mdotep2*hoep2 + mdot44*ho44) /(mdot45);
-state(12,8) = {ho45};
-[state] = unFAIR3(state,12);
-Po45 = state{12,2};
-
-taum2 = ho45/ho44;
-component{11,4} = taum2;
-pim2 = state{12,2} / state{11,2};
-component{11,2} = pim2;
-
-%Across Turbine
-fun = @(ho5) mdot5*(ho45 - ho5)*etamL...    %change in energy across LP turb
-    -mdot25*(ho25-ho2)...                   %change in energy across LP compressor
-    -mdot13*(ho13-ho2)...                    %change in energy across fan
-    -PtoL / etamPL;                         %energy draw of takeoff power
-ho5 = fzero(fun,ho45);
-
-state(13,8) = {ho5};
-[state] = unFAIR3(state,13);
-Po5 = state{13,2};
-
-tautl = ho5/ho45;
-component{12,4} = tautl;
-etl = component{12,3};
-pitL = (state{13,2} / state{12,2})^(1/etl);
-component{12,2} = pitL;
-
-Po5i = Po45*pitL; %mechanical efficiency
-state(13,2) = {Po5i};
-state(13,3) = {[]};
-state(13,8) = {[]};
-[state] = unFAIR3(state,13);
-ho5i = state{13,8};
-state(13,2) = {Po5};
-state(13,3) = {[]};
-state(13,8) = {[]};
-[state] = unFAIR3(state,13);
-etatH = (ho45-ho5)/(ho45-ho5i);
-component{12,6} = etatH;
-end
 function state = off_afterburner(state)
     %Input Tt7 and f_AB in initial conditions
     [state] = unFAIR3(state,16);
@@ -1433,7 +1335,6 @@ state{15,2} = Pro6A;
 %% State 7o
 [state] = unFAIR3(state,16);
 end
-
 function [A45_6] = A_turb(component, M6)
     gamma = 1.3;
     [pi_tL,~,tau_tL] = component{12,2:4};
