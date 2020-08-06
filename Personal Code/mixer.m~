@@ -1,12 +1,11 @@
-function [state,design,check,M6,alpha_track] = mixer(state,component,design,A16_6,M6,M6A_ref,alpha_track)
+function [state,design,check,M6] = mixer(state,component,design,A16_6,M6,M6A_ref,alpha_track)
 %check = 0 if bad and 1 if good
 a_dampner = .9;
-n = floor(alpha_track/20);
-a_dampner = a_dampner * .8^n;
-
-if a_dampner < .1
-    a_dampner = .1;
+if rem(alpha_track,20) == 0
+    n = flooralpha_track/20;
+    a_dampner = a_dampner * .5^n;
 end
+
 
 [alpha,beta,ep1,ep2] = design{2:5,2};
 [pi_f, pi_cL, pi_cH, pi_b, ~, pi_tH, ~, ~, pi_tL] = component{4:12,2};
@@ -23,7 +22,7 @@ MFP6 = MFP2(M6, gamma6, R6);
 [M16] = Kutta_mach(gamma16,M6,gamma6,Po16_Po6);
 
 if ~isreal(M16)
-    M16 = 0.1;
+    M16 = 0;
 end
 
 MFP16 = MFP2(M16, gamma16, R16);
@@ -31,7 +30,7 @@ MFP16 = MFP2(M16, gamma16, R16);
 % Find bypass ratios and quantify error
 [alpha_prime,alpha_i] = bypass_ratio(MFP16,To16,MFP6,Po16_Po6,To6,A16_6,beta,ep1,ep2,f);
 
-alpha_err = norm((alpha - alpha_i)/alpha);
+alpha_err = norm((alpha - alpha_i)/alpha)
 if alpha_err > .001
     design{2,2} = alpha - a_dampner*(alpha - alpha_i);
     check = 0;
@@ -42,7 +41,7 @@ else
     if M6A_err > .001
         M6 = M6 + .1*(M6A_ref - M6A_i); %maybe needs a damper in there? (IE multiply difference by .9)
         check = 0;
-        alpha_track = 0;
+        
     else
         check = 1;
     end
