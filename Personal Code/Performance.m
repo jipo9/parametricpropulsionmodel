@@ -998,7 +998,7 @@ end
 function [state, component,v0] = off_ambient(state,component,inputs,A0)
 alt = inputs{2,2};
 M0 = inputs{3,2};
-[T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
+[T0, ~, Pzero, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
 state(2,3) = {T0};
 [state] = unFAIR3(state,2);
 [~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
@@ -1006,12 +1006,9 @@ R0 = cp0 - cp0/gamma0;
 a0 = sqrt(R0*gamma0*T0); %[m/s]
 v0 = M0*a0; %[m/s]
 
-mdot0 = rho0*A0*v0;
-state{2,5} = mdot0;
 
-
-T_o0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
-state(3,3) = {T_o0};
+To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
+state(3,3) = {To0};
 [state] = unFAIR3(state,3);
 
 
@@ -1024,6 +1021,11 @@ h0 = state{2,8};
 ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
+
+Po = Pzero*((1+((gamma0-1)/2)*M0^2)^(gamma0/(gamma0-1)));
+%mdot0 = rho0*A0*v0;
+mdot0 = (A0*Po)*sqrt(gamma0/(To0*R0))*M0*(1+((gamma0-1)/2)*M0^2)^(-1*(gamma0+1)/(2*(gamma0-1))); %compressible eqn
+state{2,5} = mdot0;
 end
 function [state,component] = off_inlet(state,component,inputs)
 M0 = inputs{3,2};
