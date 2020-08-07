@@ -221,8 +221,9 @@ for input = 1:1
     design(7,2) = {PtoH};
     
 state = stateR;
-mdot = 188.72*0.45359237;
-state{2,5} = mdot;
+%mdot = 188.72*0.45359237;
+%state{2,5} = mdot;
+A0 = 5.836/10.764; %area of inlet [sqft => sqm]
 
 
 
@@ -235,7 +236,7 @@ state{2,5} = mdot;
 end
 
 
-[performance_results,inputs_results,state_results,design_results,component_results,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
+[performance_results,inputs_results,state_results,design_results,component_results,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB,A0);
 performance_results
 alpha = design_results{2,2}
 M6
@@ -254,8 +255,11 @@ M_50 = linspace(.7,1.9,n);
 M = [M_SL;M_10;M_20;M_30;M_36;M_40;M_50];
 altitude = [0,10000,20000,30000,36000,40000,50000] ./ 3.281;
 
-figure
+f1 = figure;
+f2 = figure;
 hold on
+F = zeros(size(M));
+S = zeros(size(M));
 for ii = 1:size(altitude,2)
     ii
     for jj = 1:size(M,2)
@@ -264,13 +268,19 @@ for ii = 1:size(altitude,2)
         alt = altitude(ii);
         inputs(2,2) = {alt};
         inputs(3,2) = {M0};
-        %change inputed mdot based on alt, M0 and A_inlet
-        [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
+        [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB,A0);
         % Find thurst based on F/ mdot * mdot
-        T = performance_i{2,1} * state{2,5};
+        T = performance_i{2,1} * state_i{2,5};
         F(ii,jj) = T;
+        S(ii,jj) = performance_i{2,2};
     end
-    plot(M(ii,:),F(ii,:))
+    plot(M(ii,:),F(ii,:),'linewidth',1.5)
+    %plot(M(ii,:),S(ii,:),'linewidth',1.5)
+    legend('SL','10k ft','20k ft','30k ft','36k ft','40kft','50k ft','location','best')
+    title('Mach Number vs. Thrust at Various Altitudes')
+    xlabel('Mach Number')
+    ylabel('Thrust (N)')
+    grid('on')
 end
 
 %% Printout Checks
@@ -384,7 +394,7 @@ for test = 1:1
 % performance_check(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
 end
 
-performance_check
+performance_check;
 %% On Design Functions
 function [state,component,performance] = component_seperate(state,component,design,inputs)
 % Runs an engine analysis w/ a seperated LP and HP spools
@@ -892,9 +902,9 @@ performance(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency'
 performance(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
 end
 %% Off Design Functions
-function [performance,inputs,state,design,component,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB);
+function [performance,inputs,state,design,component,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB,A0)
+    [state, component,v0] = off_ambient(state,component,inputs,A0);
     [state,design] = off_derived_parameters(state,design,fAB);    
-    [state, component,v0] = off_ambient(state,component,inputs);
     [state,component] = off_inlet(state,component,inputs);
     check = 0;
     alpha_track = 0;
@@ -977,16 +987,20 @@ state(22,5) = {mdotep2};
 
 
 end
-function [state, component,v0] = off_ambient(state,component,inputs)
+function [state, component,v0] = off_ambient(state,component,inputs,A0)
 alt = inputs{2,2};
 M0 = inputs{3,2};
-[T0, ~, ~, ~] = atmosisa(alt); %obtain standard atmospheric conditions
+[T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
 state(2,3) = {T0};
 [state] = unFAIR3(state,2);
 [~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
 R0 = cp0 - cp0/gamma0;
 a0 = sqrt(R0*gamma0*T0); %[m/s]
 v0 = M0*a0; %[m/s]
+
+mdot0 = rho0*A0*v0;
+state{2,5} = mdot0;
+
 
 T_o0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
 state(3,3) = {T_o0};

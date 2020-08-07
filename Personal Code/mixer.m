@@ -32,7 +32,7 @@ MFP16 = MFP2(M16, gamma16, R16);
 [alpha_prime,alpha_i] = bypass_ratio(MFP16,To16,MFP6,Po16_Po6,To6,A16_6,beta,ep1,ep2,f);
 
 alpha_err = norm((alpha - alpha_i)/alpha);
-if alpha_err > .001
+if alpha_err > .01 %changed from .001 for speed
     design{2,2} = alpha - a_dampner*(alpha - alpha_i);
     check = 0;
     
