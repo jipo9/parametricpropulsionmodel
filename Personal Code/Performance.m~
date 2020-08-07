@@ -255,7 +255,8 @@ M_50 = linspace(.7,1.9,n);
 M = [M_SL;M_10;M_20;M_30;M_36;M_40;M_50];
 altitude = [0,10000,20000,30000,36000,40000,50000] ./ 3.281;
 
-figure
+f1 = figure;
+% f2 = figure;
 hold on
 F = zeros(size(M));
 S = zeros(size(M));
@@ -267,14 +268,16 @@ for ii = 1:size(altitude,2)
         alt = altitude(ii);
         inputs(2,2) = {alt};
         inputs(3,2) = {M0};
-        %change inputed mdot based on alt, M0 and A_inlet
         [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB,A0);
         % Find thurst based on F/ mdot * mdot
         T = performance_i{2,1} * state_i{2,5};
+        mdot_ = state_i{2,5};
         F(ii,jj) = T;
         S(ii,jj) = performance_i{2,2};
+        mdot(ii,jj) = mdot_;
     end
-    plot(M(ii,:),S(ii,:),'linewidth',1.5)
+    plot(M(ii,:),F(ii,:),'linewidth',1.5)
+    %plot(M(ii,:),S(ii,:),'linewidth',1.5)
     legend('SL','10k ft','20k ft','30k ft','36k ft','40kft','50k ft','location','best')
     title('Mach Number vs. Thrust at Various Altitudes')
     xlabel('Mach Number')
@@ -282,6 +285,11 @@ for ii = 1:size(altitude,2)
     grid('on')
 end
 
+figure
+hold on
+for ii = 1:size(altitude,2)
+    plot(M(ii,:),F(ii,:),'linewidth',1.5)
+end 
 %% Printout Checks
 
 for ref = 1:1
@@ -911,13 +919,13 @@ function [performance,inputs,state,design,component,M6] = offdesign(inputs,state
         [state,design] = off_derived_parameters(state,design,fAB);
         [state,component] = off_fan(state,component,componentR,design); %flag
         [state,component] = off_comp(state,component,design, componentR); %flag
-        [state,component] = off_burner(state,component);
+        [state,component] = off_burner(state,component,design,fAB);
         [state,component] = off_turb(state,component,M6,A45_6); %flag
         [state,design,check,M6,alpha_track] = mixer(state,component,design,A16_6,M6,M6A_ref,alpha_track);
         alpha_track = alpha_track+1;
     end
     
-    state = off_afterburner(state);
+    state = off_afterburner(state,fAB);
     [state,component,performance] = off_nozzle(state,component,v0,design);
 end
 function [state,design] = off_derived_parameters(state,design,fAB)
@@ -1168,18 +1176,32 @@ ho3 = ho25*tau_cL;
 state{7,8} = ho3;
 [state] = unFAIR3(state,7);
 end
-function [state,component] = off_burner(state,component)
+function [state,component] = off_burner(state,component,design,fAB)
 state(8,2:3) = state(7,2:3);
 state(8,6:12) = state(7,6:12);
+mdot31 = state{8,3};
+h_PR = design{8,2};
 
-state{9,2} = [];
-state{9,8} = [];
-[state] = unFAIR3(state,9);
+f_i = state{9,4};
+error = 1;
+while error > .01
+    state{9,2} = [];
+    state{9,8} = [];
+    [state] = unFAIR3(state,9);
 
-ho31 = state{7,8};
-ho4 = state{9,8};
-taub = ho4/ho31;
-component{7,4} = taub;
+    ho31 = state{7,8};
+    ho4 = state{9,8};
+    taub = ho4/ho31;
+    component{7,4} = taub;
+
+    mdotf = mdot31*(ho4 - ho31) / h_PR;
+    f = mdotf/mdot31;
+    state{9,4} = f;
+    [state,design] = off_derived_parameters(state,design,fAB);
+    error = (f - f_i)/f_i;
+    f_i = f;
+end
+
 end
 function [state,component] = off_turb(state,component,M6,A45_6)
 tau_m1 = component{8,4};
@@ -1251,7 +1273,7 @@ state{13,8} = ho5;
 component{12,2} = pi_tL;
 component{12,4} = tau_tL;
 end
-function state = off_afterburner(state)
+function state = off_afterburner(state,fAB)
     %Input Tt7 and f_AB in initial conditions
     [state] = unFAIR3(state,16);
     ho6A = state{15,8};
