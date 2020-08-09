@@ -1053,20 +1053,20 @@ To4 = To4max;
 To0 = T0*(1+((M0^2)*((gamma-1)/2)));
 
 theta0 = To0/Tstd;
+if theta0 > 1
 
+    TR = 1.1;
+while TR > 1
+To4 = To4*.9999
 To4sls = To4/theta0;
-TR = To4max/To4sls;
-
-
-M0break = sqrt((TR-1)*(2/(gamma-1)));
-
-while isreal(M0break) == 0
-    To4 = To4*.999;
-    To4sls = To4/theta0;
-    TR = To4max/To4sls;
-    M0break = sqrt((TR-1)*(2/(gamma-1)));
+TR = To4max/To4sls
 end
-    
+
+end
+
+%M0break = sqrt((TR-1)*(2/(gamma-1)))
+
+%M0break = sqrt((((TR*Tstd)/T0)-1)*(2/(gamma-1)))
 
 
     
