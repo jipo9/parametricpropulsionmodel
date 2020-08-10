@@ -1,6 +1,6 @@
 clear
 clc
-close all
+% close all
 
 % Error 1: Mixer area (hardcodded in)
         % Comes from error in turbine pressure ratios
@@ -34,6 +34,8 @@ close all
 % Need to corraborate afterburner
 
 %% To do
+% Check right on design parameters and plot actual F, mdot and S
+
 
 % Fix area ratio calculator!!!
 % Fix burner and AB functions
@@ -157,14 +159,28 @@ for run_offdesign = 1:1
 end
 for estimating_mixer_props = 1:1
     M6_est = .4;
-    [A16_6] = A_mixer(stateR,componentR,designR,M6_est); %all error comes from errors in turbines
-    A16_6 = .2715
+    [A16_6,P6A_ref] = A_mixer(stateR,componentR,designR,inputsR,M6_est) %all error comes from errors in turbines
+%     A16_6 = .2715
+    alt = inputsR{2,2};
+    [~, ~, P0, ~] = atmosisa(alt);
+    Po6A_P0 = 3.421 * .935 * 20 * .95 * .4231 * .4831 *.9637;
+    P6A_ref = Po6A_P0 * P0
     [A45_6] = A_turb(componentR, M6_est)
 end
 
 performanceR
 alpha
 M6_est
+
+
+% M6A_ref = .4188;
+% M6A_ref = .3221;
+% M6A_ref = .3746;
+% [state,design,~,M6,~] = mixer(stateR,componentR,designR,A16_6,M6_est,M6A_ref,1);
+% 
+% alpha = design{2,2}
+% M6
+
 
 %% Off Design Analysis
 
@@ -182,21 +198,21 @@ for input = 1:1
     component = componentR;
     
         %should be automatically input, not hardcoded in
-%         eta_f = .8674;
-%         eta_cL = .8674;
-%         eta_cH = .8751;
-%         eta_tH = .8995;
-%         eta_tL = .9074;
+        eta_f = .8674;
+        eta_cL = .8674;
+        eta_cH = .8751;
+        eta_tH = .8995;
+        eta_tL = .9074;
 %         component(:,5) = componentR(:,5); %Actually how this will look, code this in better?
-        % eta_b = .999;
-        % eta_PL = 1;
-        % eta_PH = 1;
-        % eta_AB = .99;
-%         component(4,5) = {eta_f};
-%         component(5,5) = {eta_cL};
-%         component(6,5) = {eta_cH};
-%         component(9,6) = {eta_tH};
-%         component(12,6) = {eta_tL};
+%         eta_b = .999;
+%         eta_PL = 1;
+%         eta_PH = 1;
+%         eta_AB = .99;
+        component(4,5) = {eta_f};
+        component(5,5) = {eta_cL};
+        component(6,5) = {eta_cH};
+        component(9,6) = {eta_tH};
+        component(12,6) = {eta_tL};
 
 %         pi_b = .95;
 %         pi_AB = .95;
@@ -208,8 +224,8 @@ for input = 1:1
     alt = 36000/3.281; %altitude [m from feet]
     M0 = 1.451; %freestream mach number
     
-    alt = 40000/3.281; %altitude [m from feet]
-    M0 = 1.8; %freestream mach number
+%     alt = 40000/3.281; %altitude [m from feet]
+%     M0 = 1.8; %freestream mach number
     inputs(2,2) = {alt};
     inputs(3,2) = {M0};
     
@@ -232,11 +248,22 @@ A0 = 5.836/10.764; %area of inlet [sqft => sqm]
     fAB = .03371;
     
     M6 = .4; %inital guess
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     M6A_ref = .4188;
 end
 
 
-[performance_results,inputs_results,state_results,design_results,component_results,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB,A0);
+[performance_results,inputs_results,state_results,design_results,component_results,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,P6A_ref,fAB,A0);
 performance_results
 alpha = design_results{2,2}
 M6
@@ -256,8 +283,22 @@ M = [M_SL;M_10;M_20;M_30;M_36;M_40;M_50];
 altitude = [0,10000,20000,30000,36000,40000,50000] ./ 3.281;
 fAB = 0;
 
+
+
+
+
+% Sea level, 20 kft, 40 kft
+M = [.1,.2,.3,.4,.5,.6,.7,.8,.9,1;
+      .4,.5,.6,.7,.8,.9,1,1.1,1.2,1.3;
+      .6,.7,.8,.9,1,1.1,1.2,1.3,1.4,1.5];
+altitude = [0,20000,40000] ./ 3.281;
+mdot = [142.5,145,150,155,162.5,170,182.5,190,197.5,205;
+        77.5,80,85,92.5,100,110,120,130,137.5,147.5;
+        37.5,40,45,50,55,60, 65,72.5,82.5,87.5] .* 0.45359237;
+fAB = 0;
+
 f1 = figure;
-% f2 = figure;
+f2 = figure;
 hold on
 F = zeros(size(M));
 S = zeros(size(M));
@@ -265,32 +306,102 @@ for ii = 1:size(altitude,2)
     ii
     for jj = 1:size(M,2)
         jj
+        state{2,5} = mdot(ii,jj);
         M0 = M(ii,jj);
         alt = altitude(ii);
         inputs(2,2) = {alt};
         inputs(3,2) = {M0};
-        [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB,A0);
+        [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,P6A_ref,fAB,A0);
         % Find thurst based on F/ mdot * mdot
         T = performance_i{2,1} * state_i{2,5};
         mdot_ = state_i{2,5};
         F(ii,jj) = T;
         S(ii,jj) = performance_i{2,2};
-        mdot(ii,jj) = mdot_;
+%         P6A_ref(ii,jj) = state_i{23,1};
     end
-    plot(M(ii,:),F(ii,:),'linewidth',1.5)
+%     plot(M(ii,:),F(ii,:),'linewidth',1.5)
     %plot(M(ii,:),S(ii,:),'linewidth',1.5)
-    legend('SL','10k ft','20k ft','30k ft','36k ft','40kft','50k ft','location','best')
+
+end
+
+
+for ii = 1:size(altitude,2)
+    plot(M(ii,:),S(ii,:),'linewidth',1.5)
+end
+    
+al = linspace(.2,.7,30);
+for ii = 1: size(al,2)
+       alpha = al(ii);
+       design{2,2} = alpha;
+       [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,P6A_ref,fAB,A0);
+        % Find thurst based on F/ mdot * mdot
+        F(ii) = performance_i{2,1};
+        S(ii) = performance_i{2,2};
+end
+
+figure
+plot(al,S)
+title('Specific Fuel Consumption Vs Alpha')
+xlabel('Effective Bypass Ratio')
+ylabel('Specific Fuel Consumption')
+
+figure
+plot(al,F)
+title('Thurst/Mass flow Vs Alpha')
+xlabel('Effective Bypass Ratio')
+ylabel('F/mdot')
+
+
+
+
+
+
+
+figure
+    legend('SL','20k ft','40kft')
     title('Mach Number vs. Thrust at Various Altitudes')
     xlabel('Mach Number')
     ylabel('Thrust (N)')
     grid('on')
-end
-
-figure
 hold on
 for ii = 1:size(altitude,2)
     plot(M(ii,:),F(ii,:),'linewidth',1.5)
 end 
+
+figure
+    legend('SL','20k ft','40kft')
+    title('Mach Number vs. Specific Fuel Consumption')
+    xlabel('Mach Number')
+    ylabel('S (kg/N)')
+    grid('on')
+hold on
+for ii = 1:size(altitude,2)
+    plot(M(ii,:),S(ii,:),'linewidth',1.5)
+end 
+
+figure
+    legend('SL','20k ft','40kft')
+    title('Mach Number vs. Mass Flow at Various Altitudes')
+    xlabel('Mach Number')
+    ylabel('Mass Flow (kg/s)')
+    grid('on')
+hold on
+for ii = 1:size(altitude,2)
+    plot(M(ii,:),mdot(ii,:))
+end 
+
+figure
+    legend('SL','20k ft','40kft')
+    title('Mach Number vs. Reference Pressure at Various Altitudes')
+    xlabel('Mach Number')
+    ylabel('Pa')
+    grid('on')
+hold on
+for ii = 1:size(altitude,2)
+    plot(M(ii,:),P6A_ref(ii,:),'linewidth',1.5)
+end 
+
+
 %% Printout Checks
 
 for ref = 1:1
@@ -403,6 +514,15 @@ for test = 1:1
 end
 
 performance_check;
+
+
+
+
+
+
+
+
+
 %% On Design Functions
 function [state,component,performance] = component_seperate(state,component,design,inputs)
 % Runs an engine analysis w/ a seperated LP and HP spools
@@ -898,6 +1018,13 @@ f_0 = state{18,4};
 
 
 F_mdot = (1+f_0-(beta/(1+alpha)))*v9     -   v0  +   (1+f_0-(beta/(1+alpha)))*R9*T9*(1-Pr0/Pr9)/(R0*v9*gamma0);
+
+mdot9  = state{18,5};
+v9 = v0*3.142;
+F_mdot = (mdot9*v9 - mdot0*v0)/mdot0;
+
+
+
 S = f_0 / F_mdot;
 eta_TH = ((v0^2/2*((1+f_0-(beta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + PtoH)/mdot0))/...
     (f_0*h_PR);
@@ -910,8 +1037,8 @@ performance(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency'
 performance(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
 end
 %% Off Design Functions
-function [performance,inputs,state,design,component,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB,A0)
-    [state, component,v0] = off_ambient(state,component,inputs,A0);
+function [performance,inputs,state,design,component,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,P6A_ref,fAB,A0)
+     [state, component,v0] = off_ambient(state,component,inputs,A0);
     [state,design] = off_derived_parameters(state,design,fAB);    
     [state,component] = off_inlet(state,component,inputs);
     check = 0;
@@ -922,10 +1049,10 @@ function [performance,inputs,state,design,component,M6] = offdesign(inputs,state
         [state,component] = off_comp(state,component,design, componentR); %flag
         [state,component] = off_burner(state,component,design,fAB);
         [state,component] = off_turb(state,component,M6,A45_6); %flag
-        [state,design,check,M6,alpha_track] = mixer(state,component,design,A16_6,M6,M6A_ref,alpha_track);
+        [state,design,check,M6,alpha_track,M6A_i] = mixer(state,component,design,inputs,A16_6,M6,P6A_ref,alpha_track);
+%         M6
         alpha_track = alpha_track+1;
-    end
-    
+    end  
     state = off_afterburner(state,fAB);
     [state,component,performance] = off_nozzle(state,component,v0,design);
 end
@@ -1022,10 +1149,10 @@ ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
 
-Po = Pzero*((1+((gamma0-1)/2)*M0^2)^(gamma0/(gamma0-1)));
-%mdot0 = rho0*A0*v0;
-mdot0 = (A0*Po)*sqrt(gamma0/(To0*R0))*M0*(1+((gamma0-1)/2)*M0^2)^(-1*(gamma0+1)/(2*(gamma0-1))); %compressible eqn
-state{2,5} = mdot0;
+% Po = Pzero*((1+((gamma0-1)/2)*M0^2)^(gamma0/(gamma0-1)));
+% %mdot0 = rho0*A0*v0;
+% mdot0 = (A0*Po)*sqrt(gamma0/(To0*R0))*M0*(1+((gamma0-1)/2)*M0^2)^(-1*(gamma0+1)/(2*(gamma0-1))); %compressible eqn
+% state{2,5} = mdot0;
 end
 function [state,component] = off_inlet(state,component,inputs)
 M0 = inputs{3,2};
@@ -1197,7 +1324,7 @@ while error > .01
     taub = ho4/ho31;
     component{7,4} = taub;
 
-    mdotf = mdot31*(ho4 - ho31) / h_PR;
+    mdotf = mdot31*(ho4 - ho31) / h_PR; %plus eta_burner
     f = mdotf/mdot31;
     state{9,4} = f;
     [state,design] = off_derived_parameters(state,design,fAB);
