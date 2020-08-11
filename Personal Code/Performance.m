@@ -516,13 +516,6 @@ end
 performance_check;
 
 
-
-
-
-
-
-
-
 %% On Design Functions
 function [state,component,performance] = component_seperate(state,component,design,inputs)
 % Runs an engine analysis w/ a seperated LP and HP spools
