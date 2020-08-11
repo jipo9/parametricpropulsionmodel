@@ -3,19 +3,19 @@ clc
 close all
 
 
-alpha = 5;
-pi_total = 30;
-pi_f = 1.7;
+alpha = 7.5;
+pi_total = 35;
+pi_f = 3;
 
 
-n = 10;
+n = 30;
 M_SL = linspace(.1,1,n);
-M_10 = linspace(.2,1.2,n);
-M_20 = linspace(.3,1.5,n);
-M_30 = linspace(.4,1.7,n);
-M_36 = linspace(.5,1.8,n);
-M_40 = linspace(.6,1.9,n);
-M_50 = linspace(.7,1.9,n);
+M_10 = linspace(.1,1,n);
+M_20 = linspace(.1,1,n);
+M_30 = linspace(.1,1,n);
+M_36 = linspace(.1,1,n);
+M_40 = linspace(.1,1,n);
+M_50 = linspace(.1,1,n);
 
 M = [M_SL;M_10;M_20;M_30;M_36;M_40;M_50];
 altitude = [0,10000,20000,30000,36000,40000,50000] ./ 3.281;
@@ -25,10 +25,10 @@ hold on
 F_A = zeros(size(M));
 for ii = 1:size(altitude,2)
     ii
+    alt = altitude(ii);
     for jj = 1:size(M,2)
         jj
         M0 = M(ii,jj);
-        alt = altitude(ii);
         [F_A0] = simplistic_model_(alpha,pi_total,pi_f,M0,alt);
         F_A(ii,jj) = F_A0;
     end
@@ -41,10 +41,6 @@ for ii = 1:size(altitude,2)
     warning('off','all')
 end
 
-
-alpha = 1;
-pi_total = 30;
-pi_f = 2;
 
 function [F_A] = simplistic_model_(alpha,pi_total,pi_f,M0,alt)
 state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};

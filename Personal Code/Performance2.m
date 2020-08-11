@@ -18,25 +18,28 @@ close all
 % Input data from "On-Design Case". This case should be the ideal case that
 % the engine is designed to perform under
 
-T = 1; % N Max or Takeoff
-A = 1; % Area of inlet 
-pitotal = 1; %Assume constant?
-alpha = 1; %bypass ratio
-beta = 1; %bleed ratio
-Pto = 0; %Watts
-h_PR = 18400*2326; %J/kg, for a (CH2)n propellant
-year = 1995;
+%Engine being ustilized is the DGEN-390 Price Induction
+alt = 25000 / 3.281; %altitude [m from feet]
+M0 = .35;
+pi_f = 2.7; %Mid approx for turbofan
+pi_cL = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
+pi_cH = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
+alpha = 7.5;
+beta = 0;
+PtoH = 0;
+PtoL = 0;
+A0 = pi*(.469/2)^2;
+year = 2011;
 
-% Add spot to hardcode in any given information!!!!
-on_design(T,A,pitotal,alpha,beta,Pto,h_PR,year)
+[state,component,design, inputs, performance] = on_design(alt,M0,pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year);
 
-% Use Parametric Performance function to compute off design conditions
-        % Change the way that burner fuel is calculated/ way max
-        % temperature is estimated
-        
-        % Streamline inputs
-        
-% Find efficiency parameters
+
+F = performance{2,1};
+mdot0 = state{2,5};
+F_mdot = F/mdot0 * (1/9.806655)
+S = performance{2,2} / ((.453592/3600)/4.44822)
+disp('Range for F/mdot is 13-27 and range for S is .67 to 1.03')
+disp('is supersonic bypass exhaust wrong???also i think the efficiencies should be much higher??? Also fix the imaginary numbers... maybe go through and check values 1 by 1?')
 
 %% Off design plots
 % Loop for each case

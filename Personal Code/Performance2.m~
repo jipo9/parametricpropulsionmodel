@@ -17,33 +17,37 @@ close all
 %% On design
 % Input data from "On-Design Case". This case should be the ideal case that
 % the engine is designed to perform under
-% S = 3.2251e-05; %kg/s/N
-T = 5.5923e+04; % N Max or Takeoff
-% mdot0 = 90.7185; %kg/s
-% alt = 35000/3.281; %m
-% M0 = 1.6;
+
+T = 1; % N Max or Takeoff
 A = 1; % Area of inlet 
-pitotal = 82.9635;
-
-alpha = .4; %bypass ratio
-% beta = .01; %bleed ratio
-% Pto = 301.34*10^3; %Watts
+pitotal = 1; %Assume constant?
+alpha = 1; %bypass ratio
+beta = 1; %bleed ratio
+Pto = 0; %Watts
 h_PR = 18400*2326; %J/kg, for a (CH2)n propellant
-
-
-
-design(2,2) = {alpha};
-design(3,2) = {beta};
-design(6,2) = {Pto};
-design(7,2) = {pitotal};
-design(8,2) = {h_PR};
-
-
-
 year = 1995;
 
+% Add spot to hardcode in any given information!!!!
 
-on_design(T_takeoff,A,pi)
+
+alt = 
+M0 = 
+pi_f = 
+pi_cL = 
+pi_cH = 
+alpha = 
+beta = 0;
+PtoH = 0;
+PtoL = 0;
+A0 = pi*()^2;
+year = 
+
+
+
+
+
+
+[state,component,design, input, performance] = on_design(alt,M0,pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year);
 
 % Use Parametric Performance function to compute off design conditions
         % Change the way that burner fuel is calculated/ way max
