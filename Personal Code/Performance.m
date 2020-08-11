@@ -237,7 +237,6 @@ for input = 1:1
     design(7,2) = {PtoH};
     
 state = stateR;
-state(9,3) = {[]};
 %mdot = 188.72*0.45359237;
 %state{2,5} = mdot;
 A0 = 5.836/10.764; %area of inlet [sqft => sqm]
@@ -299,10 +298,7 @@ mdot = [142.5,145,150,155,162.5,170,182.5,190,197.5,205;
 fAB = 0;
 
 f1 = figure;
-<<<<<<< HEAD
 f2 = figure;
-=======
->>>>>>> 4693a9387e1ee8e256225a55e7bb4d052b790e8a
 hold on
 F = zeros(size(M));
 S = zeros(size(M));
@@ -315,11 +311,7 @@ for ii = 1:size(altitude,2)
         alt = altitude(ii);
         inputs(2,2) = {alt};
         inputs(3,2) = {M0};
-<<<<<<< HEAD
         [performance_i,inputs_i,state_i,design_i,component_i] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,P6A_ref,fAB,A0);
-=======
-        [performance_i,inputs_i,state_i,design_i,component_i,~] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB,A0);
->>>>>>> 4693a9387e1ee8e256225a55e7bb4d052b790e8a
         % Find thurst based on F/ mdot * mdot
         T = performance_i{2,1} * state_i{2,5};
         mdot_ = state_i{2,5};
@@ -329,7 +321,6 @@ for ii = 1:size(altitude,2)
     end
 %     plot(M(ii,:),F(ii,:),'linewidth',1.5)
     %plot(M(ii,:),S(ii,:),'linewidth',1.5)
-<<<<<<< HEAD
 
 end
 
@@ -368,22 +359,14 @@ ylabel('F/mdot')
 
 figure
     legend('SL','20k ft','40kft')
-=======
-    legend('SL','10k ft','20k ft','30k ft','36k ft','40k ft','50k ft','location','best')
->>>>>>> 4693a9387e1ee8e256225a55e7bb4d052b790e8a
     title('Mach Number vs. Thrust at Various Altitudes')
     xlabel('Mach Number')
     ylabel('Thrust (N)')
     grid('on')
-<<<<<<< HEAD
 hold on
 for ii = 1:size(altitude,2)
     plot(M(ii,:),F(ii,:),'linewidth',1.5)
 end 
-=======
-    warning('off','all')
-end
->>>>>>> 4693a9387e1ee8e256225a55e7bb4d052b790e8a
 
 figure
     legend('SL','20k ft','40kft')
@@ -395,7 +378,6 @@ hold on
 for ii = 1:size(altitude,2)
     plot(M(ii,:),S(ii,:),'linewidth',1.5)
 end 
-<<<<<<< HEAD
 
 figure
     legend('SL','20k ft','40kft')
@@ -420,69 +402,115 @@ for ii = 1:size(altitude,2)
 end 
 
 
-=======
-    legend('SL','10k ft','20k ft','30k ft','36k ft','40k ft','50k ft','location','best')
-    title('Mach Number vs. SFC at Various Altitudes')
-    xlabel('Mach Number')
-    ylabel('Specific Fuel Consumption')
-    grid('on')
->>>>>>> 4693a9387e1ee8e256225a55e7bb4d052b790e8a
 %% Printout Checks
 
-% for ref = 1:1
-%     state_check = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
-%     state_check(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
-%     component_check = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
-%     component_check(2:17,1) = {'Ram Recovery';'Inlet Actual';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
-%     design_check = {'Parameter','Value'};
-%     design_check(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
-%     inputs_check = {'Parameter','Value'};
-%     inputs_check(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
+for ref = 1:1
+    state_check = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
+    state_check(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
+    component_check = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
+    component_check(2:17,1) = {'Ram Recovery';'Inlet Actual';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
+    design_check = {'Parameter','Value'};
+    design_check(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
+    inputs_check = {'Parameter','Value'};
+    inputs_check(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
+    
+    M0 = 1.451;
+    alt = 36000/3.281; %altitude [m from feet]
+    To4 = 3200*.555556;
+    To7 = 3600*.555556;
+    pi_n = .97;
+    
+    component_check(2:16,2) = {3.4211; .9354; 3.9000; 3.9000; 5.1282; .95; [];    .4231; []; [];    .4831; []; .9779; .95; pi_n};
+    component_check(2:16,4) = {1.4211; [];    1.5479; 1.5479; 1.6803;  []; .9673; .8381; []; .9731; .8598; []; .8404;  []; []};
+    
+    mdot = 188.72*0.45359237;
+    alpha = .449;
+    beta = .01;
+    ep1 = .05;
+    ep2 = .05;
+    f = .03070;
+    fAB = .03353;
+    
+    state_check{2,5} = mdot;
+    state_check{9,3} = To4;
+    state_check{9,4} = f;
+    state_check{16,3} = To7;
+    
+    inputs_check{2,2} = alt;
+    inputs_check{3,2} = M0;
+    
+    design_check{2,2} = alpha;
+    design_check{3,2} = beta;
+    design_check{4,2} = ep1;
+    design_check{5,2} = ep2;
+    
+    [state_check,design_check] = off_derived_parameters(state_check,design_check,fAB);
+    [state_check,component_check] = a(state_check,component_check,alt,To4);
+    
+    F_mdot = 110.83*9.806655;
+    S = 1.6941*2.8325e-05;
+    eta_TH = .4525;
+    eta_P = .4626;
+    M9 = M0*1.531;
+    
+    eta_o = eta_TH*eta_P;
+    
+performance_check(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Exhaust Mach'};
+performance_check(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
+end
+for test = 1:1
+%     state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
+%     state(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
+%     component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
+%     component(2:17,1) = {'Ram Recovery';'Inlet Actual';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
+%     design = {'Parameter','Value'};
+%     design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
+%     inputs = {'Parameter','Value'};
+%     inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
 %     
-%     M0 = 1.451;
-%     alt = 36000/3.281; %altitude [m from feet]
+%     M0 = 1.8000;
+%     alt = 40000/3.281; %altitude [m from feet]
 %     To4 = 3200*.555556;
 %     To7 = 3600*.555556;
 %     pi_n = .97;
 %     
-%     component_check(2:16,2) = {3.4211; .9354; 3.9000; 3.9000; 5.1282; .95; [];    .4231; []; [];    .4831; []; .9779; .95; pi_n};
-%     component_check(2:16,4) = {1.4211; [];    1.5479; 1.5479; 1.6803;  []; .9673; .8381; []; .9731; .8598; []; .8404;  []; []};
+%     component(2:16,2) = {5.7458; .9067; 3.0054; 3.0054; 4.7208; .95;    [];    .4231; []; [];    .5023; []; .9735; .95; pi_n};
+%     component(2:16,4) = {1.6480; [];    1.4259; 1.4259; 1.6377;  []; .9673;    .8381; []; .9731; .8667; []; .8268;  []; []};
 %     
 %     mdot = 188.72*0.45359237;
-%     alpha = .449;
+%     alpha = .530;
 %     beta = .01;
 %     ep1 = .05;
 %     ep2 = .05;
-%     f = .03070;
-%     fAB = .03353;
+%     f = .02875;
+%     fAB = .03371;
 %     
-%     state_check{2,5} = mdot;
-%     state_check{9,3} = To4;
+%     state{2,5} = mdot;
+%     state{9,3} = To4;
 %     state_check{9,4} = f;
-%     state_check{16,3} = To7;
+%     state{16,3} = To7;
 %     
-%     inputs_check{2,2} = alt;
-%     inputs_check{3,2} = M0;
+%     inputs{2,2} = alt;
+%     inputs{3,2} = M0;
 %     
-%     design_check{2,2} = alpha;
-%     design_check{3,2} = beta;
-%     design_check{4,2} = ep1;
-%     design_check{5,2} = ep2;
+%     design{2,2} = alpha;
+%     design{3,2} = beta;
+%     design{4,2} = ep1;
+%     design{5,2} = ep2;
 %     
-%     [state_check,design_check] = off_derived_parameters(state_check,design_check,inputs_check,fAB);
+%     [state_check,design_check] = off_derived_parameters(state_check,design_check,fAB);
 %     [state_check,component_check] = a(state_check,component_check,alt,To4);
 %     
-%     F_mdot = 110.83*9.806655;
-%     S = 1.6941*2.8325e-05;
-%     eta_TH = .4525;
-%     eta_P = .4626;
-%     M9 = M0*1.531;
+%     F_mdot = 104.69*9.806655;
+%     S = 1.7468*2.8325e-05;
+%     eta_TH = .471;
+%     eta_P = .5342;
+%     M9 = 2.3377;
 %     
 %     eta_o = eta_TH*eta_P;
 %     
 % performance_check(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Exhaust Mach'};
 % performance_check(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
-<<<<<<< HEAD
 end
 
 performance_check;
@@ -495,65 +523,6 @@ performance_check;
 
 
 
-=======
-% end
-% for test = 1:1
-% %     state = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
-% %     state(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
-% %     component = {'Component','Pressure Ratio','Polytropic Efficieny','Enthalpy Ratio', 'Mechanical/Combustion Efficiency'};
-% %     component(2:17,1) = {'Ram Recovery';'Inlet Actual';'Fan';'LP Compressor';'HP Compressor';'Main Burner';'Coolant Mixer 1';'HP Turbine';'HP Takeoff';'Coolant Mixer 2';'LP Turbine';'LP Takeoff';'Mixer';'Afterburner';'Nozzle';'Overall'};
-% %     design = {'Parameter','Value'};
-% %     design(2:8,1) = {'alpha';'beta';'epsilon1';'epsilon2';'PtoL';'PtoH';'h_PR'};
-% %     inputs = {'Parameter','Value'};
-% %     inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','SFC (kg/s/N)','Max Burner Temp (K)','Po9/P9'};
-% %     
-% %     M0 = 1.8000;
-% %     alt = 40000/3.281; %altitude [m from feet]
-% %     To4 = 3200*.555556;
-% %     To7 = 3600*.555556;
-% %     pi_n = .97;
-% %     
-% %     component(2:16,2) = {5.7458; .9067; 3.0054; 3.0054; 4.7208; .95;    [];    .4231; []; [];    .5023; []; .9735; .95; pi_n};
-% %     component(2:16,4) = {1.6480; [];    1.4259; 1.4259; 1.6377;  []; .9673;    .8381; []; .9731; .8667; []; .8268;  []; []};
-% %     
-% %     mdot = 188.72*0.45359237;
-% %     alpha = .530;
-% %     beta = .01;
-% %     ep1 = .05;
-% %     ep2 = .05;
-% %     f = .02875;
-% %     fAB = .03371;
-% %     
-% %     state{2,5} = mdot;
-% %     state{9,3} = To4;
-% %     state_check{9,4} = f;
-% %     state{16,3} = To7;
-% %     
-% %     inputs{2,2} = alt;
-% %     inputs{3,2} = M0;
-% %     
-% %     design{2,2} = alpha;
-% %     design{3,2} = beta;
-% %     design{4,2} = ep1;
-% %     design{5,2} = ep2;
-% %     
-% %     [state_check,design_check] = off_derived_parameters(state_check,design_check,fAB);
-% %     [state_check,component_check] = a(state_check,component_check,alt,To4);
-% %     
-% %     F_mdot = 104.69*9.806655;
-% %     S = 1.7468*2.8325e-05;
-% %     eta_TH = .471;
-% %     eta_P = .5342;
-% %     M9 = 2.3377;
-% %     
-% %     eta_o = eta_TH*eta_P;
-% %     
-% % performance_check(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Exhaust Mach'};
-% % performance_check(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
-% end
-% 
-% performance_check;
->>>>>>> 4693a9387e1ee8e256225a55e7bb4d052b790e8a
 %% On Design Functions
 function [state,component,performance] = component_seperate(state,component,design,inputs)
 % Runs an engine analysis w/ a seperated LP and HP spools
@@ -1068,25 +1037,17 @@ performance(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency'
 performance(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
 end
 %% Off Design Functions
-<<<<<<< HEAD
 function [performance,inputs,state,design,component,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,P6A_ref,fAB,A0)
      [state, component,v0] = off_ambient(state,component,inputs,A0);
     [state,design] = off_derived_parameters(state,design,fAB);    
-=======
-function [performance,inputs,state,design,component,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,M6A_ref,fAB,A0)
-    [state, component,v0] = off_ambient(state,component,inputs,A0);
-    [state,design] = off_derived_parameters(state,design,inputs,fAB);
->>>>>>> 4693a9387e1ee8e256225a55e7bb4d052b790e8a
     [state,component] = off_inlet(state,component,inputs);
-    [To4] = thetabreak(state,inputs);
-    state(9,3) = {To4};
     check = 0;
     alpha_track = 0;
     while check == 0
-        [state,design] = off_derived_parameters(state,design,inputs,fAB);
+        [state,design] = off_derived_parameters(state,design,fAB);
         [state,component] = off_fan(state,component,componentR,design); %flag
         [state,component] = off_comp(state,component,design, componentR); %flag
-        [state,component] = off_burner(state,component,design,inputs,fAB);
+        [state,component] = off_burner(state,component,design,fAB);
         [state,component] = off_turb(state,component,M6,A45_6); %flag
         [state,design,check,M6,alpha_track,M6A_i] = mixer(state,component,design,inputs,A16_6,M6,P6A_ref,alpha_track);
 %         M6
@@ -1095,7 +1056,7 @@ function [performance,inputs,state,design,component,M6] = offdesign(inputs,state
     state = off_afterburner(state,fAB);
     [state,component,performance] = off_nozzle(state,component,v0,design);
 end
-function [state,design] = off_derived_parameters(state,design,inputs,fAB)
+function [state,design] = off_derived_parameters(state,design,fAB)
 %Derived parameters for performance model, w/ changing values
 
 mdot = state{2,5};
@@ -1160,7 +1121,6 @@ state(22,4) = {0};
 state(22,5) = {mdotep2};
 
 
-
 end
 function [state, component,v0] = off_ambient(state,component,inputs,A0)
 alt = inputs{2,2};
@@ -1179,7 +1139,6 @@ state(3,3) = {To0};
 [state] = unFAIR3(state,3);
 
 
-
 P0 = state{2,2};
 Po0 = state{3,2};
 pi_r = Po0/P0;
@@ -1190,51 +1149,10 @@ ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
 
-<<<<<<< HEAD
 % Po = Pzero*((1+((gamma0-1)/2)*M0^2)^(gamma0/(gamma0-1)));
 % %mdot0 = rho0*A0*v0;
 % mdot0 = (A0*Po)*sqrt(gamma0/(To0*R0))*M0*(1+((gamma0-1)/2)*M0^2)^(-1*(gamma0+1)/(2*(gamma0-1))); %compressible eqn
 % state{2,5} = mdot0;
-=======
-Po = Pzero*((1+((gamma0-1)/2)*M0^2)^(gamma0/(gamma0-1)));
-%mdot0 = rho0*A0*v0;
-mdot0 = (A0*Po)*sqrt(gamma0/(To0*R0))*M0*(1+((gamma0-1)/2)*M0^2)^(-1*(gamma0+1)/(2*(gamma0-1))); %compressible eqn
-state{2,5} = mdot0;
-
-
-
-
-end
-function [To4] = thetabreak(state,inputs)
-To4max = 3200*.555555556; %input max To4
-gamma = state{2,7};
-T0 = state{2,3};
-M0 = inputs{3,2};
-
-To4 = To4max;
-
-[Tstd,~,~,~] = atmosisa(0);
-To0 = T0*(1+((M0^2)*((gamma-1)/2)));
-
-theta0 = To0/Tstd;
-
-To4sls = To4/theta0;
-TR = To4max/To4sls;
-
-
-M0break = sqrt((TR-1)*(2/(gamma-1)));
-
-while isreal(M0break) == 0
-    To4 = To4*.999;
-    To4sls = To4/theta0;
-    TR = To4max/To4sls;
-    M0break = sqrt((TR-1)*(2/(gamma-1)));
-end
-    
-
-
-    
->>>>>>> 4693a9387e1ee8e256225a55e7bb4d052b790e8a
 end
 function [state,component] = off_inlet(state,component,inputs)
 M0 = inputs{3,2};
@@ -1388,7 +1306,7 @@ ho3 = ho25*tau_cL;
 state{7,8} = ho3;
 [state] = unFAIR3(state,7);
 end
-function [state,component] = off_burner(state,component,design,inputs,fAB)
+function [state,component] = off_burner(state,component,design,fAB)
 state(8,2:3) = state(7,2:3);
 state(8,6:12) = state(7,6:12);
 mdot31 = state{8,3};
@@ -1409,7 +1327,7 @@ while error > .01
     mdotf = mdot31*(ho4 - ho31) / h_PR; %plus eta_burner
     f = mdotf/mdot31;
     state{9,4} = f;
-    [state,design] = off_derived_parameters(state,design,inputs,fAB);
+    [state,design] = off_derived_parameters(state,design,fAB);
     error = (f - f_i)/f_i;
     f_i = f;
 end
