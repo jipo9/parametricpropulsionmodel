@@ -19,9 +19,9 @@ close all
 % the engine is designed to perform under
 
 %Engine being ustilized is the DGEN-390 Price Induction
-alt = 25000 / 3.281; %altitude [m from feet]
+alt = 20000 / 3.281; %altitude [m from feet]
 M0 = .35;
-pi_f = 2.7; %Mid approx for turbofan
+pi_f = 2; %Mid approx for turbofan
 pi_cL = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
 pi_cH = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 7.5;

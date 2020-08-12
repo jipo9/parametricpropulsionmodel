@@ -66,26 +66,26 @@ inputs(7,2) = {T_t4};
 inputs(8,2) = {A0};
 
 
-[state, component,v0] = ambient(state,component,inputs);
+[state, component,v0] = ambient(state,component,design,inputs);
 [state,component] = inlet(state,component,inputs);
 [state,component] = fan(state,component);
 [state,component] = LPcomp(state,component);
 [state,component] = HPcomp(state,component);
-[state,component] = burner(state,component);
+[state,component] = burner(state,component,design);
 [state,component] = HPturb(state,component,design);
 [state,component] = LPturb(state,component,design);
 [state,component,performance] = nozzle(state,component,v0,design);
+end
+
 %% Functions
-function [state,design] = mdot(state,inputs,design)
+function [state,design] = mdot(state,design)
 % Calculates mass flow throughout engine sections
 
 mdot0 = state{2,5};
-alt = inputs{2,2};
-M0 = inputs{3,2};
-T_t4 = inputs{7,2};
 alpha = design{2,2};
 beta = design{3,2};
-
+ep1 = design{4,2};
+ep2 = design{5,2};
 
 % MASS FLOW AND FUEL TO AIR CALCULATIONS
 f = state{9,4};
@@ -142,7 +142,7 @@ state(20,5) = {mdotep};
 state(21,5) = {mdotep1};
 state(22,5) = {mdotep2};
 end
-function [state, component,v0] = ambient(state,component,inputs)
+function [state, component,v0] = ambient(state,component,design,inputs)
 alt = inputs{2,2};
 M0 = inputs{3,2};
 A0 = inputs{8,2};
@@ -158,7 +158,7 @@ v0 = M0*a0; %[m/s]
 
 mdot0 = A0 * v0 * rho0;
 state{2,5} = mdot0;
-[state,design] = mdot(state,inputs,design);
+[state,design] = mdot(state,design);
 
 T_o0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
 state(3,3) = {T_o0};
@@ -263,7 +263,7 @@ ho3i = state_ideal{7,8};
 etach = (ho3i-ho25)/(ho3-ho25);
 component{6,5} = etach;
 end
-function [state,component] = burner(state,component)
+function [state,component] = burner(state,component,design)
 state(8,2:3) = state(7,2:3);
 state(8,6:12) = state(7,6:12);
 [state] = unFAIR3(state,9);
@@ -297,7 +297,7 @@ end
 
 taub = ho4/ho31;
 component{7,4} = taub;
-[state,design] = mdot(state,inputs,design);
+[state,design] = mdot(state,design);
 end
 function [state,component] = HPturb(state,component,design)
 mdot3 = state{7,5};
@@ -410,7 +410,7 @@ h_PR = design{8,2};
 PtoL = design{6,2};
 PtoH = design{7,2};
 mdot0 = state{2,5};
-[~,pi_r,pi_d,~,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
+[~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
 
 
 Pro13 = state{5,2};
@@ -446,6 +446,10 @@ a9 = sqrt(R9*gamma9*T9); %m/s
 v9 = M9*a9;
 
 
+
+
+
+
 f_0 = (f19*mdot19 + f9*mdot9)/(mdot19 + mdot9);
 
 
@@ -461,5 +465,4 @@ eta_th = eta_o/eta_p;
 
 performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach'};
 performance(2,:) = {F,S,eta_th,eta_p,eta_o,M19,M9};
-end
 end
