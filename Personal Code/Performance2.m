@@ -1,6 +1,6 @@
 clear
 clc
-close all
+% close all
 
 %% To do:
 
@@ -19,16 +19,16 @@ close all
 % the engine is designed to perform under
 
 %Engine being ustilized is the DGEN-390 Price Induction
-alt = 20000 / 3.281; %altitude [m from feet]
-M0 = .35;
-pi_f = 2; %Mid approx for turbofan
-pi_cL = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
-pi_cH = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
-alpha = 7.5;
-beta = 0;
-PtoH = 0;
-PtoL = 0;
-A0 = pi*(.469/2)^2;
+alt = 5000 / 3.281; % Max altitude [m from feet]
+M0 = .35; %Max Mach
+pi_f = 2.7; %Mid approx for fan is 2.7
+pi_cL = 5.9; %Mid approx for low pressure compressor is 5.9, pi_cL = pi_cH
+pi_cH = 5.9; %Mid approx for high pressure compressor is 5.9, pi_cL = pi_cH
+alpha = 7.5; % Bypass Ratio Given in engine data
+beta = 0; % Assume no bleed air
+PtoH = 0; % Assume no power takeoff on high pressure shaft
+PtoL = 0; % Assume no power takeoff on high pressure shaft
+A0 = pi*(.469/2)^2; % Assume inlet area (only really matters wjen power takeoff is given)
 year = 2011;
 
 [state,component,design, inputs, performance] = on_design(alt,M0,pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year);
@@ -39,7 +39,7 @@ mdot0 = state{2,5};
 F_mdot = F/mdot0 * (1/9.806655)
 S = performance{2,2} / ((.453592/3600)/4.44822)
 disp('Range for F/mdot is 13-27 and range for S is .67 to 1.03')
-disp('is supersonic bypass exhaust wrong???also i think the efficiencies should be much higher??? Also fix the imaginary numbers... maybe go through and check values 1 by 1?')
+
 
 %% Off design plots
 % Loop for each case

@@ -27,6 +27,20 @@ close all
     % Talk w/ propulsion reference?
     % Cry a bit then move on to a more rudimentary model?
 
+    
+M = linspace(0,1.5);
+gamma = 1.4;
+for ii = 1:100
+    [pi_14] = pressure(M(ii),1.4);
+    Pt_P_14(ii) = 1/pi_14;
+    [pi_13] = pressure(M(ii),1.3);
+    Pt_P_13(ii) = 1/pi_13;
+end
+plot(M,Pt_P_14,M,Pt_P_13)
+xlabel('Mach Number')
+ylabel('P / Pt')
+legend('gamma = 1.4','gamma = 1.3')
+
 %% Analyze M6 vs M16 at each P6/P16 (fixed A16_6)
 A16_6 = 0.2715;
 
@@ -415,7 +429,8 @@ end
 function [P_Pt] = pressure(M,gamma)
 %Calculates static over stagnation pressure for isentropic compressible
 %gas
-P_Pt = (1 - (gamma - 1)/2*M^2)^(-gamma/(gamma-1));
+Pt_P = (1 + (gamma - 1)/2*M^2)^(gamma/(gamma-1));
+P_Pt = 1/Pt_P;
 end
 
 function [T_Tt] = temperature(M,gamma)

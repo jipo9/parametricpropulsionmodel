@@ -16,14 +16,13 @@ inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','
 % Assume values come from level of tech
 [pi_dmax, e_c, e_f, pi_b, eta_b, e_t, pi_n, T_t4] = LOT(year);
 
-% Calculate 
-if T_t4 > 2400*.55556
-    ep1 = (T_t4/.5556-2400)/(16000);
-    ep2 = ep1;
-else
+% Calculate coolant air
+ep1 = (T_t4 - 1333.333333333)/8888.8888888888889;
+if ep1 < 0
     ep1 = 0;
-    ep2 = 0;
 end
+ep2 = ep1;
+
 
 % Assume 100% mechanical efficiency on shaft and shaft takeoff power
 etamH = 1;
@@ -75,6 +74,14 @@ inputs(8,2) = {A0};
 [state,component] = HPturb(state,component,design);
 [state,component] = LPturb(state,component,design);
 [state,component,performance] = nozzle(state,component,v0,design);
+
+
+% [E_fan] = delta_E(state,4,5);
+% [E_LPComp] = delta_E(state,4,6);
+% [E_HPComp] = delta_E(state,6,7);
+% [E_HPTurb] = delta_E(state,10,11);
+% [E_LPTurb] = delta_E(state,12,13);
+
 end
 
 %% Functions
@@ -250,8 +257,8 @@ state(7,2) = {Po3};
 
 ho25 = state{6,8};
 ho3 = state{7,8};
-taucl = ho3/ho25;
-component{6,4} = taucl;
+tauch = ho3/ho25;
+component{6,4} = tauch;
 
 state_ideal = state;
 Po3i = Po25*pich; %mechanical efficiency
@@ -335,7 +342,7 @@ state(11,8) = {ho44};
 Po44 = state{11,2};
 tauth = ho44/ho41;
 component{9,4} = tauth;
-pitH = (Po44 / Po41)^(1/eth);
+pitH = (Po44 / Po41)^eth;
 component{9,2} = pitH;
 
 %Find efficiency
@@ -346,7 +353,7 @@ state_ideal(11,3) = {[]};
 state_ideal(11,8) = {[]};
 [state_ideal] = unFAIR3(state_ideal,11);
 ho44i = state_ideal{11,8};
-etatH = (ho41-ho44)/(ho41-ho44i);
+etatH = (ho41-ho44i)/(ho41-ho44);
 component{9,6} = etatH;
 end
 function [state,component] = LPturb(state,component,design)
@@ -389,7 +396,7 @@ Po5 = state{13,2};
 tautl = ho5/ho45;
 component{12,4} = tautl;
 etl = component{12,3};
-pitL = (Po5 / Po45)^(1/etl);
+pitL = (Po5 / Po45)^etl;
 component{12,2} = pitL;
 
 %Find efficiency
@@ -400,7 +407,7 @@ state_ideal(13,3) = {[]};
 state_ideal(13,8) = {[]};
 [state_ideal] = unFAIR3(state_ideal,13);
 ho5i = state_ideal{13,8};
-etatH = (ho45-ho5)/(ho45-ho5i);
+etatH = (ho45-ho5i)/(ho45-ho5);
 component{12,6} = etatH;
 end
 function [state,component,performance] = nozzle(state,component,v0,design)
@@ -424,7 +431,7 @@ state(15,2) = {Pr19};
 [state] = unFAIR3(state,15);
 
 [~,~,T19,f19,mdot19,~,gamma19,~,~,R19,~,~] = state{15,:};
-M19 = sqrt((( Po19_P19^(-(gamma19-1)/gamma19)  -  1 ) / (- (gamma19 - 1)/2)));
+M19 = sqrt((( Po19_P19^((gamma19-1)/gamma19)  -  1 ) / ( (gamma19 - 1)/2)));
 a19 = sqrt(R19*gamma19*T19); %m/s
 v19 = M19*a19;
 
@@ -441,7 +448,7 @@ state(18,2) = {Pr9};
 [state] = unFAIR3(state,18);
 
 [~,~,T9,f9,mdot9,~,gamma9,~,~,R9,~,~] = state{18,:};
-M9 = sqrt((( Po9_P9^(-(gamma9-1)/gamma9)  -  1 ) / (- (gamma9 - 1)/2)));
+M9 = sqrt((( Po9_P9^((gamma9-1)/gamma9)  -  1 ) / ((gamma9 - 1)/2)));
 a9 = sqrt(R9*gamma9*T9); %m/s
 v9 = M9*a9;
 
@@ -449,19 +456,26 @@ v9 = M9*a9;
 
 
 
-
-f_0 = (f19*mdot19 + f9*mdot9)/(mdot19 + mdot9);
-
+mdot4 =  state{9,5};
+f = state{9,4};
+mdotf = mdot4*f/(1+f);
 
 F = mdot19*v19 +mdot9*v9 - mdot0*v0;
-S = f_0 * mdot0 / F;
+S = mdotf / F;
 
-eta_o = v0/(h_PR*S);
-% eta_o = F*v0 / ((state{9,5} - state{8,5})*h_PR);
+mech_power = -.5*mdot0*v0^2 + .5*mdot19*v19^2 + .5*mdot9*v9^2 + PtoH + PtoL;
+thrust_power = F*v0;
+chem_power = mdotf*h_PR;
 
-eta_p = (F*v0) / (.5*mdot19*v19^2 + .5*mdot9*v9^2 - .5*mdot0*v0^2 + PtoH + PtoL);
-eta_th = eta_o/eta_p;
+eta_o = thrust_power/chem_power;
+eta_th = mech_power/chem_power;
+eta_p = thrust_power/mech_power;
 
+% Alternative equations
+% eta_o = v0/(h_PR*S);
+% % eta_o = F*v0 / ((state{9,5} - state{8,5})*h_PR);
+% eta_p = (F*v0) / (.5*mdot19*v19^2 + .5*mdot9*v9^2 - .5*mdot0*v0^2 + PtoH + PtoL);
+% eta_th = eta_o/eta_p;
 
 performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach'};
 performance(2,:) = {F,S,eta_th,eta_p,eta_o,M19,M9};
