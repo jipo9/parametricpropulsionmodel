@@ -378,19 +378,19 @@ P0_P9 = 1;
 h_PR = design{8,2};
 PtoL = design{6,2};
 PtoH = design{7,2};
-[~,pi_r,pi_d,~,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
+[~,pi_r,pi_d,~,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,pi_M,pi_AB,pi_n,~] = component{:,2};
 
 %Calculate pressure drop across nozzle
-Pro5 = state{13,2};
-pi_n = component{16,2};
-Pro9 = Pro5*pi_n;
+Pro5 = state{13,2}
+pin = component{16,2};
+Pro9 = Pro5*pin
 state(17,2) = {Pro9};
+state{17,2} = [];
 state{17,3} = [];
-state{17,8} = [];
 [state] = unFAIR3(state,17);
 
 %Calculate static conditions of exhaust
-Po9_P0 = pi_r*pi_d(2)*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_n;
+Po9_P0 = pi_r*pi_d(2)*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_M*pi_AB*pi_n;
 Po9_P9 = Po9_P0/P0_P9;
 Pr9 = Pro9 / Po9_P9;
 state(18,2) = {Pr9};

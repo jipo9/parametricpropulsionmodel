@@ -41,13 +41,26 @@ S = performance{2,2} / ((.453592/3600)/4.44822)
 disp('Range for F/mdot is 13-27 and range for S is .67 to 1.03')
 disp('is supersonic bypass exhaust wrong???also i think the efficiencies should be much higher??? Also fix the imaginary numbers... maybe go through and check values 1 by 1?')
 
-%% Off design plots
+%% Off design
+
+componentR = component;
+
+alt = [0,10000,20000,30000,40000]./3.281;
+M0 = [0,.1,.2,.3];
+
+for i = 1:length(alt)
+    for j = 1:length(M0)
+        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0(j),alt(i));
+    end
+end
+
+
+%[state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0,alt);
 % Loop for each case
     % Use modified off design analysis for 2 spool, no afterburner, no mixer
         % No iterative scheme, performance is funciton of flight condition
         % Add theta break in later (or now since its easy?
-        
-        
+
 %% Eqns
 % F = mdot16*v16 + mdot9*v9 - mdot0*v0; %Assume perfectly expanded
 % S = f_0 * mdot0 / F;
