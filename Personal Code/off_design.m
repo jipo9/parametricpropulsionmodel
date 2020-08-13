@@ -4,14 +4,21 @@ function [state,component,design,inputs,performance] = off_design(state,componen
 % returns the engine performance for any given flight condition
 
 %% Calculations
+tauf_i = component{4,4};
+error = 1;
+while error > .0001
 [state, component,v0] = off_ambient(state,component,design,alt,M0,A0);
 [state,component] = off_inlet(state,component,inputs);
-
 [state,component] = off_fan(state,component,componentR,design);
 [state,component] = off_comp(state,component,design, componentR);
 [state,component] = off_burner(state,component,design);
 [state,component] = off_turb(state,componentR,component);
 [state,component,performance] = off_nozzle(state,component,v0,design);
+
+tauf = component{4,4};
+error = norm(tauf-tauf_i)/tauf;
+tauf_i = tauf;
+end
     
 end   
 

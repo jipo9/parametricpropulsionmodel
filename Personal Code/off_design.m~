@@ -4,15 +4,19 @@ function [state,component,design,inputs,performance] = off_design(state,componen
 % returns the engine performance for any given flight condition
 
 %% Calculations
-[state, component,v0] = off_ambient(state,component,alt,M0,A0);
-%[state,design] = off_derived_parameters(state,design);
+tauf_i
+error = 1;
+while error > .0001
+[state, component,v0] = off_ambient(state,component,design,alt,M0,A0);
 [state,component] = off_inlet(state,component,inputs);
-
 [state,component] = off_fan(state,component,componentR,design);
 [state,component] = off_comp(state,component,design, componentR);
 [state,component] = off_burner(state,component,design);
-[state,component] = off_turb(state,component);
+[state,component] = off_turb(state,componentR,component);
 [state,component,performance] = off_nozzle(state,component,v0,design);
+
+error
+end
     
 end   
 
@@ -81,77 +85,7 @@ state(20,5) = {mdotep};
 state(21,5) = {mdotep1};
 state(22,5) = {mdotep2};
 end
-function [state,design] = off_derived_parameters(state,design)
-%Derived parameters for performance model, w/ changing values
-
-mdot0 = state{2,5};
-alpha = design{2,2};
-beta = design{3,2};
-ep1 = design{4,2};
-ep2 = design{5,2};
-f = state{9,4};
-f0 = 0;
-
-% MASS FLOW AND FUEL TO AIR CALCULATIONS
-
-mdot4 = state{9,5};
-mdot31 = state{8,5};
-if size(f,1) == 1
-    mdot_f = mdot4 - mdot31;
-else
-    mdot_f = 0;
-end
-
-mdot25 = mdot0/(1+alpha); %after bypass leaves
-mdot13 = mdot0 - mdot25; % bypass mass flow
-
-mdot31 = mdot25*(1-beta - ep1 -ep2); %after bleed and coolant leaves
-mdotbeta = mdot25*beta; %bleed air
-mdotep1 = mdot25*ep1; %coolant air 1
-mdotep2 = mdot25*ep2; %coolant air 2
-mdotep = mdotep1+mdotep2; %combined coolant air
-
-mdot4 = mdot31 + mdot_f; %mass flow rate post-burner
-f4 = mdot_f / mdot31; %fuel/air ratio post-burner
-
-mdot41 = mdot4 + mdotep1; %mass flow rate after addtion of cooling air 1
-f41 = f4*mdot4 / mdot41; %fuel/air ratio after addtion of cooling air 1
-
-mdot45 = mdot41 + mdotep2; %mass flow rate after addtion of cooling air 2
-f45 = f41*mdot41 / mdot45; %fuel/air ratio after addtion of cooling air 2
-
-mdot6A = mdot45 + mdot13; %mass flow rate after addtion of bypass air
-f6A = f45*mdot45 / mdot6A; %fuel/air ratio after addtion of bypass air
-
-
-
-% Store all values
-state(2:8,4) = {f0};
-state(2:4,5) = {mdot0};
-state(5,5) = {mdot13};
-state(6:7,5) = {mdot25};
-state(8,5) = {mdot31};
-state(9,4) = {f4};
-state(9,5) = {mdot4};
-state(10:11,4) = {f41};
-state(10:11,5) = {mdot41};
-state(12:14,4) = {f45};
-state(12:14,5) = {mdot45};
-state(15,4) = {f6A};
-state(15,5) = {mdot6A};
-
-state(19,4) = {0};
-state(19,5) = {mdotbeta};
-state(20,4) = {0};
-state(20,5) = {mdotep};
-state(21,4) = {0};
-state(21,5) = {mdotep1};
-state(22,4) = {0};
-state(22,5) = {mdotep2};
-
-
-end
-function [state, component,v0] = off_ambient(state,component,alt,M0,A0)
+function [state, component,v0] = off_ambient(state,component,design,alt,M0,A0)
 [T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
 state(2,3) = {T0};
 [state] = unFAIR3(state,2);
@@ -357,53 +291,58 @@ while error > .01
     mdotf = mdot31*(ho4 - ho31) / h_PR; %plus eta_burner
     f = mdotf/mdot31;
     state{9,4} = f;
-    [state,design] = off_derived_parameters(state,design);
+    [state,design] = mdot(state,design);
     error = (f - f_i)/f_i;
     f_i = f;
 end
 
 end
-function [state,component] = off_turb(state,component)
-tau_m1 = component{8,4};
-tau_tH = component{9,4};
-tau_m2 = component{11,4};
-ho4 = state{9,8};
-
-A45_6 = 1;
-M6 = .5;
-
-gamma = 1.3;
-eta_tL = component{12,6};
-X = A45_6 * 1/M6 * (2/(gamma+1)    *  (1+(gamma-1)/2*M6^2)  )^  ((gamma+1)/(2*(gamma-1)));
-
-error = 1;
-up = 10;
-low = 0;
-while error > .0000001
-    pi_tL = (up+low)/2;
-    tau_tL = 1 - eta_tL*(1-pi_tL^((gamma-1)/gamma));
-    X_i = pi_tL/sqrt(tau_tL);
-    error = norm(X_i - X)/X;
-    if X_i > X
-       up =  pi_tL;
-    else
-       low =  pi_tL;
-    end
-end
-
-
-
-%         tau_tL = 0.8598;
-%         pi_tL = 0.4831;
+function [state,component] = off_turb(state,componentR,component)
+ tau_m1 = componentR{8,4};
+% tau_tH = component{9,4};
+ tau_m2 = componentR{11,4};
+ ho4 = state{9,8};
+% 
+% A45_6 = 1;
+% M6 = .5;
+% 
+% gamma = 1.3;
+% eta_tL = component{12,6};
+% X = A45_6 * 1/M6 * (2/(gamma+1)    *  (1+(gamma-1)/2*M6^2)  )^  ((gamma+1)/(2*(gamma-1)));
+% 
+% error = 1;
+% up = 10;
+% low = 0;
+% while error > .0000001
+%     pi_tL = (up+low)/2;
+%     tau_tL = 1 - eta_tL*(1-pi_tL^((gamma-1)/gamma));
+%     X_i = pi_tL/sqrt(tau_tL);
+%     error = norm(X_i - X)/X;
+%     if X_i > X
+%        up =  pi_tL;
+%     else
+%        low =  pi_tL;
+%     end
+% end
+% 
+% 
+% 
+% %         tau_tL = 0.8598;
+% %         pi_tL = 0.4831;
+% %         
+% %         tau_m1 = 0.9673;
+% %         tau_tH = 0.8381;
+% %         tau_m2 = 0.9731;
+% %         
+% %         component{8,4} = tau_m1;
+% %         component{9,4} = tau_tH;
+% %         component{11,4} = tau_m2;
 %         
-%         tau_m1 = 0.9673;
-%         tau_tH = 0.8381;
-%         tau_m2 = 0.9731;
-%         
-%         component{8,4} = tau_m1;
-%         component{9,4} = tau_tH;
-%         component{11,4} = tau_m2;
-        
+
+pi_tH = componentR{9,2};
+tau_tH = componentR{9,4};
+pi_tL = componentR{12,2};
+tau_tL = componentR{12,4};
 
 state{10,2} = [];
 state{10,3} = [];
@@ -435,6 +374,8 @@ state{13,8} = ho5;
 
 component{12,2} = pi_tL;
 component{12,4} = tau_tL;
+component{9,2} = pi_tH;
+component{9,4} = tau_tH;
 end
 function [state,component,performance] = off_nozzle(state,component,v0,design)
 %Take in inputs    
