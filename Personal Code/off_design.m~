@@ -1,11 +1,11 @@
-function [state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0,alt)
+function [state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0,alt,A0)
 %% Read Me
 % This function takes in the results from the on-design analysis and
 % returns the engine performance for any given flight condition
 
 %% Calculations
-[state, component,v0] = off_ambient(state,component,alt,M0);
-[state,design] = off_derived_parameters(state,design);
+[state, component,v0] = off_ambient(state,component,alt,M0,A0);
+%[state,design] = off_derived_parameters(state,design);
 [state,component] = off_inlet(state,component,inputs);
 
 [state,component] = off_fan(state,component,componentR,design);
@@ -17,7 +17,70 @@ function [state,component,design,inputs,performance] = off_design(state,componen
 end   
 
 %% Functions
+function [state,design] = mdot(state,design)
+% Calculates mass flow throughout engine sections
 
+mdot0 = state{2,5};
+alpha = design{2,2};
+beta = design{3,2};
+ep1 = design{4,2};
+ep2 = design{5,2};
+
+% MASS FLOW AND FUEL TO AIR CALCULATIONS
+f = state{9,4};
+mdot4 = state{9,5};
+mdot31 = state{8,5};
+if size(f,1) == 1
+    mdot_f = mdot4 - mdot31;
+else
+    mdot_f = 0;
+end
+
+f0 = 0; %freestream fuel/air ratio
+
+mdot25 = mdot0/(1+alpha); %after bypass leaves
+mdot13 = mdot0 - mdot25; % bypass mass flow
+
+mdot31 = mdot25*(1-beta - ep1 -ep2); %after bleed and coolant leaves
+mdotbeta = mdot25*beta; %bleed air
+mdotep1 = mdot25*ep1; %coolant air 1
+mdotep2 = mdot25*ep2; %coolant air 2
+mdotep = mdotep1+mdotep2; %combined coolant air
+
+mdot4 = mdot31 + mdot_f; %mass flow rate post-burner
+f4 = mdot_f / mdot31; %fuel/air ratio post-burner
+
+mdot41 = mdot4 + mdotep1; %mass flow rate after addtion of cooling air 1
+f41 = f4*mdot4 / mdot41; %fuel/air ratio after addtion of cooling air 1
+
+mdot45 = mdot41 + mdotep2; %mass flow rate after addtion of cooling air 2
+f45 = f41*mdot41 / mdot45; %fuel/air ratio after addtion of cooling air 2
+
+mdot6A = mdot45 + mdot13; %mass flow rate after addtion of bypass air
+f6A = f45*mdot45 / mdot6A; %fuel/air ratio after addtion of bypass air
+
+% Store all values
+state(2:8,4) = {f0};
+state(2:4,5) = {mdot0};
+state(5,5) = {mdot13};
+state(6:7,5) = {mdot25};
+state(8,5) = {mdot31};
+state(9,4) = {f4};
+state(9,5) = {mdot4};
+state(10:11,4) = {f41};
+state(10:11,5) = {mdot41};
+state(12:13,4) = {f45};
+state(12:13,5) = {mdot45};
+state(14:15,4) = {f0};
+state(14:15,5) = {mdot13};
+state(17:18,4) = {f45};
+state(17:18,5) = {mdot45};
+
+state(19,5) = {mdotbeta};
+state(20,5) = {mdotep};
+state(21,5) = {mdotep1};
+state(22,5) = {mdotep2};
+end
 function [state,design] = off_derived_parameters(state,design)
 %Derived parameters for performance model, w/ changing values
 
@@ -88,8 +151,8 @@ state(22,5) = {mdotep2};
 
 
 end
-function [state, component,v0] = off_ambient(state,component,alt,M0)
-[T0, ~, ~, ~] = atmosisa(alt); %obtain standard atmospheric conditions
+function [state, component,v0] = off_ambient(state,component,alt,M0,A0)
+[T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
 state(2,3) = {T0};
 [state] = unFAIR3(state,2);
 [~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
@@ -97,6 +160,9 @@ R0 = cp0 - cp0/gamma0;
 a0 = sqrt(R0*gamma0*T0); %[m/s]
 v0 = M0*a0; %[m/s]
 
+mdot0 = A0 * v0 * rho0;
+state{2,5} = mdot0;
+[state,design] = mdot(state,design);
 
 To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
 state(3,3) = {To0};
@@ -113,8 +179,8 @@ ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
 
-% Po = Pzero*((1+((gamma0-1)/2)*M0^2)^(gamma0/(gamma0-1)));
-% %mdot0 = rho0*A0*v0;
+
+
 % mdot0 = (A0*Po)*sqrt(gamma0/(To0*R0))*M0*(1+((gamma0-1)/2)*M0^2)^(-1*(gamma0+1)/(2*(gamma0-1))); %compressible eqn
 % state{2,5} = mdot0;
 end
@@ -378,19 +444,19 @@ P0_P9 = 1;
 h_PR = design{8,2};
 PtoL = design{6,2};
 PtoH = design{7,2};
-[~,pi_r,pi_d,~,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,pi_M,pi_AB,pi_n,~] = component{:,2};
+[~,pi_r,pi_d,~,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
 
 %Calculate pressure drop across nozzle
-Pro5 = state{13,2}
-pin = component{16,2};
-Pro9 = Pro5*pin
+Pro5 = state{13,2};
+pi_n = component{16,2};
+Pro9 = Pro5*pi_n;
 state(17,2) = {Pro9};
-state{17,2} = [];
 state{17,3} = [];
+state{17,8} = [];
 [state] = unFAIR3(state,17);
 
 %Calculate static conditions of exhaust
-Po9_P0 = pi_r*pi_d(2)*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_M*pi_AB*pi_n;
+Po9_P0 = pi_r*pi_d(2)*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_n;
 Po9_P9 = Po9_P0/P0_P9;
 Pr9 = Pro9 / Po9_P9;
 state(18,2) = {Pr9};
