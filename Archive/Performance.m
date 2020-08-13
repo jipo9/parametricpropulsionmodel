@@ -1031,7 +1031,7 @@ performance(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
 end
 %% Off Design Functions
 function [performance,inputs,state,design,component,M6] = offdesign(inputs,state,design,component,componentR,A16_6,A45_6,M6,P6A_ref,fAB,A0)
-     [state, component,v0] = off_ambient(state,component,inputs,A0);
+    [state, component,v0] = off_ambient(state,component,inputs,A0);
     [state,design] = off_derived_parameters(state,design,fAB);    
     [state,component] = off_inlet(state,component,inputs);
     check = 0;
