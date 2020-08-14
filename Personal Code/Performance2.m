@@ -61,8 +61,8 @@ disp('Range for F/mdot is 13-27 and range for S is .67 to 1.03')
 
 componentR = component;
 
-alt = [0,10000,20000,30000]./3.281;
-M0 = [.1,.2,.3];
+alt = [0,10000,20000,30000,40000]./3.281;
+M0 = linspace(.1,.85,10);
 
 for i = 1:length(alt)
     for j = 1:length(M0)
@@ -73,6 +73,19 @@ for i = 1:length(alt)
     end
 end
 
+h1 = figure(1);
+h1.WindowStyle = 'docked'; 
+plot(M0,F(3,:))
+xlabel('Mach Number')
+ylabel('Thrust (N)')
+grid('on')
+
+h2 = figure(2);
+h2.WindowStyle = 'docked'; 
+plot(M0,S(1,:))
+xlabel('Mach Number')
+ylabel('SFC')
+grid('on')
 
 
 % Loop for each case
