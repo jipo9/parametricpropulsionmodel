@@ -433,6 +433,9 @@ state(15,2) = {Pr19};
 
 [~,~,T19,f19,mdot19,~,gamma19,~,~,R19,~,~] = state{15,:};
 M19 = sqrt((( Po19_P19^((gamma19-1)/gamma19)  -  1 ) / ( (gamma19 - 1)/2)));
+
+(((1+(gamma-1)/2)*M19^2)^((-gamma)/(gamma-1)))
+
 a19 = sqrt(R19*gamma19*T19); %m/s
 v19 = M19*a19;
 

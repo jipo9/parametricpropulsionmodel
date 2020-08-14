@@ -1,21 +1,27 @@
-function [state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0,alt,A0)
+function [state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0,alt,A0,A45_9)
 %% Read Me
 % This function takes in the results from the on-design analysis and
 % returns the engine performance for any given flight condition
 
+
 %% Calculations
-tauf_i
+tauf_i = component{4,4};
 error = 1;
+
 while error > .0001
 [state, component,v0] = off_ambient(state,component,design,alt,M0,A0);
 [state,component] = off_inlet(state,component,inputs);
 [state,component] = off_fan(state,component,componentR,design);
 [state,component] = off_comp(state,component,design, componentR);
+% [To4] = thetabreak(state,inputs);
+% state(9,3) = {To4};
 [state,component] = off_burner(state,component,design);
-[state,component] = off_turb(state,componentR,component);
+[state,component] = off_turb(state,component);
 [state,component,performance] = off_nozzle(state,component,v0,design);
 
-error
+tauf = component{4,4};
+error = norm(tauf-tauf_i)/tauf;
+tauf_i = tauf;
 end
     
 end   
@@ -88,6 +94,9 @@ end
 function [state, component,v0] = off_ambient(state,component,design,alt,M0,A0)
 [T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
 state(2,3) = {T0};
+state(2,4) = {0};
+state{2,2} = [];
+state{2,8} = [];
 [state] = unFAIR3(state,2);
 [~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
 R0 = cp0 - cp0/gamma0;
@@ -100,6 +109,8 @@ state{2,5} = mdot0;
 
 To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
 state(3,3) = {To0};
+state{3,2} = [];
+state{3,8} = [];
 [state] = unFAIR3(state,3);
 
 
@@ -135,6 +146,8 @@ Po2 = pid*Po0;
 
 component{3,2} = [pi_dmax,pid];
 state(4,2) =  {Po2};
+state{4,3} = [];
+state{4,8} = [];
 [state] = unFAIR3(state,4);
 
 ho0 = state{3,8};
@@ -297,52 +310,47 @@ while error > .01
 end
 
 end
-function [state,component] = off_turb(state,componentR,component)
- tau_m1 = componentR{8,4};
-% tau_tH = component{9,4};
- tau_m2 = componentR{11,4};
- ho4 = state{9,8};
-% 
-% A45_6 = 1;
-% M6 = .5;
-% 
-% gamma = 1.3;
-% eta_tL = component{12,6};
-% X = A45_6 * 1/M6 * (2/(gamma+1)    *  (1+(gamma-1)/2*M6^2)  )^  ((gamma+1)/(2*(gamma-1)));
-% 
-% error = 1;
-% up = 10;
-% low = 0;
-% while error > .0000001
-%     pi_tL = (up+low)/2;
-%     tau_tL = 1 - eta_tL*(1-pi_tL^((gamma-1)/gamma));
-%     X_i = pi_tL/sqrt(tau_tL);
-%     error = norm(X_i - X)/X;
-%     if X_i > X
-%        up =  pi_tL;
-%     else
-%        low =  pi_tL;
-%     end
-% end
-% 
-% 
-% 
-% %         tau_tL = 0.8598;
-% %         pi_tL = 0.4831;
-% %         
-% %         tau_m1 = 0.9673;
-% %         tau_tH = 0.8381;
-% %         tau_m2 = 0.9731;
-% %         
-% %         component{8,4} = tau_m1;
-% %         component{9,4} = tau_tH;
-% %         component{11,4} = tau_m2;
-%         
+function [state,component] = off_turb(state,component,M9,A45_9)
+tau_m1 = component{8,4};
+tau_tH = component{9,4};
+tau_m2 = component{11,4};
+ho4 = state{9,8};
 
-pi_tH = componentR{9,2};
-tau_tH = componentR{9,4};
-pi_tL = componentR{12,2};
-tau_tL = componentR{12,4};
+M9 = .5;
+A45_6 = 1;
+
+gamma = 1.3;
+eta_tL = component{12,6};
+X = A45_6 * 1/M9 * (2/(gamma+1)    *  (1+(gamma-1)/2*M9^2)  )^  ((gamma+1)/(2*(gamma-1)));
+
+error = 1;
+up = 10;
+low = 0;
+while error > .0000001
+    pi_tL = (up+low)/2;
+    tau_tL = 1 - eta_tL*(1-pi_tL^((gamma-1)/gamma));
+    X_i = pi_tL/sqrt(tau_tL);
+    error = norm(X_i - X)/X;
+    if X_i > X
+       up =  pi_tL;
+    else
+       low =  pi_tL;
+    end
+end
+
+
+
+%         tau_tL = 0.8598;
+%         pi_tL = 0.4831;
+%         
+%         tau_m1 = 0.9673;
+%         tau_tH = 0.8381;
+%         tau_m2 = 0.9731;
+%         
+%         component{8,4} = tau_m1;
+%         component{9,4} = tau_tH;
+%         component{11,4} = tau_m2;
+        
 
 state{10,2} = [];
 state{10,3} = [];
@@ -374,59 +382,192 @@ state{13,8} = ho5;
 
 component{12,2} = pi_tL;
 component{12,4} = tau_tL;
-component{9,2} = pi_tH;
-component{9,4} = tau_tH;
 end
+% function [state,component] = off_turb(state,componentR,component)
+%  tau_m1 = componentR{8,4};
+% %tau_tH = component{9,4};
+%  tau_m2 = componentR{11,4};
+%  ho4 = state{9,8};
+% % 
+% % A45_6 = 1;
+% % M6 = .5;
+% % 
+% % gamma = 1.3;
+% % eta_tL = component{12,6};
+% % X = A45_6 * 1/M6 * (2/(gamma+1)    *  (1+(gamma-1)/2*M6^2)  )^  ((gamma+1)/(2*(gamma-1)));
+% % 
+% % error = 1;
+% % up = 10;
+% % low = 0;
+% % while error > .0000001
+% %     pi_tL = (up+low)/2;
+% %     tau_tL = 1 - eta_tL*(1-pi_tL^((gamma-1)/gamma));
+% %     X_i = pi_tL/sqrt(tau_tL);
+% %     error = norm(X_i - X)/X;
+% %     if X_i > X
+% %        up =  pi_tL;
+% %     else
+% %        low =  pi_tL;
+% %     end
+% % end
+% % 
+% % 
+% % 
+% % %         tau_tL = 0.8598;
+% % %         pi_tL = 0.4831;
+% % %         
+% % %         tau_m1 = 0.9673;
+% % %         tau_tH = 0.8381;
+% % %         tau_m2 = 0.9731;
+% % %         
+% % %         component{8,4} = tau_m1;
+% % %         component{9,4} = tau_tH;
+% % %         component{11,4} = tau_m2;
+% %         
+% 
+% pi_tH = componentR{9,2};
+% tau_tH = componentR{9,4};
+% pi_tL = componentR{12,2};
+% tau_tL = componentR{12,4};
+% 
+% state{10,2} = [];
+% state{10,3} = [];
+% ho41 = ho4*tau_m1;
+% state{10,8} = ho41;
+% [state] = unFAIR3(state,10);
+% 
+% state{11,2} = [];
+% state{11,3} = [];
+% ho44 = ho41*tau_tH;
+% state{11,8} = ho44;
+% [state] = unFAIR3(state,11);
+% 
+% state{12,2} = [];
+% state{12,3} = [];
+% ho45 = ho44*tau_m2;
+% state{12,8} = ho45;
+% [state] = unFAIR3(state,12);
+% 
+% state{13,2} = [];
+% state{13,3} = [];
+% ho5 = ho45*tau_tL;
+% state{13,8} = ho5;
+% [state] = unFAIR3(state,13);
+% 
+% %         component{9,2} = (state{11,2} / state{10,2})^(1/.89);
+% %         component{9,2} = 0.4231;
+% 
+% 
+% component{12,2} = pi_tL;
+% component{12,4} = tau_tL;
+% component{9,2} = pi_tH;
+% component{9,4} = tau_tH;
+% end
 function [state,component,performance] = off_nozzle(state,component,v0,design)
-%Take in inputs    
 alpha = design{2,2};
 beta = design{3,2};
-P0_P9 = 1;
 h_PR = design{8,2};
 PtoL = design{6,2};
 PtoH = design{7,2};
-[~,pi_r,pi_d,~,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
+mdot0 = state{2,5};
+[~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
 
-%Calculate pressure drop across nozzle
+
+Pro13 = state{5,2};
+Pro19 = Pro13*pi_n;
+state(14,2) = {Pro19};
+state{14,3} = [];
+state{14,8} = [];
+[state] = unFAIR3(state,14);
+
+Po19_P19 = pi_r*pi_d(2)*pi_f*pi_n;
+Pr19 = Pro19 / Po19_P19;
+state(15,2) = {Pr19};
+state(15,3) = {[]};
+state(15,8) = {[]};
+[state] = unFAIR3(state,15);
+
+[~,~,T19,f19,mdot19,~,gamma19,~,~,R19,~,~] = state{15,:};
+M19 = sqrt((( Po19_P19^((gamma19-1)/gamma19)  -  1 ) / ( (gamma19 - 1)/2)));
+a19 = sqrt(R19*gamma19*T19); %m/s
+v19 = M19*a19;
+
+
+
 Pro5 = state{13,2};
-pi_n = component{16,2};
 Pro9 = Pro5*pi_n;
 state(17,2) = {Pro9};
 state{17,3} = [];
 state{17,8} = [];
 [state] = unFAIR3(state,17);
 
-%Calculate static conditions of exhaust
-Po9_P0 = pi_r*pi_d(2)*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_n;
-Po9_P9 = Po9_P0/P0_P9;
+Po9_P9 = pi_r*pi_d(2)*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_n;
 Pr9 = Pro9 / Po9_P9;
 state(18,2) = {Pr9};
+state{18,3} = [];
+state{18,8} = [];
 [state] = unFAIR3(state,18);
-component{16,4} = state{17,8} / state{13,8};
 
-%Find exhause mach number
-[~,~,~,~,~,~,~,ho9] = state{17,:};
-[~,~,T9,~,~,cp9,gamma9,h9] = state{18,:};
-R9 = cp9 - cp9/gamma9;
+[~,~,T9,f9,mdot9,~,gamma9,~,~,R9,~,~] = state{18,:};
+M9 = sqrt((( Po9_P9^((gamma9-1)/gamma9)  -  1 ) / ((gamma9 - 1)/2)));
 a9 = sqrt(R9*gamma9*T9); %m/s
-v9 = sqrt(2*(ho9-h9));
-M9 = v9 / a9;
+v9 = M9*a9;
 
-%Find misc values
-[~,Pr0,~,~,~,cp0,gamma0,~] = state{2,:};
-R0 = cp0 - cp0/gamma0;
-mdot0 = state{2,5};
-f_0 = state{18,4};
 
-%Calculate Performance
-F_mdot = (1+f_0-(beta/(1+alpha)))*v9     -   v0  +   (1+f_0-(beta/(1+alpha)))*R9*T9*(1-Pr0/Pr9)/(R0*v9*gamma0);
-S = f_0 / F_mdot;
 
-eta_TH = ((v0^2/2*((1+f_0-(beta/(1+alpha)))*(v9/v0)^2 - 1) + (PtoL + PtoH)/mdot0))/...
-    (f_0*h_PR);
-eta_P = (2*F_mdot/v0)/...
-    ((1+f_0-beta/(1+alpha))*(v9/v0)^2 - 1);
-eta_o = eta_TH*eta_P;
-performance(1,:) = {'Thrust','Specific Fuel Consumption','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Exhaust Mach'};
-performance(2,:) = {F_mdot,S,eta_TH,eta_P,eta_o,M9};
+
+
+mdot4 =  state{9,5};
+f = state{9,4};
+mdotf = mdot4*f/(1+f);
+
+%F = mdot9*(v9-v0) + mdot19*(v19-v0);
+
+F = mdot19*v19 +mdot9*v9 - mdot0*v0;
+
+S = mdotf / F;
+
+%S = f/((1+alpha)*(F/(mdot9+mdot19)))
+
+mech_power = -.5*mdot0*v0^2 + .5*mdot19*v19^2 + .5*mdot9*v9^2 + PtoH + PtoL;
+thrust_power = F*v0;
+chem_power = mdotf*h_PR;
+
+eta_o = thrust_power/chem_power;
+eta_th = mech_power/chem_power;
+eta_p = thrust_power/mech_power;
+
+% Alternative equations
+% eta_o = v0/(h_PR*S);
+% % eta_o = F*v0 / ((state{9,5} - state{8,5})*h_PR);
+% eta_p = (F*v0) / (.5*mdot19*v19^2 + .5*mdot9*v9^2 - .5*mdot0*v0^2 + PtoH + PtoL);
+% eta_th = eta_o/eta_p;
+
+performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach'};
+performance(2,:) = {F,S,eta_th,eta_p,eta_o,M19,M9};
+end
+function [To4] = thetabreak(state,inputs)
+To4max = 2000*.555555556; %input max To4
+gamma = state{2,7};
+T0 = state{2,3};
+M0 = inputs{3,2};
+
+To4 = To4max;
+
+[Tstd,~,~,~] = atmosisa(0);
+To0 = T0*(1+((M0^2)*((gamma-1)/2)));
+
+theta0 = To0/Tstd;
+
+To4sls = To4/theta0;
+TR = To4max/To4sls;
+
+M0break = sqrt((TR-1)*(2/(gamma-1)));
+while isreal(M0break) == 0
+    To4 = To4*.999;
+    To4sls = To4/theta0;
+    TR = To4max/To4sls;
+    M0break = sqrt((TR-1)*(2/(gamma-1)));
+end
+    
 end
