@@ -24,9 +24,15 @@ while error > .0001
     pi = piR.*(1.3.*X - .3);
     [pi_f,pi_cL,pi_cH] = component{4:6,2};
 
+%     pi__f = piR_f*(2.5*X(1) - 1.5);
+
     pi_f = .75*pi_f + .25*pi(1);
     pi_cL = .75*pi_cL + .25*pi(2);
     pi_cH = .75*pi_cH + .25*pi(3);
+%     
+%     if pi_f < 1
+%         pi_f = 1;
+%     end
 
     component(4:6,2) = {pi_f,pi_cL,pi_cH};
 
@@ -539,7 +545,7 @@ eta_o = thrust_power/chem_power; %Overall engine efficiency
 eta_th = mech_power/chem_power; %Thermal engine efficiency
 eta_p = thrust_power/mech_power; %Propulsive engine efficiency
 
-% Alternative equations
+% Alternative equations34
 % eta_o = v0/(h_PR*S);
 % % eta_o = F*v0 / ((state{9,5} - state{8,5})*h_PR);
 % eta_p = (F*v0) / (.5*mdot19*v19^2 + .5*mdot9*v9^2 - .5*mdot0*v0^2 + PtoH + PtoL);
