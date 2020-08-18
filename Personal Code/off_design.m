@@ -483,7 +483,7 @@ state{14,8} = [];
 [state] = unFAIR3(state,14);
 
 % Calculate static bypass-exhaust thermo conditions
-Po19_P19 = pi_r*pi_d*pi_f*pi_n;
+Po19_P19 = pi_r*pi_d*pi_f*pi_n
 Pr19 = Pro19 / Po19_P19;
 state(15,2) = {Pr19};
 state(15,3) = {[]};

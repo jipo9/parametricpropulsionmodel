@@ -56,7 +56,7 @@ fprintf('%s\n','Tange for S ~ .45-.83')
 fprintf('%s\n','--------------------------')
 
 M9 = performance{2,7};
-[A45_9] = A_turb(component, M9);
+% [A45_9] = A_turb(component, M9);
 
 %% Off design
 altR = alt;
@@ -70,10 +70,7 @@ M0 = linspace(.1,.45,10);
 for i = 1:length(alt)
     for j = 1:length(M0)
         j
-        [state_i,component_i,design_i,inputs_i,performance_i] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R);    
-        
-        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R);
-        
+        [state_i,component_i,design_i,inputs_i,performance_i] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R);            
         %finding component pressure ratios and corrected mass flow
         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component_i{:,2};
         [~, ~, P0, ~] = atmosisa(alt(i)); 
