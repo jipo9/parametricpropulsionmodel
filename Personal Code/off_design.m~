@@ -1,11 +1,13 @@
-function [state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0,alt,A0,A45_9)
+function [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0,alt,A0,A45_9)
 %% Read Me
 % This function takes in the results from the on-design analysis and
 % returns the engine performance for any given flight condition
 
 
 %% Calculations
-tauf_i = component{4,4};
+
+componentR = component;
+M9_i = .5;
 error = 1;
 
 while error > .0001
@@ -13,15 +15,13 @@ while error > .0001
 [state,component] = off_inlet(state,component,inputs);
 [state,component] = off_fan(state,component,componentR,design);
 [state,component] = off_comp(state,component,design, componentR);
-% [To4] = thetabreak(state,inputs);
-% state(9,3) = {To4};
 [state,component] = off_burner(state,component,design);
-[state,component] = off_turb(state,component);
+[state,component] = off_turb(state,component,M9_i,A45_9,componentR);
 [state,component,performance] = off_nozzle(state,component,v0,design);
 
-tauf = component{4,4};
-error = norm(tauf-tauf_i)/tauf;
-tauf_i = tauf;
+M9 = performance{2,7};
+error = norm(M9-M9_i)/M9;
+M9_i = M9;
 end
     
 end   
@@ -310,33 +310,33 @@ while error > .01
 end
 
 end
-function [state,component] = off_turb(state,component,M9,A45_9)
+function [state,component] = off_turb(state,component,M9,A45_9,componentR)
 tau_m1 = component{8,4};
-tau_tH = component{9,4};
+tau_tH = componentR{9,4};
+tau_tL = componentR{12,4};
 tau_m2 = component{11,4};
 ho4 = state{9,8};
 
-M9 = .5;
-A45_6 = 1;
-
-gamma = 1.3;
-eta_tL = component{12,6};
-X = A45_6 * 1/M9 * (2/(gamma+1)    *  (1+(gamma-1)/2*M9^2)  )^  ((gamma+1)/(2*(gamma-1)));
-
-error = 1;
-up = 10;
-low = 0;
-while error > .0000001
-    pi_tL = (up+low)/2;
-    tau_tL = 1 - eta_tL*(1-pi_tL^((gamma-1)/gamma));
-    X_i = pi_tL/sqrt(tau_tL);
-    error = norm(X_i - X)/X;
-    if X_i > X
-       up =  pi_tL;
-    else
-       low =  pi_tL;
-    end
-end
+pi_tH = componentR{9,2};
+pi_tL = componentR{12,2};
+% gamma = 1.3;
+% eta_tL = component{12,6};
+% X = A45_9 * 1/M9 * (2/(gamma+1)    *  (1+(gamma-1)/2*M9^2)  )^  ((gamma+1)/(2*(gamma-1)));
+% 
+% error = 1;
+% up = 10;
+% low = 0;
+% while error > .0000001
+%     pi_tL = (up+low)/2;
+%     tau_tL = 1 - eta_tL*(1-pi_tL^((gamma-1)/gamma));
+%     X_i = pi_tL/sqrt(tau_tL);
+%     error = norm(X_i - X)/X;
+%     if X_i > X
+%        up =  pi_tL;
+%     else
+%        low =  pi_tL;
+%     end
+% end
 
 
 
@@ -380,8 +380,8 @@ state{13,8} = ho5;
 %         component{9,2} = 0.4231;
 
 
-component{12,2} = pi_tL;
-component{12,4} = tau_tL;
+% component{12,2} = pi_tL;
+% component{12,4} = tau_tL;
 end
 % function [state,component] = off_turb(state,componentR,component)
 %  tau_m1 = componentR{8,4};

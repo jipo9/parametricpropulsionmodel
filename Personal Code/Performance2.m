@@ -21,6 +21,7 @@ close all
 
 
 %Engine being utilized is the DGEN-390 Price Induction
+% Design point is 10kft and M = .338
 alt = 10000 / 3.281; %altitude [m from feet]
 M0 = .338;
 pi_f = 1.2; %Mid approx for turbofan %2
@@ -57,18 +58,14 @@ F = performance{2,1} * .224809
 mdot0 = state{2,5};
 F_mdot = F/mdot0 * (1/9.806655);
 S = performance{2,2} / ((.453592/3600)/4.44822)
-disp('We want F of 291   Range for S is .45 to ,8')
+disp('For the DGEN 390, We want F of 354 and S of .72 at design point')
+disp('Range for F ~ 300-570')
+disp('Tange for S ~ .45-.83')
 
 
 %% Off design
 
-
-
-[state2,component2,design2,inputs2,performance2] = off_design(state,component,design,inputs,component,M0,alt,A0,A45_9);
-
-
-
-componentR = component;
+[state2,component2,design2,inputs2,performance2] = off_design(state,component,design,inputs,M0,alt,A0,A45_9);
 
 alt = [0,10000,20000,30000]./3.281;
 M0 = linspace(.1,.45,20);
@@ -78,7 +75,7 @@ M0 = linspace(.1,.45,20);
 for i = 1:length(alt)
     for j = 1:length(M0)
         %[state,component,design,inputs,performance] = on_design(alt(i),M0(j),pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year);
-        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0(j),alt(i),A0,A45_9);
+        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,A45_9);
         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
         [~, ~, P0, ~] = atmosisa(alt(i)); %obtain standard atmospheric conditions
         
@@ -86,7 +83,7 @@ for i = 1:length(alt)
         To25 = state{6,3};
         mdot25 = state{6,5};
         mdot25_cor(i,j) = mdot25 * sqrt(To25/T_std) / (Po25_Std);
-%         pif(i,j) = pi_f;
+        pif(i,j) = pi_f;
         picL(i,j) = pi_cL;
        
         S(i,j) = performance{2,2} / ((.453592/3600)/4.44822);
@@ -94,6 +91,8 @@ for i = 1:length(alt)
         F(i,j) = T;
     end
 end
+
+%% Plots
 
 h1 = figure(1);
 h1.WindowStyle = 'docked'; 
@@ -120,16 +119,16 @@ grid('on')
 end
 
 
-% h3 = figure(3);
-% h3.WindowStyle = 'docked';
-% for i = 1:length(alt)
-% plot(M0,pif(i,:),'linewidth',1.5)
-% hold on
-% legend('SL','10k','20k','30k','40k')
-% xlabel('Mach Number')
-% ylabel('Fan Pressure Ratio')
-% grid('on')
-% end
+h3 = figure(3);
+h3.WindowStyle = 'docked';
+for i = 1:length(alt)
+plot(M0,pif(i,:),'linewidth',1.5)
+hold on
+legend('SL','10k','20k','30k','40k')
+xlabel('Mach Number')
+ylabel('Fan Pressure Ratio')
+grid('on')
+end
 
 
 h4 = figure(4);
