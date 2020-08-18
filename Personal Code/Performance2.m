@@ -63,13 +63,13 @@ altR = alt;
 mdotc_R = CorrectedMassFlow(state,altR,altR,component);
 
 alt = [0,10000,20000,30000]./3.281;
-M0 = linspace(.1,.45,20);
+M0 = linspace(.1,.45,10);
 
 
 [T_std, ~, P_std, ~] = atmosisa(0); %obtain standard atmospheric conditions at SL
 for i = 1:length(alt)
     for j = 1:length(M0)
-        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R)     
+        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R);     
         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
         [~, ~, P0, ~] = atmosisa(alt(i)); %obtain standard atmospheric conditions
         Po25_Std = pi_r*pi_d*pi_cL*P0/P_std;
@@ -83,9 +83,16 @@ for i = 1:length(alt)
         mdot25_cor(i,j) = mdot25 * sqrt(To25/T_std) / (Po25_Std);
         pif(i,j) = pi_f;
         picL(i,j) = pi_cL;
+        
+        %storing momentum
+        pinlet(i,j) = performance{2,8};
+        pcore(i,j) = performance{2,9};
+        pbypass(i,j) = performance{2,10};
        
+        %storing thrust and SFC
         S(i,j) = performance{2,2} / ((.453592/3600)/4.44822);
         F(i,j) = performance{2,1} * 0.224809;
+        
     end
 end
 
@@ -142,6 +149,38 @@ ylabel('LP Compressor Ratio')
 grid('on')
 end
 
+h5 = figure(5);
+h5.WindowStyle = 'docked'; 
+for i = 1:length(alt)
+subplot(3,1,1)
+plot(M0,pinlet(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Inlet Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Inlet Air Momentum')
+grid('on')
+end
+for i = 1:length(alt)
+subplot(3,1,2)
+plot(M0,pcore(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Core Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Core Air Momentum')
+grid('on')
+end
+for i = 1:length(alt)
+subplot(3,1,3)
+plot(M0,pbypass(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Bypass Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Bypass Air Momentum')
+grid('on')
+end
 
 %% Eqns
 % F = mdot16*v16 + mdot9*v9 - mdot0*v0; %Assume perfectly expanded

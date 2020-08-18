@@ -89,9 +89,6 @@ f41 = f4*mdot4 / mdot41; %fuel/air ratio after addtion of cooling air 1
 mdot45 = mdot41 + mdotep2; %mass flow rate after addtion of cooling air 2
 f45 = f41*mdot41 / mdot45; %fuel/air ratio after addtion of cooling air 2
 
-% mdot6A = mdot45 + mdot13; %mass flow rate after addtion of bypass air
-% f6A = f45*mdot45 / mdot6A; %fuel/air ratio after addtion of bypass air
-
 % Store all values
 state(2:8,4) = {f0};
 state(2:4,5) = {mdot0};
@@ -501,8 +498,13 @@ mdot4 =  state{9,5};
 f = state{9,4};
 mdotf = mdot4*f/(1+f);
 
+%Calculate Momentum
+pinlet = mdot0*v0;
+pcore = mdot9*v9;
+pbypass = mdot19*v19;
+
 %Calculate performance parameters
-F = mdot19*v19 +mdot9*v9 - mdot0*v0; %Thrust
+F = pcore + pbypass - pinlet; %Thrust
 S = mdotf / F; %Specific fuel consumption
 mech_power = -.5*mdot0*v0^2 + .5*mdot19*v19^2 + .5*mdot9*v9^2 + PtoH + PtoL; %Mechanical power consumed
 thrust_power = F*v0; %Thrust power generated
@@ -518,8 +520,8 @@ eta_p = thrust_power/mech_power; %Propulsive engine efficiency
 % eta_th = eta_o/eta_p;
 
 % Store parameters
-performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach'};
-performance(2,:) = {F,S,eta_th,eta_p,eta_o,M19,M9};
+performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach','Inlet Momentum','Core Momentum','Bypass Momentum'};
+performance(2,:) = {F,S,eta_th,eta_p,eta_o,M19,M9,pinlet,pcore,pbypass};
 end
 function [To4] = thetabreak(state,inputs)
 To4max = 2000*.555555556; %input max To4
