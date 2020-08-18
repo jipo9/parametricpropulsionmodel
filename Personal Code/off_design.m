@@ -1,4 +1,4 @@
-function [state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0,alt,A0,A45_9)
+function [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0,alt,A0,A45_9)
 %% Read Me
 % This function takes in the results from the on-design analysis and
 % returns the engine performance for any given flight condition
@@ -18,12 +18,9 @@ while error > .0001
 [state,component] = off_inlet(state,component,inputs);
 [state,component] = off_fan(state,component,componentR,design);
 [state,component] = off_comp(state,component,design, componentR);
-% [To4] = thetabreak(state,inputs);
-% state(9,3) = {To4};
 [state,component] = off_burner(state,component,design);
 [state,component] = off_turb(state,component,componentR);
 [state,component,performance] = off_nozzle(state,component,v0,design);
-
 tauf = component{4,4};
 error = norm(tauf-tauf_i)/tauf;
 tauf_i = tauf;
