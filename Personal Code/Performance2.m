@@ -5,19 +5,17 @@ close all
 
 %% Read Me
 % The following function creates performance charts of a subsonic turbofan
-% w/ no afterburner or mixer
+% no afterburner and no mixer
 
 %% On design
-% Input data from "On-Design Case". This case should be the ideal case that
 
-
-% DGEN-390 Price Induction
+% Engine : DGEN-390 Price Induction
 % Design point is 10kft and M = .338
 alt = 10000 / 3.281; %altitude [m from feet]
 M0 = .338;
-pi_f = 1.2; %Mid approx for turbofan %2
-pi_cL = 6; %Mid approx for turbofan, pi_cL = pi_cH %5.9
-pi_cH = 6; %Mid approx for turbofan, pi_cL = pi_cH
+pi_f = 2; %Mid approx for turbofan %2
+pi_cL = 5.9; %Mid approx for turbofan, pi_cL = pi_cH %5.9
+pi_cH = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
 beta = 0;
 PtoH = 0;
@@ -25,7 +23,7 @@ PtoL = 0;
 A0 = pi*(.469/2)^2;
 year = 2011;
 
-%Engine JT9D
+% Engine : JT9D
 % To4 == 1970F
 
 % alt = 30000 / 3.281;
@@ -43,6 +41,7 @@ year = 2011;
 % Run on-design
 [state,component,design,inputs,performance] = on_design(alt,M0,pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year);
 
+% Calculate thrust and SFC
 F = performance{2,1} * .224809;
 mdot0 = state{2,5};
 F_mdot = F/mdot0 * (1/9.806655);
@@ -51,7 +50,7 @@ S = performance{2,2} / ((.453592/3600)/4.44822);
 fprintf('%s\n','--------On Design---------')
 fprintf('%s%.2f\n','Calculated Thrust = ',F)
 fprintf('%s%.2f\n\n','Calculated SFC = ',S)
-fprintf('%s\n\n','For the DGEN 390, We want F of 354 and S of .72 at design point')
+fprintf('%s\n\n','For the DGEN390, We want F of 354 and S of .72 at design point')
 fprintf('%s\n','Range for F ~ 300-570')
 fprintf('%s\n','Tange for S ~ .45-.83')
 fprintf('%s\n','--------------------------')
@@ -62,7 +61,6 @@ M9 = performance{2,7};
 %% Off design
 
 
-
 alt = [0,10000,20000,30000]./3.281;
 M0 = linspace(.1,.45,20);
 
@@ -71,9 +69,10 @@ M0 = linspace(.1,.45,20);
 for i = 1:length(alt)
     for j = 1:length(M0)
         [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,A45_9);
+        
+        %finding component pressure ratios and corrected mass flow
         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
         [~, ~, P0, ~] = atmosisa(alt(i)); 
-        
         Po25_Std = pi_r*pi_d(2)*pi_cL*P0/P_std;
         To25 = state{6,3};
         mdot25 = state{6,5};
@@ -99,6 +98,7 @@ xlabel('Mach Number')
 ylabel('Thrust (lb)')
 grid('on')
 end
+
 
 h2 = figure(2);
 h2.WindowStyle = 'docked';
