@@ -11,9 +11,9 @@ close all
 
 % Engine : DGEN-390 Price Induction
 % Design point is 10kft and M = .338
-alt = 10000 / 3.281; %altitude [m from feet]
-M0 = .338;
-pi_f = 1.4; %Mid approx for turbofan %2
+alt = 35000 / 3.281; %altitude [m from feet]
+M0 = .45;
+pi_f = 2; %Mid approx for turbofan %2
 pi_cL = 5.9; %Mid approx for turbofan, pi_cL = pi_cH %5.9
 pi_cH = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
@@ -69,24 +69,36 @@ M0 = linspace(.1,.45,20);
 [T_std, ~, P_std, ~] = atmosisa(0); %obtain standard atmospheric conditions at SL
 for i = 1:length(alt)
     for j = 1:length(M0)
-        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R)     
-        [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
-        [~, ~, P0, ~] = atmosisa(alt(i)); %obtain standard atmospheric conditions
-        Po25_Std = pi_r*pi_d*pi_cL*P0/P_std;
+        j
+        [state_i,component_i,design_i,inputs_i,performance_i] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R);    
+        
         
         %finding component pressure ratios and corrected mass flow
-        [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
+        [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component_i{:,2};
         [~, ~, P0, ~] = atmosisa(alt(i)); 
         Po25_Std = pi_r*pi_d*pi_cL*P0/P_std;
-        To25 = state{6,3};
-        mdot25 = state{6,5};
+        To25 = state_i{6,3};
+        mdot25 = state_i{6,5};
         mdot25_cor(i,j) = mdot25 * sqrt(To25/T_std) / (Po25_Std);
-        pif(i,j) = pi_f;
         picL(i,j) = pi_cL;
+        
+        
+        %finding component pressure ratios and corrected mass flow
+        [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component_i{:,2};
+        Po44_Std = pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*P0/P_std;
+        To44 = state_i{11,3};
+        mdot44 = state_i{11,5};
+        mdot44_cor(i,j) = mdot44 * sqrt(To44/T_std) / (Po44_Std);
+        pitH(i,j) = pi_tH;
+        
+        
+        
        
-        S(i,j) = performance{2,2} / ((.453592/3600)/4.44822);
-        F(i,j) = performance{2,1} * 0.224809;
+        S(i,j) = performance_i{2,2} / ((.453592/3600)/4.44822);
+        F(i,j) = performance_i{2,1} * 0.224809;
     end
+    
+    a= 1;
 end
 
 %% Plots
@@ -120,12 +132,12 @@ end
 h3 = figure(3);
 h3.WindowStyle = 'docked';
 for i = 1:length(alt)
-plot(M0,pif(i,:),'linewidth',1.5)
-title('Fan Pressure Ratio vs. Mach Number')
+plot(mdot44_cor(i,:),pitH(i,:),'linewidth',1.5)
 hold on
-legend('SL','10k','20k','30k','40k')
-xlabel('Mach Number')
-ylabel('Fan Pressure Ratio')
+title('HP Turb Pressure Ratio vs. Corr Mass Flow')
+legend('SL','10k','20k','30k')
+xlabel('Corrected Mass Flow')
+ylabel('HP Turbine Pressure Ratio')
 grid('on')
 end
 

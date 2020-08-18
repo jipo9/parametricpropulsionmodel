@@ -13,9 +13,8 @@ inputs{2,2} = alt;
 inputs{3,2} = M0;
 inputs{8,2} = A0;
 componentR = component;
-[pi_f,pi_cL,pi_cH] = component{4:6,2};
-piR = [pi_f,pi_cL,pi_cH];
-
+[piR_f,piR_cL,piR_cH] = componentR{4:6,2};
+piR = [piR_f,piR_cL,piR_cH];
 
 tauf_i = component{4,4};
 error = 1;
@@ -45,7 +44,34 @@ while error > .0001
     error = norm(tauf-tauf_i)/tauf;
     tauf_i = tauf;
 end
-    
+
+
+
+
+if ~isreal(performance{2,1})
+    performance{2,1} = 0;
+end
+if ~isreal(performance{2,2})
+    performance{2,2} = 0;
+end
+if ~isreal(performance{2,3})
+    performance{2,3} = 0;
+end
+if ~isreal(performance{2,4})
+    performance{2,4} = 0;
+end
+if ~isreal(performance{2,5})
+    performance{2,5} = 0;
+end
+if ~isreal(performance{2,6})
+    performance{2,6} = 0;
+end
+if ~isreal(performance{2,7})
+    performance{2,7} = 0;
+end
+if ~isreal(performance{2,1})
+    performance{2,1} = 0;
+end
 end   
 
 %% Functions
