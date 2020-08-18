@@ -59,7 +59,8 @@ M9 = performance{2,7};
 [A45_9] = A_turb(component, M9);
 
 %% Off design
-
+altR = alt;
+mdotc_R = CorrectedMassFlow(state,altR,altR,component);
 
 alt = [0,10000,20000,30000]./3.281;
 M0 = linspace(.1,.45,20);
@@ -68,11 +69,10 @@ M0 = linspace(.1,.45,20);
 [T_std, ~, P_std, ~] = atmosisa(0); %obtain standard atmospheric conditions at SL
 for i = 1:length(alt)
     for j = 1:length(M0)
-        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,A45_9);      
+        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R)     
         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
         [~, ~, P0, ~] = atmosisa(alt(i)); %obtain standard atmospheric conditions
         Po25_Std = pi_r*pi_d*pi_cL*P0/P_std;
-        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,A45_9);
         
         %finding component pressure ratios and corrected mass flow
         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
