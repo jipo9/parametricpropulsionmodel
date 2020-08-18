@@ -81,8 +81,7 @@ for i = 1:length(alt)
         [state,component,design,inputs,performance] = off_design(state,component,design,inputs,componentR,M0(j),alt(i),A0,A45_9);
         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
         [~, ~, P0, ~] = atmosisa(alt(i)); %obtain standard atmospheric conditions
-        
-        Po25_Std = pi_r*pi_d(2)*pi_cL*P0/P_std;
+        Po25_Std = pi_r*pi_d*pi_cL*P0/P_std;
         To25 = state{6,3};
         mdot25 = state{6,5};
         mdot25_cor(i,j) = mdot25 * sqrt(To25/T_std) / (Po25_Std);
