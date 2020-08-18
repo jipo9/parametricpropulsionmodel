@@ -476,7 +476,7 @@ state(14,2) = {Pro19};
 [state] = unFAIR3(state,14);
 
 % Calculate static bypass-exhaust thermo conditions
-Po19_P19 = pi_r*pi_d*pi_f*pi_n;
+            Po19_P19 = pi_r*pi_d*pi_f*pi_n;
 Pr19 = Pro19 / Po19_P19;
 state(15,2) = {Pr19};
 [state] = unFAIR3(state,15);
@@ -495,7 +495,7 @@ state(17,2) = {Pro9};
 [state] = unFAIR3(state,17);
 
 % Calculate static core-exhaust thermo conditions
-Po9_P9 = pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_n;
+            Po9_P9 = pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*pi_tL*pi_n;
 Pr9 = Pro9 / Po9_P9;
 state(18,2) = {Pr9};
 [state] = unFAIR3(state,18);
