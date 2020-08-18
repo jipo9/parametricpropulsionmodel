@@ -10,6 +10,7 @@ function [state,component,design,inputs,performance] = off_design(state,componen
 inputs{2,2} = alt;
 inputs{3,2} = M0;
 inputs{8,2} = A0;
+componentR = component;
 
 tauf_i = component{4,4};
 error = 1;
@@ -365,35 +366,6 @@ state{13,3} = [];
 ho5 = ho45*tau_tL;
 state{13,8} = ho5;
 [state] = unFAIR3(state,13);
-
-
-% Alternative method, use constant area of chocked flow at station 4.5 to find changine HP turbine performance 
-% pi_tH = componentR{9,2};
-% pi_tL = componentR{12,2};
-% gamma = 1.3;
-% eta_tL = component{12,6};
-% X = A45_9 * 1/M9 * (2/(gamma+1)    *  (1+(gamma-1)/2*M9^2)  )^  ((gamma+1)/(2*(gamma-1)));
-% 
-% error = 1;
-% up = 10;
-% low = 0;
-% while error > .0000001
-%     pi_tL = (up+low)/2;
-%     tau_tL = 1 - eta_tL*(1-pi_tL^((gamma-1)/gamma));
-%     X_i = pi_tL/sqrt(tau_tL);
-%     error = norm(X_i - X)/X;
-%     if X_i > X
-%        up =  pi_tL;
-%     else
-%        low =  pi_tL;
-%     end
-% end     
-%         component{8,4} = tau_m1;
-%         component{9,4} = tau_tH;
-%         component{11,4} = tau_m2;
-
-% component{12,2} = pi_tL;
-% component{12,4} = tau_tL;
 end
 function [state,component,performance] = off_nozzle(state,component,v0,design)
 % Calculates the thermodynamic state at stagnation bypass-exhaust,
