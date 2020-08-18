@@ -63,7 +63,7 @@ altR = alt;
 mdotc_R = CorrectedMassFlow(state,altR,altR,component);
 
 alt = [0,10000,20000,30000]./3.281;
-M0 = linspace(.1,.45,20);
+M0 = linspace(.1,.45,10);
 
 
 [T_std, ~, P_std, ~] = atmosisa(0); %obtain standard atmospheric conditions at SL
@@ -72,6 +72,7 @@ for i = 1:length(alt)
         j
         [state_i,component_i,design_i,inputs_i,performance_i] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R);    
         
+        [state,component,design,inputs,performance] = off_design(state,component,design,inputs,M0(j),alt(i),A0,altR,mdotc_R);
         
         %finding component pressure ratios and corrected mass flow
         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component_i{:,2};
@@ -82,7 +83,7 @@ for i = 1:length(alt)
         mdot25_cor(i,j) = mdot25 * sqrt(To25/T_std) / (Po25_Std);
         picL(i,j) = pi_cL;
         
-        
+
         %finding component pressure ratios and corrected mass flow
         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component_i{:,2};
         Po44_Std = pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*P0/P_std;
@@ -90,12 +91,14 @@ for i = 1:length(alt)
         mdot44 = state_i{11,5};
         mdot44_cor(i,j) = mdot44 * sqrt(To44/T_std) / (Po44_Std);
         pitH(i,j) = pi_tH;
-        
-        
-        
        
         S(i,j) = performance_i{2,2} / ((.453592/3600)/4.44822);
         F(i,j) = performance_i{2,1} * 0.224809;
+
+        %storing momentum
+        pinlet(i,j) = performance_i{2,8};
+        pcore(i,j) = performance_i{2,9};
+        pbypass(i,j) = performance_i{2,10};
     end
     
     a= 1;
@@ -155,14 +158,44 @@ grid('on')
 end
 
 
-%% Eqns
-% F = mdot16*v16 + mdot9*v9 - mdot0*v0; %Assume perfectly expanded
-% S = f_0 * mdot0 / F;
-% Overall_efficieny = v0/(hPR*S);
-% Propulsive_efficiency = (F*v0) / (.5*mdot16*v16^2 + .5*mdot9*v9^2 - .5*mdot0*v0^2 + PTOH + PTOL)
-% Thermal_efficiency = Overall_efficieny/Propulsive_efficiency;
-function [A45_6] = A_turb(component, M6)
-    gamma = 1.3;
-    [pi_tL,~,tau_tL] = component{12,2:4};
-    A45_6 = pi_tL/sqrt(tau_tL) * M6 * 1/(2/(gamma+1)*(1+(gamma-1)/2*M6^2))^((gamma+1)/(2*(gamma-1)));
+h5 = figure(5);
+h5.WindowStyle = 'docked'; 
+for i = 1:length(alt)
+subplot(3,1,1)
+plot(M0,pinlet(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Inlet Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Inlet Air Momentum')
+grid('on')
 end
+
+
+for i = 1:length(alt)
+subplot(3,1,2)
+plot(M0,pcore(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Core Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Core Air Momentum')
+grid('on')
+end
+for i = 1:length(alt)
+subplot(3,1,3)
+plot(M0,pbypass(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Bypass Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Bypass Air Momentum')
+grid('on')
+end
+
+
+% function [A45_6] = A_turb(component, M6)
+%     gamma = 1.3;
+%     [pi_tL,~,tau_tL] = component{12,2:4};
+%     A45_6 = pi_tL/sqrt(tau_tL) * M6 * 1/(2/(gamma+1)*(1+(gamma-1)/2*M6^2))^((gamma+1)/(2*(gamma-1)));
+% end
