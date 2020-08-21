@@ -9,23 +9,18 @@ To4R = state{9,3};
 pi_cHR = component{6,2};
 pi_fR = component{4,2};
 [C3] = constant(0,0,alphaR,To4R,pi_cHR,pi_fR)
-
-
 componentR = component;
 error = 1;
 alpha_i = alphaR;
-while error > .0001
 [state, component,v0] = off_ambient(state,component,design,alt,M0,A0);
 [state,component] = off_inlet(state,component);
+while error > .0001
 [state,component] = off_fan(state,component,componentR,design);
 [state,component] = off_comp(state,component,design, componentR);
 % [To4] = thetabreak(state,inputs);
 % state(9,3) = {To4};
 [state,component] = off_burner(state,component,design);
 [state,component] = off_turb(state,component);
-[state,component,performance] = off_nozzle(state,component,v0,design);
-
-%call these new values
 
 [pi_cH] = component{6,2};
 [tau_r,~,tau_f] = component{2:4,4};
@@ -35,7 +30,7 @@ error = norm(alpha-alpha_i)/alpha;
 alpha_i = alpha
 design{2,2} = alpha_i;
 end
-  
+[state,component,performance] = off_nozzle(state,component,M0,v0,design);
 end   
 
 %% Functions
@@ -48,6 +43,45 @@ tau_lambda = To4/T0 * 1.25; %constant to reflect changing Cp without complicated
 tau_r = 1 + .2*(M0)^2;
 tau_f = p_if ^ (1/(gamma*ef/(gamma-1)));
 C3 = alpha*pi_cH*sqrt(tau_r*tau_f/tau_lambda); %why const?
+end
+
+function [A] = corrmass(A)
+[T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
+state(2,3) = {T0};
+state(2,4) = {0};
+state{2,2} = [];
+state{2,8} = [];
+[state] = unFAIR3(state,2);
+[~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
+R0 = cp0 - cp0/gamma0;
+a0 = sqrt(R0*gamma0*T0); %[m/s]
+v0 = M0*a0; %[m/s]
+
+To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
+state(3,3) = {To0};
+state{3,2} = [];
+state{3,8} = [];
+[state] = unFAIR3(state,3);
+
+P0 = state{2,2};
+Po0 = state{3,2};
+pi_r = Po0/P0;
+component{2,2} = pi_r;
+
+h0 = state{2,8};
+ho0 = state{3,8};
+tau_r = ho0/h0;
+component{2,4} = tau_r;
+
+
+% mdot_on = ;
+% To0_on = ;
+% Po0_on = ;
+
+mdot0 = A0 * v0 * rho0;
+mdot0 = mdot_on * sqrt(To0_on/To0) * Po0/Po0_on
+state{2,5} = mdot0;
+[state,design] = mdot(state,design);
 end
 function [state,design] = mdot(state,design)
 % Calculates mass flow throughout engine sections
@@ -122,16 +156,11 @@ R0 = cp0 - cp0/gamma0;
 a0 = sqrt(R0*gamma0*T0); %[m/s]
 v0 = M0*a0; %[m/s]
 
-mdot0 = A0 * v0 * rho0;
-state{2,5} = mdot0;
-[state,design] = mdot(state,design);
-
 To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
 state(3,3) = {To0};
 state{3,2} = [];
 state{3,8} = [];
 [state] = unFAIR3(state,3);
-
 
 P0 = state{2,2};
 Po0 = state{3,2};
@@ -143,10 +172,9 @@ ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
 
-
-
-% mdot0 = (A0*Po)*sqrt(gamma0/(To0*R0))*M0*(1+((gamma0-1)/2)*M0^2)^(-1*(gamma0+1)/(2*(gamma0-1))); %compressible eqn
-% state{2,5} = mdot0;
+mdot0 = A0 * v0 * rho0;
+state{2,5} = mdot0;
+[state,design] = mdot(state,design);
 end
 function [state,component] = off_inlet(state,component)
 pid = component{3,2};
@@ -362,7 +390,7 @@ ho5 = ho45*tau_tL;
 state{13,8} = ho5;
 [state] = unFAIR3(state,13);
 end
-function [state,component,performance] = off_nozzle(state,component,v0,design)
+function [state,component,performance] = off_nozzle(state,component,M0,v0,design)
 % Calculates the thermodynamic state at stagnation bypass-exhaust,
 % stagnation core-exhaust, static bypass-exhaust, and static core-exhaust 
 
@@ -429,8 +457,9 @@ mdotf = mdot4*f/(1+f);
 
 %Calculate Momentum
 pinlet = mdot0*v0;
-pcore = mdot9*(v9-v0);
-pbypass = mdot19*(v19-v0);
+pcore = mdot9*(v9);
+pbypass = mdot19*(v19);
+
 
 %Calculate performance parameters
 F = pcore + pbypass - pinlet; %Thrust
@@ -448,10 +477,14 @@ eta_p = thrust_power/mech_power; %Propulsive engine efficiency
 % eta_p = (F*v0) / (.5*mdot19*v19^2 + .5*mdot9*v9^2 - .5*mdot0*v0^2 + PtoH + PtoL);
 % eta_th = eta_o/eta_p;
 
+% Installation bad stuff BIG APPROX
+F = F* (1-M0);
+
 % Store parameters
-performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach','Inlet Momentum','Core Momentum','Bypass Momentum'};
-performance(2,:) = {F,S,eta_th,eta_p,eta_o,M19,M9,pinlet,pcore,pbypass};
+performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach','Inlet Momentum','Core Momentum','Bypass Momentum','Inlet Mass Flow','Core Mass Flow','Bypass Mass Flow','Inlet Velocity','Core Velocity','Bypass Velocity'};
+performance(2,:) = {F,S,eta_th,eta_p,eta_o,M19,M9,pinlet,pcore,pbypass,mdot0,mdot9,mdot19,v0,v9,v19};
 end
+
 function [To4] = thetabreak(state,inputs)
 To4max = 2000*.555555556; %input max To4
 gamma = state{2,7};

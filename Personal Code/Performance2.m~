@@ -11,11 +11,11 @@ close all
 
 % Engine : DGEN-390 Price Induction
 % Design point is 10kft and M = .338
-alt = 35000 / 3.281; %altitude [m from feet]
+alt = 0 / 3.281; %altitude [m from feet]
 M0 = .45;
-pi_f = 2; %Mid approx for turbofan %2
-pi_cL = 2; %Mid approx for turbofan, pi_cL = pi_cH %5.9
-pi_cH = 10; %Mid approx for turbofan, pi_cL = pi_cH
+pi_f = 1.4; %Mid approx for turbofan %2
+pi_cL = 5.9; %Mid approx for turbofan, pi_cL = pi_cH %5.9
+pi_cH = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
 beta = 0;
 PtoH = 0;
@@ -96,6 +96,15 @@ for i = 1:length(alt)
         pinlet(i,j) = performance_i{2,8};
         pcore(i,j) = performance_i{2,9};
         pbypass(i,j) = performance_i{2,10};
+        mdot0(i,j) = performance_i{2,11};
+        mdot9(i,j) = performance_i{2,12};
+        mdot19(i,j) = performance_i{2,13};
+        v0(i,j) = performance_i{2,14};
+        v9(i,j) = performance_i{2,15};
+        v19(i,j) = performance_i{2,16};
+        
+        alpha(i,j) = design_i{2,2};
+
     end
     
     a= 1;
@@ -167,8 +176,6 @@ xlabel('Mach Number')
 ylabel('Inlet Air Momentum')
 grid('on')
 end
-
-
 for i = 1:length(alt)
 subplot(3,1,2)
 plot(M0,pcore(i,:),'linewidth',1.5)
@@ -190,7 +197,83 @@ ylabel('Bypass Air Momentum')
 grid('on')
 end
 
+h6 = figure(6);
+h6.WindowStyle = 'docked'; 
+for i = 1:length(alt)
+subplot(3,1,1)
+plot(M0,pinlet(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Inlet Mass')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Inlet Air Momentum')
+grid('on')
+end
+for i = 1:length(alt)
+subplot(3,1,2)
+plot(M0,pcore(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Core Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Core Air Momentum')
+grid('on')
+end
+for i = 1:length(alt)
+subplot(3,1,3)
+plot(M0,pbypass(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Bypass Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Bypass Air Momentum')
+grid('on')
+end
 
+h7 = figure(7);
+h7.WindowStyle = 'docked'; 
+for i = 1:length(alt)
+subplot(3,1,1)
+plot(M0,pinlet(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Inlet Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Inlet Air Momentum')
+grid('on')
+end
+for i = 1:length(alt)
+subplot(3,1,2)
+plot(M0,pcore(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Core Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Core Air Momentum')
+grid('on')
+end
+for i = 1:length(alt)
+subplot(3,1,3)
+plot(M0,pbypass(i,:),'linewidth',1.5)
+hold on
+title('Mach Number vs. Bypass Air Momentum')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('Bypass Air Momentum')
+grid('on')
+end
+
+h8 = figure(8);
+h8.WindowStyle = 'docked';
+for i = 1:length(alt)
+plot(M0(:),alpha(i,:),'linewidth',1.5)
+hold on
+title('Bypass Ratio vs. Mach Number')
+legend('SL','10k','20k','30k')
+xlabel('Mach Number')
+ylabel('\alpha')
+grid('on')
+end
 %% Off design
 altR = alt;
 mdotc_R = CorrectedMassFlow(state,altR,altR,component);
@@ -324,6 +407,8 @@ xlabel('Mach Number')
 ylabel('Bypass Air Momentum')
 grid('on')
 end
+
+
 
 
 % function [A45_6] = A_turb(component, M6)
