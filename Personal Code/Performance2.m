@@ -11,9 +11,9 @@ close all
 
 % Engine : DGEN-390 Price Induction
 % Design point is 10kft and M = .338
-alt = 35000 / 3.281; %altitude [m from feet]
+alt = 0 / 3.281; %altitude [m from feet]
 M0 = .45;
-pi_f = 2; %Mid approx for turbofan %2
+pi_f = 1.4; %Mid approx for turbofan %2
 pi_cL = 5.9; %Mid approx for turbofan, pi_cL = pi_cH %5.9
 pi_cH = 5.9; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
@@ -58,6 +58,153 @@ fprintf('%s\n','--------------------------')
 M9 = performance{2,7};
 % [A45_9] = A_turb(component, M9);
 
+%% Off design 2
+% altR = alt;
+% mdotc_R = CorrectedMassFlow(state,altR,altR,component);
+% 
+% alt = [0,10000,20000,30000]./3.281;
+% M0 = linspace(.1,.45,10);
+% 
+% 
+% [T_std, ~, P_std, ~] = atmosisa(0); %obtain standard atmospheric conditions at SL
+% for i = 1:length(alt)
+%     for j = 1:length(M0)
+%         j
+%         [state_i,component_i,design_i,inputs_i,performance_i] = off_design2(state,component,design,inputs,M0(j),alt(i),A0);            
+%         %finding component pressure ratios and corrected mass flow
+%         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component_i{:,2};
+%         [~, ~, P0, ~] = atmosisa(alt(i)); 
+%         Po25_Std = pi_r*pi_d*pi_cL*P0/P_std;
+%         To25 = state_i{6,3};
+%         mdot25 = state_i{6,5};
+%         mdot25_cor(i,j) = mdot25 * sqrt(To25/T_std) / (Po25_Std);
+%         picL(i,j) = pi_cL;
+%         
+% 
+%         %finding component pressure ratios and corrected mass flow
+%         [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component_i{:,2};
+%         Po44_Std = pi_r*pi_d*pi_cL*pi_cH*pi_b*pi_tH*P0/P_std;
+%         To44 = state_i{11,3};
+%         mdot44 = state_i{11,5};
+%         mdot44_cor(i,j) = mdot44 * sqrt(To44/T_std) / (Po44_Std);
+%         pitH(i,j) = pi_tH;
+%        
+%         S(i,j) = performance_i{2,2} / ((.453592/3600)/4.44822);
+%         F(i,j) = performance_i{2,1} * 0.224809;
+% 
+%         %storing momentum
+%         pinlet(i,j) = performance_i{2,8};
+%         pcore(i,j) = performance_i{2,9};
+%         pbypass(i,j) = performance_i{2,10};
+%         
+%         alpha(i,j) = design_i{2,2};
+% 
+%     end
+%     
+%     a= 1;
+% end
+% 
+% %% Plots
+% 
+% h1 = figure(1);
+% h1.WindowStyle = 'docked'; 
+% for i = 1:length(alt)
+% plot(M0,F(i,:),'linewidth',1.5)
+% hold on
+% title('Thrust vs. Mach Number')
+% legend('SL','10k','20k','30k')
+% xlabel('Mach Number')
+% ylabel('Thrust (lb)')
+% grid('on')
+% end
+% 
+% 
+% h2 = figure(2);
+% h2.WindowStyle = 'docked';
+% for i = 1:length(alt)
+% plot(M0,S(i,:),'linewidth',1.5)
+% title('SFC vs. Mach Number')
+% hold on
+% legend('SL','10k','20k','30k')
+% xlabel('Mach Number')
+% ylabel('SFC')
+% grid('on')
+% end
+% 
+% 
+% h3 = figure(3);
+% h3.WindowStyle = 'docked';
+% for i = 1:length(alt)
+% plot(mdot44_cor(i,:),pitH(i,:),'linewidth',1.5)
+% hold on
+% title('HP Turb Pressure Ratio vs. Corr Mass Flow')
+% legend('SL','10k','20k','30k')
+% xlabel('Corrected Mass Flow')
+% ylabel('HP Turbine Pressure Ratio')
+% grid('on')
+% end
+% 
+% 
+% h4 = figure(4);
+% h4.WindowStyle = 'docked';
+% for i = 1:length(alt)
+% plot(mdot25_cor(i,:),picL(i,:),'linewidth',1.5)
+% hold on
+% title('LP Comp Pressure Ratio vs. Corr Mass Flow')
+% legend('SL','10k','20k','30k')
+% xlabel('Corrected Mass Flow')
+% ylabel('LP Compressor Ratio')
+% grid('on')
+% end
+% 
+% 
+% h5 = figure(5);
+% h5.WindowStyle = 'docked'; 
+% for i = 1:length(alt)
+% subplot(3,1,1)
+% plot(M0,pinlet(i,:),'linewidth',1.5)
+% hold on
+% title('Mach Number vs. Inlet Air Momentum')
+% legend('SL','10k','20k','30k')
+% xlabel('Mach Number')
+% ylabel('Inlet Air Momentum')
+% grid('on')
+% end
+% 
+% 
+% for i = 1:length(alt)
+% subplot(3,1,2)
+% plot(M0,pcore(i,:),'linewidth',1.5)
+% hold on
+% title('Mach Number vs. Core Air Momentum')
+% legend('SL','10k','20k','30k')
+% xlabel('Mach Number')
+% ylabel('Core Air Momentum')
+% grid('on')
+% end
+% for i = 1:length(alt)
+% subplot(3,1,3)
+% plot(M0,pbypass(i,:),'linewidth',1.5)
+% hold on
+% title('Mach Number vs. Bypass Air Momentum')
+% legend('SL','10k','20k','30k')
+% xlabel('Mach Number')
+% ylabel('Bypass Air Momentum')
+% grid('on')
+% end
+% 
+% 
+% h6 = figure(6);
+% h6.WindowStyle = 'docked';
+% for i = 1:length(alt)
+% plot(M0(:),alpha(i,:),'linewidth',1.5)
+% hold on
+% title('Bypass Ratio vs. Mach Number')
+% legend('SL','10k','20k','30k')
+% xlabel('Mach Number')
+% ylabel('\alpha')
+% grid('on')
+% end
 %% Off design
 altR = alt;
 mdotc_R = CorrectedMassFlow(state,altR,altR,component);
@@ -96,6 +243,8 @@ for i = 1:length(alt)
         pinlet(i,j) = performance_i{2,8};
         pcore(i,j) = performance_i{2,9};
         pbypass(i,j) = performance_i{2,10};
+        
+        alpha(i,j) = design_i{2,2};
     end
     
     a= 1;
@@ -189,6 +338,8 @@ xlabel('Mach Number')
 ylabel('Bypass Air Momentum')
 grid('on')
 end
+
+
 
 
 % function [A45_6] = A_turb(component, M6)

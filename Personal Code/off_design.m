@@ -532,8 +532,8 @@ mdotf = mdot4*f/(1+f);
 
 %Calculate Momentum
 pinlet = mdot0*v0;
-pcore = mdot9*v9;
-pbypass = mdot19*v19;
+pcore = mdot9*(v9-v0);
+pbypass = mdot19*(v19-v0);
 
 %Calculate performance parameters
 F = pcore + pbypass - pinlet; %Thrust
