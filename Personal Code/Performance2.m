@@ -11,11 +11,11 @@ close all
 
 % Engine : DGEN-390 Price Induction
 % Design point is 10kft and M = .338
-alt = 35000 / 3.281; %altitude [m from feet]
-M0 = .35;
-pi_f = 1.5; %Mid approx for turbofan %2
-pi_cL = 6; %Mid approx for turbofan, pi_cL = pi_cH %5.9
-pi_cH = 6; %Mid approx for turbofan, pi_cL = pi_cH
+alt = 10000 / 3.281; %altitude [m from feet]
+M0 = .338;
+pi_f = 2; %Mid approx for turbofan %2
+pi_cL = 2; %Mid approx for turbofan, pi_cL = pi_cH %5.9
+pi_cH = 10; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
 beta = 0;
 PtoH = 0;

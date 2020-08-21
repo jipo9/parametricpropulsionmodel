@@ -8,12 +8,15 @@ alphaR = design{2,2};
 To4R = state{9,3};
 pi_cHR = component{6,2};
 pi_fR = component{4,2};
-[C3] = constant(0,0,alphaR,To4R,pi_cHR,pi_fR)
 componentR = component;
+stateR = state;
 error = 1;
 alpha_i = alphaR;
+
+[C3] = constant(0,0,alphaR,To4R,pi_cHR,pi_fR);
 [state, component,v0] = off_ambient(state,component,design,alt,M0,A0);
 [state,component] = off_inlet(state,component);
+[state] = corrmass(state,stateR,design);
 while error > .0001
 [state,component] = off_fan(state,component,componentR,design);
 [state,component] = off_comp(state,component,design, componentR);
@@ -44,42 +47,23 @@ tau_r = 1 + .2*(M0)^2;
 tau_f = p_if ^ (1/(gamma*ef/(gamma-1)));
 C3 = alpha*pi_cH*sqrt(tau_r*tau_f/tau_lambda); %why const?
 end
+function [state] = corrmass(state,stateR,design)
+mdot_on = stateR{3,5};
+To0_on = stateR{3,3};
+Po0_on = stateR{3,13};
 
-function [A] = corrmass(A)
-[T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
-state(2,3) = {T0};
-state(2,4) = {0};
-state{2,2} = [];
-state{2,8} = [];
-[state] = unFAIR3(state,2);
-[~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
-R0 = cp0 - cp0/gamma0;
-a0 = sqrt(R0*gamma0*T0); %[m/s]
-v0 = M0*a0; %[m/s]
+To0 = state{3,3};
+Po0 = state{3,13};
 
-To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
-state(3,3) = {To0};
-state{3,2} = [];
-state{3,8} = [];
-[state] = unFAIR3(state,3);
+T0_on = stateR{2,3};
+P0_on = stateR{2,13};
 
-P0 = state{2,2};
-Po0 = state{3,2};
-pi_r = Po0/P0;
-component{2,2} = pi_r;
-
-h0 = state{2,8};
-ho0 = state{3,8};
-tau_r = ho0/h0;
-component{2,4} = tau_r;
+T0 = state{2,3};
+P0 = state{2,13};
 
 
-% mdot_on = ;
-% To0_on = ;
-% Po0_on = ;
-
-mdot0 = A0 * v0 * rho0;
-mdot0 = mdot_on * sqrt(To0_on/To0) * Po0/Po0_on
+mdot0 = mdot_on * sqrt(To0_on/To0) * Po0/Po0_on;
+% mdot0 = mdot_on * sqrt(T0_on/T0) * P0/P0_on;
 state{2,5} = mdot0;
 [state,design] = mdot(state,design);
 end
@@ -145,7 +129,7 @@ state(21,5) = {mdotep1};
 state(22,5) = {mdotep2};
 end
 function [state, component,v0] = off_ambient(state,component,design,alt,M0,A0)
-[T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
+[T0, ~, P0, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
 state(2,3) = {T0};
 state(2,4) = {0};
 state{2,2} = [];
@@ -162,9 +146,9 @@ state{3,2} = [];
 state{3,8} = [];
 [state] = unFAIR3(state,3);
 
-P0 = state{2,2};
-Po0 = state{3,2};
-pi_r = Po0/P0;
+Pr0 = state{2,2};
+Pro0 = state{3,2};
+pi_r = Pro0/Pr0;
 component{2,2} = pi_r;
 
 h0 = state{2,8};
@@ -172,9 +156,16 @@ ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
 
-mdot0 = A0 * v0 * rho0;
-state{2,5} = mdot0;
-[state,design] = mdot(state,design);
+% mdot0 = A0 * v0 * rho0;
+% state{2,5} = mdot0;
+% [state,design] = mdot(state,design);
+
+state{2,13} = P0; %temporary
+state{3,13} = pi_r*P0; %temporary
+
+
+
+
 end
 function [state,component] = off_inlet(state,component)
 pid = component{3,2};

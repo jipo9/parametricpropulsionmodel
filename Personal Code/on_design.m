@@ -155,7 +155,7 @@ M0 = inputs{3,2};
 A0 = inputs{8,2};
 
 % Model freestream ambient thermo state based on altitude at standard atmospheric model
-[T0, ~, ~, rho0] = atmosisa(alt);
+[T0, ~, P0, rho0] = atmosisa(alt);
 state(2,3) = {T0};
 state(2,4) = {0};
 [state] = unFAIR3(state,2);
@@ -180,9 +180,9 @@ state(3,3) = {T_o0};
 [state] = unFAIR3(state,3);
 
 % Find and store ram pressure ratio
-P0 = state{2,2};
-Po0 = state{3,2};
-pi_r = Po0/P0;
+Pr0 = state{2,2};
+Pro0 = state{3,2};
+pi_r = Pro0/Pr0;
 component{2,2} = pi_r;
 
 % Find and store ram enthalpy ratio
@@ -190,6 +190,11 @@ h0 = state{2,8};
 ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
+
+
+state{2,13} = P0; %temporary
+state{3,13} = pi_r*P0; %temporary
+
 end
 function [state,component] = inlet(state,component,inputs)
 % Calculates the thermodynamic state at stagnation post-inlet
