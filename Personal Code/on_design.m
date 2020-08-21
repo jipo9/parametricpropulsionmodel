@@ -29,7 +29,7 @@ function [state,component,design, inputs, performance] = on_design(alt,M0,pi_f,p
 % INNEFICIENCIES IN TURBINE AND COMPRESSOR PRESSURE RATIOS ACOUNTED W/
 % POLYTROPIC INNEFICIENCIES, AND ARE LOWER AT TURBINES DUE TO COOLING AIR
 
-% COOLANT AIR DEFINED BY BURNER EXIT TEMP (find eqn??)
+% COOLANT AIR DEFINED BY BURNER EXIT TEMP (Fig 1 - Mattingly)
 
 %-------------------Additional Assumptions-------------------%
 
