@@ -3,96 +3,97 @@ function [state,component,design,inputs,performance] = off_design2(state,compone
 % This function takes in the results from the on-design analysis and
 % returns the engine performance for any given flight condition
 
+% Assumptions are as follows:
+    % Turbine pressure and enthalpy ratios held constant from on-design
+    % Bypass ratio is iterated using constant C3 (link equation!!!)
+    % Corrected mass flow held constant (link visual!!!)
+    % NEGLECT: Installation effects and self drag, Thetabreak
+
+    %
+%% Assumptions
+% SAME ASSU
 %% Calculations
-alphaR = design{2,2};
-To4R = state{9,3};
+%Define parameters
+componentR = component;
+stateR = state;
+
+% Calculate parameter driving bypass ratio
+alpha_i = design{2,2};
+tau_lambda = component{7,6};
 pi_cHR = component{6,2};
 pi_fR = component{4,2};
-[C3] = constant(0,0,alphaR,To4R,pi_cHR,pi_fR)
-componentR = component;
+gammaf = state{5,7};
+ef = component{4,3};
+[C3] = constant(0,alpha_i,tau_lambda,pi_cHR,pi_fR,gammaf,ef);
+
+% Calculate bypass independent values
+[state, component,v0] = ambient(state,component,alt,M0,A0);
+[state,component] = inlet(state,component);
+[state] = corrmass(state,stateR,design);
+
+%Iterate through fan, compressors, burner, and turbines until appropriate
+%bypass ratio found
 error = 1;
-alpha_i = alphaR;
-[state, component,v0] = off_ambient(state,component,design,alt,M0,A0);
-[state,component] = off_inlet(state,component);
 while error > .0001
-[state,component] = off_fan(state,component,componentR,design);
-[state,component] = off_comp(state,component,design, componentR);
+[state,component] = fan(state,component,componentR,design);
+[state,component] = comp(state,component,design, componentR);
 % [To4] = thetabreak(state,inputs);
 % state(9,3) = {To4};
-[state,component] = off_burner(state,component,design);
-[state,component] = off_turb(state,component);
+[state,component] = burner(state,component,design);
+[state,component] = turb(state,component);
 
 [pi_cH] = component{6,2};
 [tau_r,~,tau_f] = component{2:4,4};
-tau_lambda = state{9,8}/state{2,8};
+tau_lambda = component{7,6};
 alpha = C3 / (pi_cH*sqrt(tau_r*tau_f/tau_lambda));
 error = norm(alpha-alpha_i)/alpha;
 alpha_i = alpha
 design{2,2} = alpha_i;
 end
-[state,component,performance] = off_nozzle(state,component,M0,v0,design);
+
+%Calculate engine performance
+[state,component,performance] = nozzle(state,component,v0,design);
 end   
 
 %% Functions
-function [C3] = constant(M0,alt,alpha,To4,pi_cH,p_if)
-gamma = 1.4;
-ef = .9;
+function [C3] = constant(M0,alpha,tau_lambda,pi_cH,p_if,gammaf,ef)
+% This function calculates C3, a constant by which we iterated alpha (the
+% bypass ratio
 
-[T0, ~, ~, ~] = atmosisa(alt);
-tau_lambda = To4/T0 * 1.25; %constant to reflect changing Cp without complicated eqns
 tau_r = 1 + .2*(M0)^2;
-tau_f = p_if ^ (1/(gamma*ef/(gamma-1)));
-C3 = alpha*pi_cH*sqrt(tau_r*tau_f/tau_lambda); %why const?
+tau_f = p_if ^ (1/(gammaf*ef/(gammaf-1)));
+C3 = alpha*pi_cH*sqrt(tau_r*tau_f/tau_lambda);
 end
+function [state] = corrmass(state,stateR,design)
+% This function calculates mass flow for the engine assuming a constant corrected mass flow at the nozzle
+mdot_on = stateR{3,5};
+To0_on = stateR{3,3};
+Po0_on = stateR{3,13};
+To0 = state{3,3};
+Po0 = state{3,13};
+mdot0 = mdot_on * sqrt(To0_on/To0) * Po0/Po0_on;
 
-function [A] = corrmass(state,stateR)
-[T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
-state(2,3) = {T0};
-state(2,4) = {0};
-state{2,2} = [];
-state{2,8} = [];
-[state] = unFAIR3(state,2);
-[~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
-R0 = cp0 - cp0/gamma0;
-a0 = sqrt(R0*gamma0*T0); %[m/s]
-v0 = M0*a0; %[m/s]
+% T0_on = stateR{2,3};
+% P0_on = stateR{2,13};
+% T0 = state{2,3};
+% P0 = state{2,13};
+% mdot0 = mdot_on * sqrt(T0_on/T0) * P0/P0_on;
 
-To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
-state(3,3) = {To0};
-state{3,2} = [];
-state{3,8} = [];
-[state] = unFAIR3(state,3);
-
-P0 = state{2,2};
-Po0 = state{3,2};
-pi_r = Po0/P0;
-component{2,2} = pi_r;
-
-h0 = state{2,8};
-ho0 = state{3,8};
-tau_r = ho0/h0;
-component{2,4} = tau_r;
-
-
-% mdot_on = ;
-% To0_on = ;
-% Po0_on = ;
-
-mdot0 = A0 * v0 * rho0;
-mdot0 = mdot_on * sqrt(To0_on/To0) * Po0/Po0_on
 state{2,5} = mdot0;
 [state,design] = mdot(state,design);
 end
 function [state,design] = mdot(state,design)
 % Calculates mass flow throughout engine sections
 
+% Input Parameters
 mdot0 = state{2,5};
+f0 = 0; %freestream fuel/air ratio
 alpha = design{2,2};
 beta = design{3,2};
 ep1 = design{4,2};
 ep2 = design{5,2};
 
-% MASS FLOW AND FUEL TO AIR CALCULATIONS
+% Calculate mass flow and fuel to air ratio at every station
 f = state{9,4};
 mdot4 = state{9,5};
 mdot31 = state{8,5};
@@ -102,7 +103,6 @@ else
     mdot_f = 0;
 end
 
-f0 = 0; %freestream fuel/air ratio
 
 mdot25 = mdot0/(1+alpha); %after bypass leaves
 mdot13 = mdot0 - mdot25; % bypass mass flow
@@ -144,54 +144,74 @@ state(20,5) = {mdotep};
 state(21,5) = {mdotep1};
 state(22,5) = {mdotep2};
 end
-function [state, component,v0] = off_ambient(state,component,design,alt,M0,A0)
-[T0, ~, ~, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
+function [state, component,v0] = ambient(state,component,alt,M0,A0)
+% Calculates the thermodynamic state at freestream ambient and stagnation
+% ambient
+
+% Model freestream ambient thermo state based on altitude at standard atmospheric model
+[T0, ~, P0, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
 state(2,3) = {T0};
 state(2,4) = {0};
 state{2,2} = [];
 state{2,8} = [];
 [state] = unFAIR3(state,2);
+
+% Calculate inlet velocity
 [~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
 R0 = cp0 - cp0/gamma0;
 a0 = sqrt(R0*gamma0*T0); %[m/s]
 v0 = M0*a0; %[m/s]
 
+% Calculate stagnation ambient thermo conditions
 To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
 state(3,3) = {To0};
 state{3,2} = [];
 state{3,8} = [];
 [state] = unFAIR3(state,3);
 
-P0 = state{2,2};
-Po0 = state{3,2};
-pi_r = Po0/P0;
+% Find and store ram pressure ratio
+Pr0 = state{2,2};
+Pro0 = state{3,2};
+pi_r = Pro0/Pr0;
 component{2,2} = pi_r;
 
+% Find and store ram enthalpy ratio
 h0 = state{2,8};
 ho0 = state{3,8};
 tau_r = ho0/h0;
 component{2,4} = tau_r;
 
-mdot0 = A0 * v0 * rho0;
-state{2,5} = mdot0;
-[state,design] = mdot(state,design);
+% For corrected mass flow
+state{2,13} = P0;
+state{3,13} = pi_r*P0;
+
+% mdot0 = A0 * v0 * rho0;
+% state{2,5} = mdot0;
 end
-function [state,component] = off_inlet(state,component)
+function [state,component] = inlet(state,component)
+% Calculates the thermodynamic state at stagnation post-inlet
+
+% Input Parameters
 pid = component{3,2};
 Po0 = state{3,2};
 Po2 = pid*Po0;
 
+% Calculate stagnation post-inlet thermo conditions
 state(4,2) =  {Po2};
 state{4,3} = [];
 state{4,8} = [];
 [state] = unFAIR3(state,4);
 
+% Find and store ram enthalpy ratio
 ho0 = state{3,8};
 ho2 = state{4,8};
 tau_d = ho2/ho0;
 component{3,4} = tau_d;
 end
-function [state,component] = off_fan(state,component,componentR,design)
+function [state,component] = fan(state,component,componentR,design)
+% Calculates the thermodynamic state at stagnation post-fan
+
+% Input Parameters
 ho4 = state{9,8};
 h0 = state{2,8};
 tau_tL = component{12,4};
@@ -199,59 +219,64 @@ tau_tH = component{9,4};
 tau_cL = component{5,4};
 tau_cLR = componentR{5,4};
 tau_cH = component{6,4};
-eta_mL = .995;
+eta_mL = component{12,5};
 alpha = design{2,2};
 beta = design{3,2};
 ep1 = design{4,2};
 ep2 = design{5,2};
 f = state{9,4};
 ho0 = state{3,8};
+ho2 = state{4,8};
 tau_r = ho0/h0;
 PtoL = design{6,2};
-eta_mPL = 1;
+eta_mPL = component{13,5};
 mdot0 = state{2,5};
 tau_fR = componentR{4,4};
 eta_f = componentR{4,5};
 
+% Calculate stagnation fan enthalpy ratio
 tau_lambda = ho4/h0;
 tau_f = 1 ...
     + ( (1-tau_tL)*eta_mL* (((1-beta-ep1-ep2)*(1+f)*tau_lambda*tau_tH/tau_r  +  (ep1*tau_tH + ep2)*tau_cL*tau_cH))   -   (1+alpha)*PtoL/(tau_r*eta_mPL*mdot0*h0)) ...
     / ((tau_cLR - 1)/(tau_fR - 1) + alpha);
+component{4,4} = tau_f;
 
+% Calculate stagnation post-fan thermo conditions
+state{5,2} = [];
+state{5,3} = [];
+ho13 = ho2*tau_f;
+state{5,8} = ho13;
+[state] = unFAIR3(state,5);
 
+% Find and store fan pressure ratio
 statei = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
 statei(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
-ho2 = state{4,8};
 ho13i = ho2*(1+eta_f*(tau_f-1));
 statei{5,8} = ho13i;
 statei{5,4} = 0;
 [statei] = unFAIR3(statei,5);
 Pro13i = statei{5,2};
 Pro2 = state{4,2};
-
 pi_f = Pro13i/Pro2;
-
 component{4,2} = pi_f;
-component{4,4} = tau_f;
-
-state{5,2} = [];
-state{5,3} = [];
-ho13 = ho2*tau_f;
-state{5,8} = ho13;
-[state] = unFAIR3(state,5);
 end
-function [state,component] = off_comp(state,component,design, componentR)
+function [state,component] = comp(state,component,design, componentR)
+% Calculates the thermodynamic state at stagnation post-LowPressureCompressor
+
+%% LP Compressor
+% Input Parameters
 statei = {'Station','Relative Pressure', ' Temperature (K)', 'Fuel to air ratio','Mass Flow (kg/s)','Cp (J/kg-K)', 'Gamma', 'Enthalpy (J/kg)', 'Entropy (J/kg-K)','Gas Constant (m^2/s^2*K)','Relative Density(kg/m^3)','Relative Volume(s*m^3??)'};
 statei(2:22,1) = {'0';'o0';'o2';'o13';'o2.5';'o3';'o3.1';'o4';'o4.1';'o4.4';'o4.5';'o5';'o6';'o6A';'o7';'o9';'9';'beta';'eptot';'ep1';'ep2'};
-
-% LP Compressor
 tau_f = component{4,4};
 tau_fR = componentR{4,4};
 tau_cLR = componentR{5,4};
 eta_cL = component{5,5};
 
+% Find and store LPComp enthalpy ratio
 tau_cL = 1 + (tau_f -1)*(tau_cLR - 1)/(tau_fR - 1);
+component{5,4} = tau_cL;
 
+% Find and store LPComp pressure ratio
 ho2 = state{4,8};
 ho25i = ho2*(1+eta_cL*(tau_cL-1));
 statei{6,8} = ho25i;
@@ -260,10 +285,9 @@ statei{6,4} = 0;
 Pro25i = statei{6,2};
 Pro2 = state{4,2};
 pi_cL = Pro25i/Pro2;
-
 component{5,2} = pi_cL;
-component{5,4} = tau_cL;
 
+% Calculate stagnation post-LPComp thermo conditions
 state{6,2} = [];
 state{6,3} = [];
 ho25 = ho2*tau_cL;
@@ -271,34 +295,33 @@ state{6,8} = ho25;
 [state] = unFAIR3(state,6);
 
 
-
-% HP Compressor
+%% HP Compressor
+% Input Parameters
 tau_r = component{2,4};
 tau_tH = component{9,4};
 tau_cL = component{5,4};
 tau_cH = component{6,4};
-
 eta_cH = component{6,5};
 etamH = component{9,5};
 etamPH = component{10,5};
-
 alpha = design{2,2};
 beta = design{3,2};
 ep1 = design{4,2};
 ep2 = design{5,2};
 PtoH = design{7,2};
-
 f = state{9,4};
 h0 = state{2,8};
 ho4 = state{9,8};
 mdot0 = state{2,5};
 
+% Find and store HPComp enthalpy ratio
 tau_lambda = ho4/h0;
-
 tau_cH = 1 ...
     + (1-tau_tH)*etamH* (((1-beta-ep1-ep2)*(1+f)*tau_lambda/(tau_r*tau_cL) + ep1*tau_cH))...
     - (1+alpha)*PtoH/(tau_r*tau_cL*etamPH*mdot0*h0);
+component{6,4} = tau_cH;
 
+% Find and store HPComp pressure ratio
 ho25 = state{6,8};
 ho3i = ho25*(1+eta_cH*(tau_cH-1));
 statei{7,8} = ho3i;
@@ -306,26 +329,35 @@ statei{7,4} = 0;
 [statei] = unFAIR3(statei,7);
 Pro3i = statei{7,2};
 Pro25 = state{6,2};
-
 pi_cH = Pro3i/Pro25;
-
 component{6,2} = pi_cH;
-component{6,4} = tau_cH;
 
+% Calculate stagnation post-HPComp thermo conditions
 state{7,2} = [];
 state{7,3} = [];
 ho3 = ho25*tau_cL;
 state{7,8} = ho3;
 [state] = unFAIR3(state,7);
 end
-function [state,component] = off_burner(state,component,design)
+function [state,component] = burner(state,component,design)
+% Calculates the thermodynamic state at stagnation pre burner and
+% stagnation post burner
+
+% Model state after bypass and bleed air is removed
 state(8,2:3) = state(7,2:3);
 state(8,6:12) = state(7,6:12);
 mdot31 = state{8,3};
+h0 = state{2,8};
 h_PR = design{8,2};
+eta_b = component{7,5};
 
+% Input Parameters
 f_i = state{9,4};
 error = 1;
+
+% Iterate until fuel to air ratio is found. Since fuel to air ratio affects
+% the enthalpy ratio for equivalent temperature ratios, this process takes
+% several iterations
 while error > .01
     state{9,2} = [];
     state{9,8} = [];
@@ -336,7 +368,7 @@ while error > .01
     taub = ho4/ho31;
     component{7,4} = taub;
 
-    mdotf = mdot31*(ho4 - ho31) / h_PR; %plus eta_burner
+    mdotf = mdot31*(ho4 - ho31) / (h_PR*eta_b - ho4);
     f = mdotf/mdot31;
     state{9,4} = f;
     [state,design] = mdot(state,design);
@@ -344,14 +376,22 @@ while error > .01
     f_i = f;
 end
 
+tau_lambda = ho4/h0;
+component{7,6} = tau_lambda;
 end
-function [state,component] = off_turb(state,component)
-% Mixer 1
+function [state,component] = turb(state,component)
+% Calculates the thermodynamic state at stagnation before and after each
+% turbine set
+
+%% Mixer 1
+% Input Parameters
 mdotep1 = state{21,5};
 mdot4 = state{9,5};
 mdot41 = state{10,5};
 hoep1 = state{8,8};
 ho4 = state{9,8};
+
+% Calculate stagnation pre-HPTurb/post-mixer1 thermo conditions
 ho41 = (mdotep1*hoep1 + mdot4*ho4) / (mdot41);
 state{10,2} = [];
 state{10,3} = [];
@@ -360,7 +400,9 @@ state(10,8) = {ho41};
 taum1 = ho41/ho4;
 component{8,4} = taum1;
 
-% HP Turbine
+%% HP Turbine
+% Hold enthalpy ratio constant and calculate stagnation post-HPTurb thermo
+% conditions
 tau_tH = component{9,4};
 state{11,2} = [];
 state{11,3} = [];
@@ -368,12 +410,15 @@ ho44 = ho41*tau_tH;
 state{11,8} = ho44;
 [state] = unFAIR3(state,11);
 
-% Mixer 2
+%% Mixer 2
+% Input Parameters
 mdotep2 = state{22,5};
 mdot44 = state{11,5};
 mdot45 = state{12,5};
 hoep2 = state{8,8};
 ho44 = state{11,8};
+
+% Calculate stagnation pre-HPTurb/post-mixer1 thermo conditions
 ho45 = (mdotep2*hoep2 + mdot44*ho44) /(mdot45);
 state{12,2} = [];
 state{12,3} = [];
@@ -382,7 +427,9 @@ state(12,8) = {ho45};
 taum2 = ho45/ho44;
 component{11,4} = taum2;
 
-% LP Turbine
+%% LP Turbine
+% Hold enthalpy ratio constant and calculate stagnation post-LPTurb thermo
+% conditions
 tau_tL = component{12,4};
 state{13,2} = [];
 state{13,3} = [];
@@ -390,7 +437,7 @@ ho5 = ho45*tau_tL;
 state{13,8} = ho5;
 [state] = unFAIR3(state,13);
 end
-function [state,component,performance] = off_nozzle(state,component,M0,v0,design)
+function [state,component,performance] = nozzle(state,component,v0,design)
 % Calculates the thermodynamic state at stagnation bypass-exhaust,
 % stagnation core-exhaust, static bypass-exhaust, and static core-exhaust 
 
@@ -400,7 +447,6 @@ PtoL = design{6,2};
 PtoH = design{7,2};
 mdot0 = state{2,5};
 [~,pi_r,pi_d,pi_f,pi_cL,pi_cH,pi_b,~,pi_tH,~,~,pi_tL,~,~,~,pi_n,~] = component{:,2};
-
 
 % Calculate stagnation bypass-exhaust thermo conditions
 Pro13 = state{5,2};
@@ -460,7 +506,6 @@ pinlet = mdot0*v0;
 pcore = mdot9*(v9);
 pbypass = mdot19*(v19);
 
-
 %Calculate performance parameters
 F = pcore + pbypass - pinlet; %Thrust
 S = mdotf / F; %Specific fuel consumption
@@ -478,7 +523,7 @@ eta_p = thrust_power/mech_power; %Propulsive engine efficiency
 % eta_th = eta_o/eta_p;
 
 % Installation bad stuff BIG APPROX
-F = F* (1-M0);
+% F = F * (1 - M0);
 
 % Store parameters
 performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach','Inlet Momentum','Core Momentum','Bypass Momentum','Inlet Mass Flow','Core Mass Flow','Bypass Mass Flow','Inlet Velocity','Core Velocity','Bypass Velocity'};
@@ -510,3 +555,17 @@ while isreal(M0break) == 0
 end
     
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+

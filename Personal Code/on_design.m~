@@ -17,6 +17,11 @@ function [state,component,design, inputs, performance] = on_design(alt,M0,pi_f,p
 % fair UTILIZES NASA GLENN THERMOCHEMICAL DATA TO OBTAIN PROPERTIES OF AIR
 % AND (CH2)n propellant COMBUSTION
 
+% TOTAL PRESSURE RATIO OF DIFFUSER OR INLET IS:
+% PI_TOTAL = PI_MAX*ETA
+% WHERE PI_MAX IS PRESSURE RATIO CAUSED BY WALL FRICTION AND ETA IS RAM
+% RECOVERY OF MIL-E-5008B
+
 % FAN, LP COMPRESSOR, AND POWER TAKEOFF(LP) POWERED BY LP TURBINE (FURTHER
 % ASSUMPTION IN COMBINED STATIONS)
 
@@ -29,20 +34,71 @@ function [state,component,design, inputs, performance] = on_design(alt,M0,pi_f,p
 % INNEFICIENCIES IN TURBINE AND COMPRESSOR PRESSURE RATIOS ACOUNTED W/
 % POLYTROPIC INNEFICIENCIES, AND ARE LOWER AT TURBINES DUE TO COOLING AIR
 
-% COOLANT AIR DEFINED BY BURNER EXIT TEMP (find eqn??)
+% FAN AND CORE STREAMS MIX COMPLETELY IN THE MIXER W/ A PRESSURE RATIO:
+% PI_TOTAL = PI_IDEAL*PI_MAX
+% WHERE PI_IDEAL IS TOTAL PRESSURE RATIO ACROSS IDEAL CONSTANT AREA MIXER
+% AND PI_MAX IS PRESSURE RATIO CAUSED BY WALL FRICTION
+
+% COOLANT AIR DEFINED BY BURNER EXIT TEMP (SEE
 
 %-------------------Additional Assumptions-------------------%
 
 % ALL ANALYSIS DONE IN METRIC
 
-% ANALYSIS IS FOR A SEPERATE EXHAUST TURBOFAN
-    % BYPASS NOZZLE ASSUMES A PRESSURE RATIO AND BEHAVIOR OF THE CORE NOZZLE
-    % NOZZLES ARE PERFECTLY EXPANDED P0=P9=P19
+% THRUST AND SPECIFIC FUEL CONSUMPTION ASSUMED AND USED TO FIND THE FUEL TO
+% AIR RATIO
 
-% PRESSURE RATIOS, POLYTROPIC EFFICIENCIES, AND MAX BURNER TEMP DEFINED BY
-% LEVEL OF TECH
+% NO AFTERBURNER AND NO PRESSURE RATIO ACROSS
 
-% INSTALLATION EFFECTS AND SELF DRAG NEGLECTED
+% SIMPLIFIED MIXER (and stagnation)
+% Mixer is assumed to be independent of mass flow through the bypass.
+% (PI_IDEAL = 1)
+% Final Pr -.5%
+% T -.1%
+% Note: This data is on a low bypass engine, will most likely matter more
+% for high bypass engines Also, value was close to 1 anyways, so older
+% engines will probably be much less accurate
+
+% NOZZLE IS PERFECTLY EXPANDED (PO = P9)
+
+% COMBINED STATION
+% Using combined functions on turbine (HP turbine, Coolant 1, LP turbine,
+% Coolant 2) and compressors (LP compressor, HP compressor) yields (from the book):
+% Final Pr +22%
+% +4.5% from compressor, +17% from turbines
+% T +4.5%
+% S -4.3%
+% eta_thermal +6%
+% eta_prop -1.8%
+% With the added benefit of:
+% Ptol and Ptoh simplify to just 1 variable
+% pi_cH and pi_cL simplify to just 1 variable
+% Assumptions
+% LP and HP shafts are one in the same
+% All values are averaged between shafts
+% Power takeoff is combined
+% All coolant air is mixed prior to the first turbine
+% I tried to vary mixing ratios a bit, seems to affect
+% results negatively to switch things around too much...
+
+%--------------------Future Assumptions--------------------%
+
+% Assumptions that will be used in comparison against actual engines
+
+% MOST ENGINE PARAMETERS "LEVEL OF TECH" based
+
+% TURBINE MECHANICAL EFFICIENCIES AND MIXER PRESSURE RATIO  = 1
+% Assuming mechanical efficiency of both spools and takeoff power is at 1
+% differs under this analysis by T = +.1%
+
+% Mixer is assumed to be 1
+% Final Pr +2.3%
+% T +.5%
+
+% Note: This data is on a low bypass engine, mixer will most likely matter more
+% for high bypass engines Also, these values were all very close to 1 anyways, so older
+% engines will probably be much less accurate
+
 
 %% Setup
 % Establish cells

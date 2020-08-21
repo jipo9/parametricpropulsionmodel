@@ -3,8 +3,6 @@ function [state,component,design,inputs,performance] = off_design(state,componen
 % This function takes in the results from the on-design analysis and
 % returns the engine performance for any given flight condition
 
-% altR = 1;
-% mdotc_R = [mdotcR_f,mdotcR_cL,mdotcR_cH];
 %% Calculations
 % Step through the engine station by station modeling the change of state
 % Iteration is used because the off design enthalpy ratios are related to
