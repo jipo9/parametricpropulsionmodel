@@ -12,7 +12,7 @@ function [state,component,design,inputs,performance] = off_design2(state,compone
 % TURBINE ENTHALPY RATIO HELD CONSTANT FROM ON-DESIGN
 
 % COMPONENT FAN AND COMPRESSOR EFFICIENCIES HELD CONSTANT FROM ON-DESIGN AND USED TO
-% CALCULATE NEW PRESSURE RATIOS
+% CALCULATE NEW PRESSURE RATIOS WITH SPOOL ENERGY BALANCE
 
 % NEGLECT: Installation effects and self drag, Thetabreak
 %% Calculations
@@ -20,14 +20,9 @@ function [state,component,design,inputs,performance] = off_design2(state,compone
 componentR = component;
 stateR = state;
 
+
 % Calculate parameter driving bypass ratio
-alpha_i = design{2,2};
-tau_lambda = component{7,6};
-pi_cHR = component{6,2};
-pi_fR = component{4,2};
-gammaf = state{5,7};
-ef = component{4,3};
-[C3] = constant(0,alpha_i,tau_lambda,pi_cHR,pi_fR,gammaf,ef);
+[C3] = constant(componentR,design);
 
 % Calculate bypass independent values
 [state, component,v0] = ambient(state,component,alt,M0,A0);
@@ -36,6 +31,7 @@ ef = component{4,3};
 
 %Iterate through fan, compressors, burner, and turbines until appropriate
 %bypass ratio found
+alpha_i = design{2,2};
 error = 1;
 while error > .0001
 [state,component] = fan(state,component,componentR,design);
@@ -50,7 +46,7 @@ while error > .0001
 tau_lambda = component{7,6};
 alpha = C3 / (pi_cH*sqrt(tau_r*tau_f/tau_lambda));
 error = norm(alpha-alpha_i)/alpha;
-alpha_i = alpha
+alpha_i = alpha;
 design{2,2} = alpha_i;
 end
 
@@ -59,13 +55,79 @@ end
 end   
 
 %% Functions
-function [C3] = constant(M0,alpha,tau_lambda,pi_cH,p_if,gammaf,ef)
+function [C3] = constant(component,design)
 % This function calculates C3, a constant by which we iterated alpha (the
 % bypass ratio
-
-tau_r = 1 + .2*(M0)^2;
-tau_f = p_if ^ (1/(gammaf*ef/(gammaf-1)));
+alpha = design{2,2};
+pi_cH = component{6,2};
+tau_r = component{2,4};
+tau_f = component{4,4};
+tau_lambda = component{7,6};
 C3 = alpha*pi_cH*sqrt(tau_r*tau_f/tau_lambda);
+end
+function [state, component,v0] = ambient(state,component,alt,M0,A0)
+% Calculates the thermodynamic state at freestream ambient and stagnation
+% ambient
+
+% Model freestream ambient thermo state based on altitude at standard atmospheric model
+[T0, ~, P0, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
+state(2,3) = {T0};
+state(2,4) = {0};
+state{2,2} = [];
+state{2,8} = [];
+[state] = unFAIR3(state,2);
+
+% Calculate inlet velocity
+[~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
+R0 = cp0 - cp0/gamma0;
+a0 = sqrt(R0*gamma0*T0); %[m/s]
+v0 = M0*a0; %[m/s]
+
+% Calculate stagnation ambient thermo conditions
+To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
+state(3,3) = {To0};
+state{3,2} = [];
+state{3,8} = [];
+[state] = unFAIR3(state,3);
+
+% Find and store ram pressure ratio
+Pr0 = state{2,2};
+Pro0 = state{3,2};
+pi_r = Pro0/Pr0;
+component{2,2} = pi_r;
+
+% Find and store ram enthalpy ratio
+h0 = state{2,8};
+ho0 = state{3,8};
+tau_r = ho0/h0;
+component{2,4} = tau_r;
+
+% For corrected mass flow
+state{2,13} = P0;
+state{3,13} = pi_r*P0;
+
+% mdot0 = A0 * v0 * rho0;
+% state{2,5} = mdot0;
+end
+function [state,component] = inlet(state,component)
+% Calculates the thermodynamic state at stagnation post-inlet
+
+% Input Parameters
+pid = component{3,2};
+Po0 = state{3,2};
+Po2 = pid*Po0;
+
+% Calculate stagnation post-inlet thermo conditions
+state(4,2) =  {Po2};
+state{4,3} = [];
+state{4,8} = [];
+[state] = unFAIR3(state,4);
+
+% Find and store ram enthalpy ratio
+ho0 = state{3,8};
+ho2 = state{4,8};
+tau_d = ho2/ho0;
+component{3,4} = tau_d;
 end
 function [state] = corrmass(state,stateR,design)
 % This function calculates mass flow for the engine assuming a constant corrected mass flow at the nozzle
@@ -146,70 +208,6 @@ state(19,5) = {mdotbeta};
 state(20,5) = {mdotep};
 state(21,5) = {mdotep1};
 state(22,5) = {mdotep2};
-end
-function [state, component,v0] = ambient(state,component,alt,M0,A0)
-% Calculates the thermodynamic state at freestream ambient and stagnation
-% ambient
-
-% Model freestream ambient thermo state based on altitude at standard atmospheric model
-[T0, ~, P0, rho0] = atmosisa(alt); %obtain standard atmospheric conditions
-state(2,3) = {T0};
-state(2,4) = {0};
-state{2,2} = [];
-state{2,8} = [];
-[state] = unFAIR3(state,2);
-
-% Calculate inlet velocity
-[~,~,T0,~,~,cp0,gamma0,~,~] = state{2,:};
-R0 = cp0 - cp0/gamma0;
-a0 = sqrt(R0*gamma0*T0); %[m/s]
-v0 = M0*a0; %[m/s]
-
-% Calculate stagnation ambient thermo conditions
-To0 = T0*(1+((M0^2)*((gamma0-1)/2))); %find total temperature using isentropic
-state(3,3) = {To0};
-state{3,2} = [];
-state{3,8} = [];
-[state] = unFAIR3(state,3);
-
-% Find and store ram pressure ratio
-Pr0 = state{2,2};
-Pro0 = state{3,2};
-pi_r = Pro0/Pr0;
-component{2,2} = pi_r;
-
-% Find and store ram enthalpy ratio
-h0 = state{2,8};
-ho0 = state{3,8};
-tau_r = ho0/h0;
-component{2,4} = tau_r;
-
-% For corrected mass flow
-state{2,13} = P0;
-state{3,13} = pi_r*P0;
-
-% mdot0 = A0 * v0 * rho0;
-% state{2,5} = mdot0;
-end
-function [state,component] = inlet(state,component)
-% Calculates the thermodynamic state at stagnation post-inlet
-
-% Input Parameters
-pid = component{3,2};
-Po0 = state{3,2};
-Po2 = pid*Po0;
-
-% Calculate stagnation post-inlet thermo conditions
-state(4,2) =  {Po2};
-state{4,3} = [];
-state{4,8} = [];
-[state] = unFAIR3(state,4);
-
-% Find and store ram enthalpy ratio
-ho0 = state{3,8};
-ho2 = state{4,8};
-tau_d = ho2/ho0;
-component{3,4} = tau_d;
 end
 function [state,component] = fan(state,component,componentR,design)
 % Calculates the thermodynamic state at stagnation post-fan

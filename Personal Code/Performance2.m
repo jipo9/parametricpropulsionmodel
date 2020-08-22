@@ -34,11 +34,11 @@ close all
 
 % Engine : DGEN-390 Price Induction
 % Design point is 10kft and M = .338
-alt = 10000 / 3.281; %altitude [m from feet]
-M0 = .338;
-pi_f = 1.5; %Mid approx for turbofan %2
-pi_cL = 1.5; %Mid approx for turbofan, pi_cL = pi_cH %5.9
-pi_cH = 10; %Mid approx for turbofan, pi_cL = pi_cH
+alt = 25000 / 3.281; %altitude [m from feet]
+M0 = .45;
+pi_f = 1.7; %Mid approx for turbofan %2
+pi_cL = 4; %Mid approx for turbofan, pi_cL = pi_cH %5.9
+pi_cH = 6; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
 beta = 0;
 PtoH = 0;
@@ -58,6 +58,27 @@ year = 2011;
 % PtoL = 0;
 % A0 = pi*(2.34/2)^2;
 % year = 1966;
+
+
+
+
+
+% alt = 10000 / 3.281; %altitude [m from feet]
+% M0 = .338;
+% pi_f = 1.5; %Mid approx for turbofan %2
+% pi_cL = 1.5; %Mid approx for turbofan, pi_cL = pi_cH %5.9
+% pi_cH = 10; %Mid approx for turbofan, pi_cL = pi_cH
+% alpha = 6.9;
+% beta = 0;
+% PtoH = 0;
+% PtoL = 0;
+% A0 = pi*(.469/2)^2;
+% year = 2011;
+
+% Top to bottom at .45 Mach = 1.80 model, 1.88 actual
+% Top to bottom at .1 Mach = 1.98 model, 2 actual
+% Sea Level slope = -.81 model, -1.15 actual
+
 
 %% On design
 % Run on-design
@@ -80,8 +101,8 @@ fprintf('%s\n','--------------------------')
 % Setup off design
 altR = alt;
 mdotc_R = CorrectedMassFlow(state,altR,altR,component);
-alt = [0,10000,20000,30000]./3.281; %Operational envelop in altitude
-M0 = linspace(.1,.8,10); %Operational envelop in Mach
+alt = [0,12500,25000]./3.281; %Operational envelop in altitude
+M0 = linspace(.1,.45,8); %Operational envelop in Mach
 [T_std, ~, P_std, ~] = atmosisa(0); %obtain standard atmospheric conditions at SL
 
 % Perform off design analysis over operational scope
@@ -135,7 +156,7 @@ for i = 1:length(alt)
 plot(M0,F(i,:),'linewidth',1.5)
 hold on
 title('Thrust vs. Mach Number')
-legend('SL','10k','20k','30k')
+legend('SL','12.5k','25k')
 xlabel('Mach Number')
 ylabel('Thrust (lb)')
 grid('on')
@@ -148,37 +169,37 @@ for i = 1:length(alt)
 plot(M0,S(i,:),'linewidth',1.5)
 title('SFC vs. Mach Number')
 hold on
-legend('SL','10k','20k','30k')
+legend('SL','12.5k','25k')
 xlabel('Mach Number')
 ylabel('SFC')
 grid('on')
 end
 
 
-h3 = figure(3);
-h3.WindowStyle = 'docked';
-for i = 1:length(alt)
-plot(mdot44_cor(i,:),pitH(i,:),'linewidth',1.5)
-hold on
-title('HP Turb Pressure Ratio vs. Corr Mass Flow')
-legend('SL','10k','20k','30k')
-xlabel('Corrected Mass Flow')
-ylabel('HP Turbine Pressure Ratio')
-grid('on')
-end
-
-
-h4 = figure(4);
-h4.WindowStyle = 'docked';
-for i = 1:length(alt)
-plot(mdot25_cor(i,:),picL(i,:),'linewidth',1.5)
-hold on
-title('LP Comp Pressure Ratio vs. Corr Mass Flow')
-legend('SL','10k','20k','30k')
-xlabel('Corrected Mass Flow')
-ylabel('LP Compressor Ratio')
-grid('on')
-end
+% h3 = figure(3);
+% h3.WindowStyle = 'docked';
+% for i = 1:length(alt)
+% plot(mdot44_cor(i,:),pitH(i,:),'linewidth',1.5)
+% hold on
+% title('HP Turb Pressure Ratio vs. Corr Mass Flow')
+% legend('SL','12.5k','25k')
+% xlabel('Corrected Mass Flow')
+% ylabel('HP Turbine Pressure Ratio')
+% grid('on')
+% end
+% 
+% 
+% h4 = figure(4);
+% h4.WindowStyle = 'docked';
+% for i = 1:length(alt)
+% plot(mdot25_cor(i,:),picL(i,:),'linewidth',1.5)
+% hold on
+% title('LP Comp Pressure Ratio vs. Corr Mass Flow')
+% legend('SL','12.5k','25k')
+% xlabel('Corrected Mass Flow')
+% ylabel('LP Compressor Ratio')
+% grid('on')
+% end
 
 
 h5 = figure(5);
@@ -188,7 +209,7 @@ subplot(3,1,1)
 plot(M0,pinlet(i,:),'linewidth',1.5)
 hold on
 title('Mach Number vs. Inlet Air Momentum')
-legend('SL','10k','20k','30k')
+legend('SL','12.5k','25k')
 xlabel('Mach Number')
 ylabel('Inlet Air Momentum')
 grid('on')
@@ -198,7 +219,7 @@ subplot(3,1,2)
 plot(M0,pcore(i,:),'linewidth',1.5)
 hold on
 title('Mach Number vs. Core Air Momentum')
-legend('SL','10k','20k','30k')
+legend('SL','12.5k','25k')
 xlabel('Mach Number')
 ylabel('Core Air Momentum')
 grid('on')
@@ -208,77 +229,77 @@ subplot(3,1,3)
 plot(M0,pbypass(i,:),'linewidth',1.5)
 hold on
 title('Mach Number vs. Bypass Air Momentum')
-legend('SL','10k','20k','30k')
+legend('SL','12.5k','25k')
 xlabel('Mach Number')
 ylabel('Bypass Air Momentum')
 grid('on')
 end
 
-h6 = figure(6);
-h6.WindowStyle = 'docked'; 
-for i = 1:length(alt)
-subplot(3,1,1)
-plot(M0,mdot0(i,:),'linewidth',1.5)
-hold on
-title('Mach Number vs. Inlet Mass Flow')
-legend('SL','10k','20k','30k')
-xlabel('Mach Number')
-ylabel('Inlet Air Mass Flow')
-grid('on')
-end
-for i = 1:length(alt)
-subplot(3,1,2)
-plot(M0,mdot9(i,:),'linewidth',1.5)
-hold on
-title('Mach Number vs. Core Mass Flow')
-legend('SL','10k','20k','30k')
-xlabel('Mach Number')
-ylabel('Core Air Mass Flow')
-grid('on')
-end
-for i = 1:length(alt)
-subplot(3,1,3)
-plot(M0,mdot19(i,:),'linewidth',1.5)
-hold on
-title('Mach Number vs. Bypass Mass Flow')
-legend('SL','10k','20k','30k')
-xlabel('Mach Number')
-ylabel('Bypass Air Mass Flow')
-grid('on')
-end
-
-h7 = figure(7);
-h7.WindowStyle = 'docked'; 
-for i = 1:length(alt)
-subplot(3,1,1)
-plot(M0,v0(i,:),'linewidth',1.5)
-hold on
-title('Mach Number vs. Inlet Velocity')
-legend('SL','10k','20k','30k')
-xlabel('Mach Number')
-ylabel('Inlet Velocity')
-grid('on')
-end
-for i = 1:length(alt)
-subplot(3,1,2)
-plot(M0,v9(i,:),'linewidth',1.5)
-hold on
-title('Mach Number vs. Core Velocity')
-legend('SL','10k','20k','30k')
-xlabel('Mach Number')
-ylabel('Core Velocity')
-grid('on')
-end
-for i = 1:length(alt)
-subplot(3,1,3)
-plot(M0,v19(i,:),'linewidth',1.5)
-hold on
-title('Mach Number vs. Bypass Velocity')
-legend('SL','10k','20k','30k')
-xlabel('Mach Number')
-ylabel('Bypass Velocity')
-grid('on')
-end
+% h6 = figure(6);
+% h6.WindowStyle = 'docked'; 
+% for i = 1:length(alt)
+% subplot(3,1,1)
+% plot(M0,mdot0(i,:),'linewidth',1.5)
+% hold on
+% title('Mach Number vs. Inlet Mass Flow')
+% legend('SL','12.5k','25k')
+% xlabel('Mach Number')
+% ylabel('Inlet Air Mass Flow')
+% grid('on')
+% end
+% for i = 1:length(alt)
+% subplot(3,1,2)
+% plot(M0,mdot9(i,:),'linewidth',1.5)
+% hold on
+% title('Mach Number vs. Core Mass Flow')
+% legend('SL','12.5k','25k')
+% xlabel('Mach Number')
+% ylabel('Core Air Mass Flow')
+% grid('on')
+% end
+% for i = 1:length(alt)
+% subplot(3,1,3)
+% plot(M0,mdot19(i,:),'linewidth',1.5)
+% hold on
+% title('Mach Number vs. Bypass Mass Flow')
+% legend('SL','12.5k','25k')
+% xlabel('Mach Number')
+% ylabel('Bypass Air Mass Flow')
+% grid('on')
+% end
+% 
+% h7 = figure(7);
+% h7.WindowStyle = 'docked'; 
+% for i = 1:length(alt)
+% subplot(3,1,1)
+% plot(M0,v0(i,:),'linewidth',1.5)
+% hold on
+% title('Mach Number vs. Inlet Velocity')
+% legend('SL','12.5k','25k')
+% xlabel('Mach Number')
+% ylabel('Inlet Velocity')
+% grid('on')
+% end
+% for i = 1:length(alt)
+% subplot(3,1,2)
+% plot(M0,v9(i,:),'linewidth',1.5)
+% hold on
+% title('Mach Number vs. Core Velocity')
+% legend('SL','12.5k','25k')
+% xlabel('Mach Number')
+% ylabel('Core Velocity')
+% grid('on')
+% end
+% for i = 1:length(alt)
+% subplot(3,1,3)
+% plot(M0,v19(i,:),'linewidth',1.5)
+% hold on
+% title('Mach Number vs. Bypass Velocity')
+% legend('SL','12.5k','25k')
+% xlabel('Mach Number')
+% ylabel('Bypass Velocity')
+% grid('on')
+% end
 
 h8 = figure(8);
 h8.WindowStyle = 'docked';
@@ -286,7 +307,7 @@ for i = 1:length(alt)
 plot(M0(:),alpha(i,:),'linewidth',1.5)
 hold on
 title('Bypass Ratio vs. Mach Number')
-legend('SL','10k','20k','30k')
+legend('SL','12.5k','25k')
 xlabel('Mach Number')
 ylabel('\alpha')
 grid('on')
