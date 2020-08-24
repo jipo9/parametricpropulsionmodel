@@ -52,7 +52,6 @@ end
 
 %Calculate engine performance
 [state,component,performance] = nozzle(state,component,v0,design);
-tau_b = component{7,4}
 end   
 
 %% Functions

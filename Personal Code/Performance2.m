@@ -75,9 +75,6 @@ year = 2011;
 % A0 = pi*(.469/2)^2;
 % year = 2011;
 
-% Top to bottom at .45 Mach = 1.80 model, 1.88 actual
-% Top to bottom at .1 Mach = 1.98 model, 2 actual
-% Sea Level slope = -.81 model, -1.15 actual
 
 
 %% On design
