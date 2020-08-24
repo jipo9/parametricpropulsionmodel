@@ -34,9 +34,9 @@ close all
 
 % Engine : DGEN-390 Price Induction
 % Design point is 10kft and M = .338
-alt = 25000 / 3.281; %altitude [m from feet]
-M0 = .45;
-pi_f = 1.7; %Mid approx for turbofan %2
+alt = 10000 / 3.281; %altitude [m from feet]
+M0 = .338;
+pi_f = 1.5; %Mid approx for turbofan %2
 pi_cL = 4; %Mid approx for turbofan, pi_cL = pi_cH %5.9
 pi_cH = 6; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
@@ -148,17 +148,30 @@ end
 
 %% DGEN DATA
 dgen390.M(:,1) = linspace(.1,.45,15);
-dgen390.data(:,1) = [638.87;616.06;594.09;572.88;552.39;532.56;513.31;494.59;476.35;458.52;441.05;423.89;406.97;390.25;373.67];
-dgen390.data(:,2) = [460.82;444.91;429.71;415.16;401.2;387.78;374.83;362.3;350.13;338.27;326.67;315.26;303.99;292.77;279.78];
-dgen390.data(:,3) = [309.99;299.64;289.89;280.27;271.07;262.25;253.76;245.55;237.56;229.74;222.03;214.39;206.75;199.08;191.3];
+dgen390.F(:,1) = [638.87;616.06;594.09;572.88;552.39;532.56;513.31;494.59;476.35;458.52;441.05;423.89;406.97;390.25;373.67];
+dgen390.F(:,2) = [460.82;444.91;429.71;415.16;401.2;387.78;374.83;362.3;350.13;338.27;326.67;315.26;303.99;292.77;279.78];
+dgen390.F(:,3) = [309.99;299.64;289.89;280.27;271.07;262.25;253.76;245.55;237.56;229.74;222.03;214.39;206.75;199.08;191.3];
 
-dgen390.datanondim(:,1) = dgen390.data(:,1)./dgen390.data(1,1);
-dgen390.datanondim(:,2) = dgen390.data(:,2)./dgen390.data(1,1);
-dgen390.datanondim(:,3) = dgen390.data(:,3)./dgen390.data(1,1);
+dgen390.S(:,1) = [.53;.55;.57;.59;.61;.63;.66;.68;.7;.73;.75;.78;.81;.84;.87];
+dgen390.S(:,2) = [.52;.54;.56;.58;.6;.62;.64;.66;.68;.7;.73;.75;.77;.8;.83];
+dgen390.S(:,3) = [.52;.54;.55;.57;.59;.61;.62;.64;.66;.68;.7;.72;.74;.76;.78];
+
+dgen390.Fnondim(:,1) = dgen390.F(:,1)./dgen390.F(1,1);
+dgen390.Fnondim(:,2) = dgen390.F(:,2)./dgen390.F(1,1);
+dgen390.Fnondim(:,3) = dgen390.F(:,3)./dgen390.F(1,1);
+
+dgen390.Snondim(:,1) = dgen390.S(:,1)./dgen390.S(1,1);
+dgen390.Snondim(:,2) = dgen390.S(:,2)./dgen390.S(1,1);
+dgen390.Snondim(:,3) = dgen390.S(:,3)./dgen390.S(1,1);
 
 Fnondim(:,1) = F(1,:)./F(1,1);
 Fnondim(:,2) = F(2,:)./F(1,1);
 Fnondim(:,3) = F(3,:)./F(1,1);
+
+Snondim(:,1) = S(1,:)./S(1,1);
+Snondim(:,2) = S(2,:)./S(1,1);
+Snondim(:,3) = S(3,:)./S(1,1);
+
 
 
 
@@ -332,9 +345,9 @@ end
 
 h9 = figure(9);
 h9.WindowStyle = 'docked';
-jj = size(dgen390.data);
+jj = size(dgen390.F);
 for i = 1:jj(2)
-plot(dgen390.M,dgen390.datanondim(:,i),'linewidth',1.5)
+plot(dgen390.M,dgen390.Fnondim(:,i),'linewidth',1.5)
 hold on
 end
 plot(dgen390.M,Fnondim(:,1),'--','linewidth',1.5,'color','#0072BD')
@@ -345,7 +358,25 @@ plot(dgen390.M,Fnondim(:,3),'--','linewidth',1.5,'color','#EDB120')
 legend('DGEN SL','DGEN 12.5k Feet','DGEN 25k Feet','Off Design SL','Off Design 12.5k Feet','Off Design 25k Feet')
 title('Normalized Thrust vs. Mach Number')
 xlabel('Mach Number')
-ylabel('Thrust')
+ylabel('Normalized Thrust')
+grid on
+
+h10 = figure(10);
+h10.WindowStyle = 'docked';
+jj = size(dgen390.S);
+for i = 1:jj(2)
+plot(dgen390.M,dgen390.Snondim(:,i),'linewidth',1.5)
+hold on
+end
+plot(dgen390.M,Snondim(:,1),'--','linewidth',1.5,'color','#0072BD')
+hold on
+plot(dgen390.M,Snondim(:,2),'--','linewidth',1.5,'color','#D95319')
+hold on
+plot(dgen390.M,Snondim(:,3),'--','linewidth',1.5,'color','#EDB120')
+legend('DGEN SL','DGEN 12.5k Feet','DGEN 25k Feet','Off Design SL','Off Design 12.5k Feet','Off Design 25k Feet')
+title('Normalized SFC vs. Mach Number')
+xlabel('Mach Number')
+ylabel('Normalized SFC')
 grid on
 
 

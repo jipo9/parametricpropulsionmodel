@@ -34,9 +34,9 @@ close all
 
 % Engine : DGEN-390 Price Induction
 % Design point is 10kft and M = .338
-alt = 25000 / 3.281; %altitude [m from feet]
-M0 = .45;
-pi_f = 1.7; %Mid approx for turbofan %2
+alt = 10000 / 3.281; %altitude [m from feet]
+M0 = .338;
+pi_f = 1.5; %Mid approx for turbofan %2
 pi_cL = 4; %Mid approx for turbofan, pi_cL = pi_cH %5.9
 pi_cH = 6; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
@@ -102,7 +102,7 @@ fprintf('%s\n','--------------------------')
 altR = alt;
 mdotc_R = CorrectedMassFlow(state,altR,altR,component);
 alt = [0,12500,25000]./3.281; %Operational envelop in altitude
-M0 = linspace(.1,.45,8); %Operational envelop in Mach
+M0 = linspace(.1,.45,15); %Operational envelop in Mach
 [T_std, ~, P_std, ~] = atmosisa(0); %obtain standard atmospheric conditions at SL
 
 % Perform off design analysis over operational scope
@@ -148,16 +148,21 @@ end
 
 %% DGEN DATA
 dgen390.M(:,1) = linspace(.1,.45,15);
-dgen390.data(:,1) = [638.87;616.06;594.09;572.88;552.39;532.56;513.31;494.59;476.35;458.52;441.05;423.89;406.97;390.25;373.67];
-dgen390.data(:,2) = [460.82;444.91;429.71;415.16;401.2;387.78;374.83;362.3;350.13;338.27;326.67;315.26;303.99;292.77;279.78];
-dgen390.data(:,3) = [309.99;299.64;289.89;280.27;271.07;262.25;253.76;245.55;237.56;229.74;222.03;214.39;206.75;199.08;191.3];
+dgen390.F(:,1) = [638.87;616.06;594.09;572.88;552.39;532.56;513.31;494.59;476.35;458.52;441.05;423.89;406.97;390.25;373.67];
+dgen390.F(:,2) = [460.82;444.91;429.71;415.16;401.2;387.78;374.83;362.3;350.13;338.27;326.67;315.26;303.99;292.77;279.78];
+dgen390.F(:,3) = [309.99;299.64;289.89;280.27;271.07;262.25;253.76;245.55;237.56;229.74;222.03;214.39;206.75;199.08;191.3];
 
-dgen390.nondim = dgen390.data./dgen390.data(1,2);
+dgen390.S(:,1) = [];
+dgen390.S(:,2) = [];
+dgen390.S(:,3) = [.52;.54;];
 
+dgen390.datanondim(:,1) = dgen390.F(:,1)./dgen390.F(1,1);
+dgen390.datanondim(:,2) = dgen390.F(:,2)./dgen390.F(1,1);
+dgen390.datanondim(:,3) = dgen390.F(:,3)./dgen390.F(1,1);
 
-Fnondim.SL = F(1,:)./F(1,1);
-Fnondim.K125 = F(2,:)./F(2,1);
-Fnondim.K250 = F(3,:)./F(3,1);
+Fnondim(:,1) = F(1,:)./F(1,1);
+Fnondim(:,2) = F(2,:)./F(1,1);
+Fnondim(:,3) = F(3,:)./F(1,1);
 
 
 
@@ -331,5 +336,20 @@ end
 
 h9 = figure(9);
 h9.WindowStyle = 'docked';
+jj = size(dgen390.F);
+for i = 1:jj(2)
+plot(dgen390.M,dgen390.datanondim(:,i),'linewidth',1.5)
+hold on
+end
+plot(dgen390.M,Fnondim(:,1),'--','linewidth',1.5,'color','#0072BD')
+hold on
+plot(dgen390.M,Fnondim(:,2),'--','linewidth',1.5,'color','#D95319')
+hold on
+plot(dgen390.M,Fnondim(:,3),'--','linewidth',1.5,'color','#EDB120')
+legend('DGEN SL','DGEN 12.5k Feet','DGEN 25k Feet','Off Design SL','Off Design 12.5k Feet','Off Design 25k Feet')
+title('Normalized Thrust vs. Mach Number')
+xlabel('Mach Number')
+ylabel('Thrust')
+grid on
 
 
