@@ -20,14 +20,9 @@ function [state,component,design,inputs,performance] = off_design2(state,compone
 componentR = component;
 stateR = state;
 
+
 % Calculate parameter driving bypass ratio
-alpha_i = design{2,2};
-tau_lambda = component{7,6};
-pi_cHR = component{6,2};
-pi_fR = component{4,2};
-gammaf = state{5,7};
-ef = component{4,3};
-[C3] = constant(componentR);
+[C3] = constant(componentR,design);
 
 % Calculate bypass independent values
 [state, component,v0] = ambient(state,component,alt,M0,A0);
@@ -36,6 +31,7 @@ ef = component{4,3};
 
 %Iterate through fan, compressors, burner, and turbines until appropriate
 %bypass ratio found
+alpha_i = design{2,2};
 error = 1;
 while error > .0001
 [state,component] = fan(state,component,componentR,design);
@@ -50,7 +46,7 @@ while error > .0001
 tau_lambda = component{7,6};
 alpha = C3 / (pi_cH*sqrt(tau_r*tau_f/tau_lambda));
 error = norm(alpha-alpha_i)/alpha;
-alpha_i = alpha
+alpha_i = alpha;
 design{2,2} = alpha_i;
 end
 
@@ -59,20 +55,14 @@ end
 end   
 
 %% Functions
-function [C3] = constant(M0,alpha,tau_lambda,pi_cH,p_if,gammaf,ef)
+function [C3] = constant(component,design)
 % This function calculates C3, a constant by which we iterated alpha (the
 % bypass ratio
-
-tau_r = 1 + .2*(M0)^2;
-tau_f = p_if ^ (1/(gammaf*ef/(gammaf-1)));
-
-
-
-alpha = 
-pi_cH = 
-tau_r = component{7,6};
+alpha = design{2,2};
+pi_cH = component{6,2};
+tau_r = component{2,4};
 tau_f = component{4,4};
-tau_lambda =
+tau_lambda = component{7,6};
 C3 = alpha*pi_cH*sqrt(tau_r*tau_f/tau_lambda);
 end
 function [state, component,v0] = ambient(state,component,alt,M0,A0)
@@ -414,11 +404,19 @@ component{8,4} = taum1;
 %% HP Turbine
 % Hold enthalpy ratio constant and calculate stagnation post-HPTurb thermo
 % conditions
-tau_tH = component{9,4};
-state{11,2} = [];
+% tau_tH = component{9,4};
+% state{11,2} = [];
+% state{11,3} = [];
+% ho44 = ho41*tau_tH;
+% state{11,8} = ho44;
+% [state] = unFAIR3(state,11);
+
+Pro41 = state{10,2};
+pi_tH = component{9,2};
 state{11,3} = [];
-ho44 = ho41*tau_tH;
-state{11,8} = ho44;
+state{11,8} = [];
+Pro44 = Pro41*pi_tH;
+state{11,2} = Pro44;
 [state] = unFAIR3(state,11);
 
 %% Mixer 2
@@ -427,15 +425,15 @@ mdotep2 = state{22,5};
 mdot44 = state{11,5};
 mdot45 = state{12,5};
 hoep2 = state{8,8};
-ho44 = state{11,8};
+Pro44 = state{11,8};
 
 % Calculate stagnation pre-HPTurb/post-mixer1 thermo conditions
-ho45 = (mdotep2*hoep2 + mdot44*ho44) /(mdot45);
+ho45 = (mdotep2*hoep2 + mdot44*Pro44) /(mdot45);
 state{12,2} = [];
 state{12,3} = [];
 state(12,8) = {ho45};
 [state] = unFAIR3(state,12);
-taum2 = ho45/ho44;
+taum2 = ho45/Pro44;
 component{11,4} = taum2;
 
 %% LP Turbine

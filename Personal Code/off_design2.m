@@ -52,6 +52,7 @@ end
 
 %Calculate engine performance
 [state,component,performance] = nozzle(state,component,v0,design);
+tau_b = component{7,4}
 end   
 
 %% Functions
@@ -132,17 +133,18 @@ end
 function [state] = corrmass(state,stateR,design)
 % This function calculates mass flow for the engine assuming a constant corrected mass flow at the nozzle
 mdot_on = stateR{3,5};
-To0_on = stateR{3,3};
-Po0_on = stateR{3,13};
-To0 = state{3,3};
-Po0 = state{3,13};
-mdot0 = mdot_on * sqrt(To0_on/To0) * Po0/Po0_on;
 
-% T0_on = stateR{2,3};
-% P0_on = stateR{2,13};
-% T0 = state{2,3};
-% P0 = state{2,13};
-% mdot0 = mdot_on * sqrt(T0_on/T0) * P0/P0_on;
+% To0_on = stateR{3,3};
+% Po0_on = stateR{3,13};
+% To0 = state{3,3};
+% Po0 = state{3,13};
+% mdot0 = mdot_on * sqrt(To0_on/To0) * Po0/Po0_on;
+
+T0_on = stateR{2,3};
+P0_on = stateR{2,13};
+T0 = state{2,3};
+P0 = state{2,13};
+mdot0 = mdot_on * sqrt(T0_on/T0) * P0/P0_on;
 
 state{2,5} = mdot0;
 [state,design] = mdot(state,design);
@@ -359,7 +361,7 @@ error = 1;
 % Iterate until fuel to air ratio is found. Since fuel to air ratio affects
 % the enthalpy ratio for equivalent temperature ratios, this process takes
 % several iterations
-while error > .01
+while error > .0001
     state{9,2} = [];
     state{9,8} = [];
     [state] = unFAIR3(state,9);
@@ -376,7 +378,6 @@ while error > .01
     error = (f - f_i)/f_i;
     f_i = f;
 end
-
 tau_lambda = ho4/h0;
 component{7,6} = tau_lambda;
 end
@@ -500,8 +501,6 @@ mdot4 =  state{9,5};
 f = state{9,4};
 mdotf = mdot4*f/(1+f);
 
-
-
 %Calculate Momentum
 pinlet = mdot0*v0;
 pcore = mdot9*(v9);
@@ -510,6 +509,7 @@ pbypass = mdot19*(v19);
 %Calculate performance parameters
 F = pcore + pbypass - pinlet; %Thrust
 S = mdotf / F; %Specific fuel consumption
+
 mech_power = -.5*mdot0*v0^2 + .5*mdot19*v19^2 + .5*mdot9*v9^2 + PtoH + PtoL; %Mechanical power consumed
 thrust_power = F*v0; %Thrust power generated
 chem_power = mdotf*h_PR; %Chemical power released
@@ -529,6 +529,11 @@ eta_p = thrust_power/mech_power; %Propulsive engine efficiency
 % Store parameters
 performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach','Inlet Momentum','Core Momentum','Bypass Momentum','Inlet Mass Flow','Core Mass Flow','Bypass Mass Flow','Inlet Velocity','Core Velocity','Bypass Velocity'};
 performance(2,:) = {F,S,eta_th,eta_p,eta_o,M19,M9,pinlet,pcore,pbypass,mdot0,mdot9,mdot19,v0,v9,v19};
+
+if ~isreal(F+S+eta_th+eta_p+eta_o+M19+M9+pinlet+pcore+pbypass+mdot0+mdot9+mdot19+v0+v9+v19)
+    error('Unreal Performance Values Detected, Please Check Inputs')
+end
+
 end
 
 function [To4] = thetabreak(state,inputs)
