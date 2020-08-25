@@ -45,6 +45,7 @@ PtoH = 0;
 PtoL = 0;
 A0 = pi*(.469/2)^2;
 year = 2011;
+To4 = 1294;%K
 
 % Engine : JT9D
 % alt = 30000 / 3.281;
@@ -79,7 +80,7 @@ year = 2011;
 
 %% On design
 % Run on-design
-[state,component,design,inputs,performance] = on_design(alt,M0,pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year);
+[state,component,design,inputs,performance] = on_design(alt,M0,pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year,To4);
 
 % Display thrust and SFC
 F = performance{2,1} * .224809;
@@ -101,6 +102,11 @@ mdotc_R = CorrectedMassFlow(state,altR,altR,component);
 alt = [0,12500,25000]./3.281; %Operational envelop in altitude
 M0 = linspace(.1,.45,15); %Operational envelop in Mach
 [T_std, ~, P_std, ~] = atmosisa(0); %obtain standard atmospheric conditions at SL
+
+
+%         [state_A,component_A,design_A,inputs_A,performance_A] = off_design2(state,component,design,inputs,.1,0,A0);            
+%         [state_B,component_B,design_B,inputs_B,performance_B] = off_design2(state,component,design,inputs,.1,10000/3.281,A0);            
+%         [state_C,component_C,design_C,inputs_C,performance_C] = off_design2(state,component,design,inputs,.1,20000/3.281,A0);            
 
 % Perform off design analysis over operational scope
 for i = 1:length(alt)

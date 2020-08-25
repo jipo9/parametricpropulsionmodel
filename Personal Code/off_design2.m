@@ -180,10 +180,9 @@ mdotep2 = mdot25*ep2; %coolant air 2
 mdotep = mdotep1+mdotep2; %combined coolant air
 
 mdot4 = mdot31 + mdot_f; %mass flow rate post-burner
-f4 = mdot_f / mdot31; %fuel/air ratio post-burner
 
 mdot41 = mdot4 + mdotep1; %mass flow rate after addtion of cooling air 1
-f41 = f4*mdot4 / mdot41; %fuel/air ratio after addtion of cooling air 1
+f41 = f*mdot4 / mdot41; %fuel/air ratio after addtion of cooling air 1
 
 mdot45 = mdot41 + mdotep2; %mass flow rate after addtion of cooling air 2
 f45 = f41*mdot41 / mdot45; %fuel/air ratio after addtion of cooling air 2
@@ -194,7 +193,7 @@ state(2:4,5) = {mdot0};
 state(5,5) = {mdot13};
 state(6:7,5) = {mdot25};
 state(8,5) = {mdot31};
-state(9,4) = {f4};
+state(9,4) = {f};
 state(9,5) = {mdot4};
 state(10:11,4) = {f41};
 state(10:11,5) = {mdot41};
@@ -376,6 +375,7 @@ while error > .0001
     [state,design] = mdot(state,design);
     error = (f - f_i)/f_i;
     f_i = f;
+    
 end
 tau_lambda = ho4/h0;
 component{7,6} = tau_lambda;

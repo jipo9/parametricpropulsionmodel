@@ -1,4 +1,4 @@
-function [state,component,design, inputs, performance] = on_design(alt,M0,pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year)
+function [state,component,design, inputs, performance] = on_design(alt,M0,pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year,To_burner)
 %% Read Me
 % This function takes in 11 inputs for turbofan efficiency parameters and
 % calculates component efficiencies and on-design performance
@@ -58,6 +58,10 @@ inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','
 % Assume values come from level of tech
 [pi_dmax, e_c, e_f, pi_b, eta_b, e_t, pi_n, T_t4] = LOT(year);
 
+if To_burner > 0
+    T_t4 = To_burner;
+end
+
 % Calculate coolant air
 ep1 = (T_t4 - 1333.333333333)/8888.8888888888889;
 if ep1 < 0
@@ -77,7 +81,6 @@ h_PR = 18400*2326; %J/kg, for a (CH2)n propellant
 
 %Store values
 state(9,3) = {T_t4};
-state(9,3) = {1294};
 component(3,2) = {pi_dmax}; %store values in component
 component(4,2:3) = {pi_f,e_f};
 component(5,2:3) = {pi_cL,e_c};
