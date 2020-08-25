@@ -147,8 +147,8 @@ for i = 1:length(alt)
 end
 
 
-S_scaled = SFC_takeoff/S(1,1).*S;
-F_scaled = T_takeoff/F(1,1).*F;
+S_scaled = SFC_takeoff.*S;
+F_scaled = T_takeoff.*F;
 
 %% DGEN DATA
 dgen390.M(:,1) = linspace(.1,.45,15);
@@ -345,7 +345,7 @@ ylabel('\alpha')
 grid('on')
 end
 legend('SL','12.5k','25k')
-
+end
 
 h9 = figure(9);
 h9.WindowStyle = 'docked';
@@ -386,29 +386,3 @@ grid on
 
 %% Plots to Output to GUI
 
-for plots = 1
-h11 = figure(11);
-h11.WindowStyle = 'docked'; 
-for i = 1:length(alt)
-plot(M0,F_scaled(i,:),'linewidth',1.5)
-hold on
-title('Thrust vs. Mach Number')
-xlabel('Mach Number')
-ylabel('Thrust (kN)')
-grid('on')
-end
-legend('SL','12.5k','25k')
-
-
-h12 = figure(12);
-h12.WindowStyle = 'docked';
-for i = 1:length(alt)
-plot(M0,S_scaled(i,:),'linewidth',1.5)
-title('SFC vs. Mach Number')
-hold on
-xlabel('Mach Number')
-ylabel('SFC')
-grid('on')
-end
-legend('SL','12.5k','25k')
-end
