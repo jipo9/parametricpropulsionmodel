@@ -47,8 +47,8 @@ A0 = pi*(.469/2)^2;
 year = 2011;
 To4 = 1294;%K
 
-T_takeoff = 638.87 * 4.44822 / 1000; %kN from lbf
-SFC_takeoff = .53; %1/hr
+T_takeoff = 739.74 * 4.44822 / 1000; %kN from lbf
+SFC_takeoff = .46; %1/hr
 
 % Engine : JT9D
 % alt = 30000 / 3.281;
@@ -91,7 +91,7 @@ mdot_high = A0*max_takeoff_speed*1.225; %kg/s
 error = 1;
 
 while norm(error) > .0001
-    mdot0 = (mdot_low + mdot_high)/2
+    mdot0 = (mdot_low + mdot_high)/2;
     [state,component,design, inputs, performance] = on_design2(pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year,To4,mdot0);
     F = performance{2,1}/1000; %kN
     error = (F-T_takeoff)/T_takeoff;
@@ -111,7 +111,7 @@ S = performance{2,2} / ((.453592/3600)/4.44822);
 fprintf('%s\n','--------On Design---------')
 fprintf('%s%.2f\n','Calculated Thrust = ',F)
 fprintf('%s%.2f\n\n','Calculated SFC = ',S)
-fprintf('%s\n\n','For the DGEN390, We want F of 354 and S of .72 at design point')
+fprintf('%s\n\n','For the DGEN390, We want F of 739.74 and S of .46 at design point')
 fprintf('%s\n','Range for F ~ 300-570')
 fprintf('%s\n','Tange for S ~ .45-.83')
 fprintf('%s\n','--------------------------')
@@ -120,7 +120,7 @@ fprintf('%s\n','--------------------------')
 altR = alt;
 mdotc_R = CorrectedMassFlow(state,altR,altR,component);
 alt = [0,12500,25000]./3.281; %Operational envelop in altitude
-M0 = linspace(.1,.45,19); %Operational envelop in Mach
+M0 = linspace(0,.45,19); %Operational envelop in Mach
 [T_std, ~, P_std, ~] = atmosisa(0); %obtain standard atmospheric conditions at SL
 
 % Perform off design analysis over operational scope

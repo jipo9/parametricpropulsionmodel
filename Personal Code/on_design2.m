@@ -59,7 +59,8 @@ inputs(2:8,1) = {'Altitude (m)','Mach Number','F/mdot','Mass Flow Rate (kg/s)','
 [pi_dmax, e_c, e_f, pi_b, eta_b, e_t, pi_n, T_t4] = LOT(year);
 
 alt = 0;
-M0 = 0;
+v0 = 1/(A0*1.225/mdot0); %m/s
+M0 = v0/343;
 state{2,5} = mdot0;
 
 if To_burner > 0
