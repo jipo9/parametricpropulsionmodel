@@ -14,7 +14,7 @@ for ii = 1:size(pif_VS_alpha,2)-1
            pif2 = pif_VS_alpha(1,ii+1);
            m = (pif2-pif1) / (alpha2-alpha1);
            
-           pi_f =  pif1 + m*(alpha-alpha1)
+           pi_f =  pif1 + m*(alpha-alpha1);
        end
    end
 end
