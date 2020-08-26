@@ -91,15 +91,13 @@ mdot_high = A0*max_takeoff_speed*1.225; %kg/s
 error = 1;
 
 while norm(error) > .0001
-    mdot0 = (mdot_low + mdot_high)/2
-    [state,component,design, inputs, performance] = on_design2(pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year,To4,mdot0);
-    F = performance{2,1}/1000; %kN
+    mdot0 = (mdot_low + mdot_high)/2;
+    [state,component,design, inputs, performance] = on_design2(pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year,To_burner,mdot0);
+    F = performance{2,1} * .224809; %lbf
     error = (F-T_takeoff)/T_takeoff;
     if error > 0
-        mdot_high = mdot0;
-    else
-        mdot_low = mdot0;
-    end
+        
+    
 end
 
 % Display thrust and SFC
