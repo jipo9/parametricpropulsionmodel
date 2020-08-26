@@ -36,7 +36,7 @@ close all
 % Design point is 10kft and M = .338
 alt = 0 / 3.281; %altitude [m from feet]
 M0 = .1;
-pi_cL = 5; %Mid approx for turbofan, pi_cL = pi_cH %5.9
+pi_cL = 4; %Mid approx for turbofan, pi_cL = pi_cH %5.9
 pi_cH = 6; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
 [pi_f] = optimalfan(alpha); %approximation for turbofan based on bypass ratio

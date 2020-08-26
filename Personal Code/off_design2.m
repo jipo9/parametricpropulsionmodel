@@ -133,17 +133,17 @@ function [state] = corrmass(state,stateR,design)
 % This function calculates mass flow for the engine assuming a constant corrected mass flow at the nozzle
 mdot_on = stateR{3,5};
 
-% To0_on = stateR{3,3};
-% Po0_on = stateR{3,13};
-% To0 = state{3,3};
-% Po0 = state{3,13};
-% mdot0 = mdot_on * sqrt(To0_on/To0) * Po0/Po0_on;
+To0_on = stateR{3,3};
+Po0_on = stateR{3,13};
+To0 = state{3,3};
+Po0 = state{3,13};
+mdot0 = mdot_on * sqrt(To0_on/To0) * Po0/Po0_on;
 
-T0_on = stateR{2,3};
-P0_on = stateR{2,13};
-T0 = state{2,3};
-P0 = state{2,13};
-mdot0 = mdot_on * sqrt(T0_on/T0) * P0/P0_on;
+% T0_on = stateR{2,3};
+% P0_on = stateR{2,13};
+% T0 = state{2,3};
+% P0 = state{2,13};
+% mdot0 = mdot_on * sqrt(T0_on/T0) * P0/P0_on;
 
 state{2,5} = mdot0;
 [state,design] = mdot(state,design);
