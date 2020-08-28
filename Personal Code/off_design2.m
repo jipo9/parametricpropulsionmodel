@@ -529,8 +529,14 @@ eta_p = thrust_power/mech_power; %Propulsive engine efficiency
 performance(1,:) = {'Thrust (N)','Specific Fuel Consumption (kg/N-s)','Propulsive Efficiency','Thermal Efficiency','Overall Efficiency','Bypass Exhaust Mach','Core Flow Mach','Inlet Momentum','Core Momentum','Bypass Momentum','Inlet Mass Flow','Core Mass Flow','Bypass Mass Flow','Inlet Velocity','Core Velocity','Bypass Velocity'};
 performance(2,:) = {F,S,eta_th,eta_p,eta_o,M19,M9,pinlet,pcore,pbypass,mdot0,mdot9,mdot19,v0,v9,v19};
 
-if ~isreal(F+S+eta_th+eta_p+eta_o+M19+M9+pinlet+pcore+pbypass+mdot0+mdot9+mdot19+v0+v9+v19)
-    error('Unreal Performance Values Detected, Please Check Inputs')
+if ~isreal(v9)
+    error('Unreal core flow velocity detected. Please check inputs. Potential issues include: Power takeoff is too high, maximum burner temperature is too low, engine operating outside of designed envelop')
+elseif ~isreal(v19)
+    error('Unreal bypass flow velocity detected. Please check inputs. Potential issues include: Low pressure compressor pressure ratio is too high, maximum burner temperature is too low, engine operating outside of designed envelop')
+elseif v9<0
+    error('Negative core flow velocity detected. Please check inputs. Potential issues include: Power takeoff is too high, maximum burner temperature is too low, engine operating outside of designed envelop')
+elseif v19<0
+    error('Negative bypass flow velocity detected. Please check inputs. Potential issues include: Low pressure compressor pressure ratio is too high, maximum burner temperature is too low, engine operating outside of designed envelop')
 end
 
 end
