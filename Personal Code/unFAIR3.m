@@ -45,7 +45,8 @@ err = 100;
 
 if size(state{station,8},1) == 1 && size(state{station,2},1) == 1  && size(state{station,3},1) == 1 
     T = state{station,3} / .5556; % R;
-    
+
+% Evaluate pressure
 elseif size(state{station,2},1) == 1 
 % if state{station,2} ~= 0 
     P = state{station,2};
@@ -61,7 +62,8 @@ elseif size(state{station,2},1) == 1
         else
             T_max = T;
         end
-    end    
+    end   
+% Evaluate enthalpy
 elseif size(state{station,8},1) == 1 
     h = state{station,8};
     while norm(err) > .00001
@@ -71,17 +73,7 @@ elseif size(state{station,8},1) == 1
         state_i(station,3) = {T* .5556};
         [state_i] = unFAIR3(state_i,station);
         h_i = state_i{station,8};
-        
-        %The following two lines are to detect if a temperature value too
-        %low is input, which would cause this code to break
-%         if h_i <0
-%                 h_i = 0;
-%         end
         err = (h_i - h)/h;
-%         if isnan(error)
-%             error  = -1;
-%         end
-%         
         if err<0
             T_min = T;
         else
@@ -89,7 +81,7 @@ elseif size(state{station,8},1) == 1
         end
         
     end    
-% elseif size(state{end,3},1) == 1
+% Evaluate temperature
 elseif state{station,3} ~= 0
     T = state{station,3} / .5556; % R;
 else
