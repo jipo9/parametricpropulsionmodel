@@ -39,7 +39,7 @@ end
 T_min = 0;
 T_max = 100000;
 err = 100;
-
+ii = 0;
 %If temperature is being input, proceed. Otherwise, use bisection method to
 %get an estimate of temperature within .1% accuracy of the input value before proceeding
 
@@ -62,7 +62,11 @@ elseif size(state{station,2},1) == 1
         else
             T_max = T;
         end
-    end   
+        ii = ii+1;
+        if ii > 1000
+            error('Max iteration loop reached in unFAIR. Error most likely comes from temperature exceeding max temperature of unFAIR function due to high burner temperatures')
+        end
+    end
 % Evaluate enthalpy
 elseif size(state{station,8},1) == 1 
     h = state{station,8};
@@ -79,7 +83,10 @@ elseif size(state{station,8},1) == 1
         else
             T_max = T;
         end
-        
+        ii = ii+1;
+        if ii > 1000
+            error('Max iteration loop reached in unFAIR. Error most likely comes from temperature exceeding max temperature of unFAIR function due to high burner temperatures')
+        end
     end    
 % Evaluate temperature
 elseif state{station,3} ~= 0

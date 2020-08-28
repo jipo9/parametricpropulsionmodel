@@ -11,79 +11,84 @@ function [state] = unFAIR3(state,station)
 %% Initialize function
 % Check if imaginary number or negative number is input
 A = state{station,8}+state{station,2}+state{station,3};
+f = state{station, 4};
+
+
 if ~isreal(A)
-    text = ['Invalid thermodynamic state input into unFAIR. Thermodynamic state was imaginary and input from st']
+   text = ['Invalid thermodynamic state input into unFAIR. Thermodynamic state was imaginary and input from "State" row ',num2st(station),'.'];
    error(text) 
 elseif A <0
-    
-
+   text = ['Invalid thermodynamic state input into unFAIR. Thermodynamic state was negative and input from "State" row ',num2st(station),'.'];
+   error(text) 
 end
 
 
+if ~isreal(f)
+   text = ['Invalid fuel to air ratio into unFAIR. Fuel to air ratio was imaginary, error most likely originated from max burner temp.'];
+   error(text) 
+elseif f <0
+   text = ['Invalid fuel to air ratio input into unFAIR. Fuel to air ratio was negative, error most likely originated from max burner temp.'];
+   error(text) 
+end
+
 %Check if fuel air ratio has an impact on results
-f = state{station, 4};
 if f< 1E-9
     f = 0;
 end
 
 T_min = 0;
 T_max = 100000;
-error = 100;
-
+err = 100;
+ii = 0;
 %If temperature is being input, proceed. Otherwise, use bisection method to
 %get an estimate of temperature within .1% accuracy of the input value before proceeding
 
 if size(state{station,8},1) == 1 && size(state{station,2},1) == 1  && size(state{station,3},1) == 1 
     T = state{station,3} / .5556; % R;
-    
+
+% Evaluate pressure
 elseif size(state{station,2},1) == 1 
 % if state{station,2} ~= 0 
     P = state{station,2};
-    while norm(error) > .00001
+    while norm(err) > .00001
         T= (T_min + T_max)/2;
         state_i = state;
         state_i(station,3) = {T* .5556};
         state_i(station,2) = state_i(station,8);
         [state_i] = unFAIR3(state_i,station);
-        error = (state_i{station,2} - P)/P;
-        if error<0
+        err = (state_i{station,2} - P)/P;
+        if err<0
             T_min = T;
         else
             T_max = T;
         end
-    end    
+        ii = ii+1;
+    end   
+% Evaluate enthalpy
 elseif size(state{station,8},1) == 1 
     h = state{station,8};
-    while norm(error) > .00001
+    while norm(err) > .00001
         T= (T_min + T_max)/2;
         state_i = state;
         state_i(station,8) = state_i(station,2);
         state_i(station,3) = {T* .5556};
         [state_i] = unFAIR3(state_i,station);
         h_i = state_i{station,8};
-        
-        %The following two lines are to detect if a temperature value too
-        %low is input, which would cause this code to break
-%         if h_i <0
-%                 h_i = 0;
-%         end
-        error = (h_i - h)/h;
-%         if isnan(error)
-%             error  = -1;
-%         end
-%         
-        if error<0
+        err = (h_i - h)/h;
+        if err<0
             T_min = T;
         else
             T_max = T;
         end
-        
+        ii = ii+1;
+        if ii > 1000
+            error('Max iteration loop reached in unFAIR. Please enter a valid ')
     end    
-% elseif size(state{end,3},1) == 1
+% Evaluate temperature
 elseif state{station,3} ~= 0
     T = state{station,3} / .5556; % R;
 else
-    error()
+    error('Please input a valid thermodynamic property')
 end
 
 %% Input data
