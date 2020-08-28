@@ -35,7 +35,7 @@ close all
 % Engine : DGEN-390 Price Induction
 % Design point is 10kft and M = .338
 alt = 0 / 3.281; %altitude [m from feet]
-M0 = .0001;
+M0 = 0;
 pi_cL = 4; %Mid approx for turbofan, pi_cL = pi_cH %5.9
 pi_cH = 6; %Mid approx for turbofan, pi_cL = pi_cH
 alpha = 6.9;
@@ -92,7 +92,7 @@ error = 1;
 
 while norm(error) > .0001
     mdot0 = (mdot_low + mdot_high)/2;
-    [state,component,design, inputs, performance] = on_design2(pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year,To4,mdot0);
+    [state,component,design, inputs, performance] = on_design2(pi_f,pi_cL,pi_cH,alpha,beta,PtoH,PtoL,A0,year,To4,mdot0,M0);
     F = performance{2,1}/1000; %kN
     error = (F-T_takeoff)/T_takeoff;
     if error > 0
