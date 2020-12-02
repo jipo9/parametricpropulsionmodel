@@ -1,21 +1,21 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration build-checksum="3126563071" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI/Parametric Turbofan Propulsion Model.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI" name="Parametric Turbofan Propulsion Model" target="target.mlapps" target-name="Package App">
-    <param.appname>Parametric Turbofan Propulsion Model</param.appname>
+  <configuration build-checksum="2296570796" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI" name="PTPM" target="target.mlapps" target-name="Package App">
+    <param.appname>PTPM</param.appname>
     <param.authnamewatermark>JP O'Dell and Joseph Hammond</param.authnamewatermark>
     <param.email>jpodell@calpoly.edu</param.email>
     <param.company />
     <param.icon />
     <param.icons />
-    <param.summary>This model outputs thrust and SFC using manufacturer published engine data.</param.summary>
-    <param.description>*Changes - Outputs data in .txt files</param.description>
-    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tp19bc18bd_81bb_4f10_9cc4_3cce2339d0f0.png</param.screenshot>
-    <param.version>2.3</param.version>
+    <param.summary>This software outputs thrust and SFC for turbofan engines given manufacturer published data.</param.summary>
+    <param.description>*Changes* Outputs .txt files for Thrust, SFC, Mach</param.description>
+    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tpe8039f43_259c_46f5_89b4_d695763ed5d3.png</param.screenshot>
+    <param.version>2.4</param.version>
     <param.products.name />
     <param.products.id />
     <param.products.version />
     <param.platforms />
     <param.output>${PROJECT_ROOT}</param.output>
-    <param.guid>02a9b60b-80de-4b71-bf7f-6c3bc6fc0f08</param.guid>
+    <param.guid>f3eb43b2-e05f-4cbb-ad07-1645cb87d21f</param.guid>
     <unset>
       <param.company />
       <param.icon />
