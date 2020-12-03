@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration build-checksum="2296570796" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI" name="PTPM" target="target.mlapps" target-name="Package App">
+  <configuration build-checksum="3960026742" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI" name="PTPM" target="target.mlapps" target-name="Package App">
     <param.appname>PTPM</param.appname>
     <param.authnamewatermark>JP O'Dell and Joseph Hammond</param.authnamewatermark>
     <param.email>jpodell@calpoly.edu</param.email>
@@ -8,8 +8,8 @@
     <param.icons />
     <param.summary>This software outputs thrust and SFC for turbofan engines given manufacturer published data.</param.summary>
     <param.description>*Changes* Outputs .txt files for Thrust, SFC, Mach</param.description>
-    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tpe8039f43_259c_46f5_89b4_d695763ed5d3.png</param.screenshot>
-    <param.version>2.4</param.version>
+    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tpc8f99dc1_7b06_496c_a984_13b86eca21f5.png</param.screenshot>
+    <param.version>2.5</param.version>
     <param.products.name />
     <param.products.id />
     <param.products.version />
