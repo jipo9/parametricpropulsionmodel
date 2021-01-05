@@ -1,21 +1,21 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration build-checksum="3960026742" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI" name="PTPM" target="target.mlapps" target-name="Package App">
+  <configuration build-checksum="1040614065" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI" name="PTPM" target="target.mlapps" target-name="Package App">
     <param.appname>PTPM</param.appname>
     <param.authnamewatermark>JP O'Dell and Joseph Hammond</param.authnamewatermark>
     <param.email>jpodell@calpoly.edu</param.email>
     <param.company />
     <param.icon />
     <param.icons />
-    <param.summary>This software outputs thrust and SFC for turbofan engines given manufacturer published data.</param.summary>
-    <param.description>*Changes* Outputs .txt files for Thrust, SFC, Mach</param.description>
-    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tpc8f99dc1_7b06_496c_a984_13b86eca21f5.png</param.screenshot>
-    <param.version>2.5</param.version>
+    <param.summary>This software outputs thrust and SFC given manufacturer published data</param.summary>
+    <param.description>Changes** Added .txt file export for T, SFC, alt, M</param.description>
+    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tp226e5c00_1ec8_4856_868c_206e9e34e25d.png</param.screenshot>
+    <param.version>2.6</param.version>
     <param.products.name />
     <param.products.id />
     <param.products.version />
     <param.platforms />
     <param.output>${PROJECT_ROOT}</param.output>
-    <param.guid>f3eb43b2-e05f-4cbb-ad07-1645cb87d21f</param.guid>
+    <param.guid>e0dd7c58-a2e4-49d1-886c-a7c267d083be</param.guid>
     <unset>
       <param.company />
       <param.icon />
@@ -30,11 +30,11 @@
       <file>${PROJECT_ROOT}/GUIv2.mlapp</file>
     </fileset.main>
     <fileset.depfun>
-      <file>${PROJECT_ROOT}/LOT.m</file>
-      <file>${PROJECT_ROOT}/off_design2.m</file>
-      <file>${PROJECT_ROOT}/on_design2.m</file>
-      <file>${PROJECT_ROOT}/optimalfan.m</file>
-      <file>${PROJECT_ROOT}/unFAIR3.m</file>
+      <file>${PROJECT_ROOT}/AnalysisCode/LOT.m</file>
+      <file>${PROJECT_ROOT}/AnalysisCode/off_design2.m</file>
+      <file>${PROJECT_ROOT}/AnalysisCode/on_design2.m</file>
+      <file>${PROJECT_ROOT}/AnalysisCode/optimalfan.m</file>
+      <file>${PROJECT_ROOT}/AnalysisCode/unFAIR3.m</file>
     </fileset.depfun>
     <fileset.resources />
     <fileset.package />
