@@ -7,7 +7,7 @@ Our model is specific to subsonic two-spool turbofans with separate exhausts and
 - Allow future expansion of model
 
 # How to Download
-To use the MATLAB GUI, you'll need to install *parametricpropulsionmodel/GUI/PTPM.mlappinstall.* This should install an app in MATLAB.
+To use the MATLAB GUI, you'll need to install *parametricpropulsionmodel/PTPM.mlappinstall.* This should install an app in MATLAB.
 
 # Methodology
 Software development began with research on existing models. Models exist for a variety of engine types, many with varied assumptions and accuracies, but exist mostly as a preliminary tool for an engine designer, not an aircraft designer. Models, typical engine parameter ranges, relationships between parameters, and underlying assumptions were studied until model development began.
