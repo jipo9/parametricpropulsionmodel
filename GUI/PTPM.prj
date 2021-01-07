@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration build-checksum="1040614065" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI" name="PTPM" target="target.mlapps" target-name="Package App">
+  <configuration build-checksum="3072919027" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI" name="PTPM" target="target.mlapps" target-name="Package App">
     <param.appname>PTPM</param.appname>
     <param.authnamewatermark>JP O'Dell and Joseph Hammond</param.authnamewatermark>
     <param.email>jpodell@calpoly.edu</param.email>
@@ -7,9 +7,9 @@
     <param.icon />
     <param.icons />
     <param.summary>This software outputs thrust and SFC given manufacturer published data</param.summary>
-    <param.description>Changes** Added .txt file export for T, SFC, alt, M</param.description>
-    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tp226e5c00_1ec8_4856_868c_206e9e34e25d.png</param.screenshot>
-    <param.version>2.6</param.version>
+    <param.description>*Changes* added option to name data output folder</param.description>
+    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tp71afd4d4_8e98_4a10_83c6_58794a7bce6f.png</param.screenshot>
+    <param.version>2.7</param.version>
     <param.products.name />
     <param.products.id />
     <param.products.version />
