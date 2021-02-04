@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration build-checksum="1692968860" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/New/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/New" name="PTPM" target="target.mlapps" target-name="Package App">
+  <configuration build-checksum="552340168" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/New/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/New" name="PTPM" target="target.mlapps" target-name="Package App">
     <param.appname>PTPM</param.appname>
     <param.authnamewatermark>JP O'Dell and Joseph Hammond</param.authnamewatermark>
     <param.email>jpodell@calpoly.edu</param.email>
@@ -8,7 +8,7 @@
     <param.icons />
     <param.summary>This software outputs thrust and SFC given manufacturer published data</param.summary>
     <param.description>*Changes* Added support for exporting .mat file, units on SFC</param.description>
-    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tp61446975_019e_4890_84e0_0dab3b8e8fed.png</param.screenshot>
+    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tp7df819ab_d6c1_4057_bf2b_8dcf2466dfe0.png</param.screenshot>
     <param.version>2.85</param.version>
     <param.products.name />
     <param.products.id />
@@ -28,7 +28,13 @@
     <fileset.main>
       <file>${PROJECT_ROOT}/GUIv2.mlapp</file>
     </fileset.main>
-    <fileset.depfun />
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}/AnalysisCode/LOT.m</file>
+      <file>${PROJECT_ROOT}/AnalysisCode/off_design2.m</file>
+      <file>${PROJECT_ROOT}/AnalysisCode/on_design2.m</file>
+      <file>${PROJECT_ROOT}/AnalysisCode/optimalfan.m</file>
+      <file>${PROJECT_ROOT}/AnalysisCode/unFAIR3.m</file>
+    </fileset.depfun>
     <fileset.resources />
     <fileset.package />
     <build-deliverables>
