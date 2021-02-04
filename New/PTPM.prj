@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration build-checksum="2343638734" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI" name="PTPM" target="target.mlapps" target-name="Package App">
+  <configuration build-checksum="1692968860" file="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/New/PTPM.prj" location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/New" name="PTPM" target="target.mlapps" target-name="Package App">
     <param.appname>PTPM</param.appname>
     <param.authnamewatermark>JP O'Dell and Joseph Hammond</param.authnamewatermark>
     <param.email>jpodell@calpoly.edu</param.email>
@@ -7,14 +7,14 @@
     <param.icon />
     <param.icons />
     <param.summary>This software outputs thrust and SFC given manufacturer published data</param.summary>
-    <param.description>*Changes* Added support for exporting .mat file</param.description>
-    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tp1425ebe9_f81d_455c_81f2_05f48ae50a9f.png</param.screenshot>
-    <param.version>2.8</param.version>
+    <param.description>*Changes* Added support for exporting .mat file, units on SFC</param.description>
+    <param.screenshot>/private/var/folders/gr/cwsydclj003bqgmc5gmk042h0000gn/T/tp61446975_019e_4890_84e0_0dab3b8e8fed.png</param.screenshot>
+    <param.version>2.85</param.version>
     <param.products.name />
     <param.products.id />
     <param.products.version />
     <param.platforms />
-    <param.output>${PROJECT_ROOT}</param.output>
+    <param.output>/Users/jpodell/Documents/GitHub/parametricpropulsionmodel</param.output>
     <param.guid>e0dd7c58-a2e4-49d1-886c-a7c267d083be</param.guid>
     <unset>
       <param.company />
@@ -24,22 +24,15 @@
       <param.products.id />
       <param.products.version />
       <param.platforms />
-      <param.output />
     </unset>
     <fileset.main>
       <file>${PROJECT_ROOT}/GUIv2.mlapp</file>
     </fileset.main>
-    <fileset.depfun>
-      <file>${PROJECT_ROOT}/AnalysisCode/LOT.m</file>
-      <file>${PROJECT_ROOT}/AnalysisCode/off_design2.m</file>
-      <file>${PROJECT_ROOT}/AnalysisCode/on_design2.m</file>
-      <file>${PROJECT_ROOT}/AnalysisCode/optimalfan.m</file>
-      <file>${PROJECT_ROOT}/AnalysisCode/unFAIR3.m</file>
-    </fileset.depfun>
+    <fileset.depfun />
     <fileset.resources />
     <fileset.package />
     <build-deliverables>
-      <file location="/Users/jpodell/Documents/GitHub/parametricpropulsionmodel" name="GUI" optional="false">/Users/jpodell/Documents/GitHub/parametricpropulsionmodel/GUI</file>
+      <file location="/Users/jpodell/Documents/GitHub" name="parametricpropulsionmodel" optional="false">/Users/jpodell/Documents/GitHub/parametricpropulsionmodel</file>
     </build-deliverables>
     <workflow />
     <matlab>
